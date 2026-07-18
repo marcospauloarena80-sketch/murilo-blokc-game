@@ -67,7 +67,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' && env.BUTLER_API_KEY != '' }}
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-        uses: yeslayla/butler-publish-itchio-action@v1
+        uses: yeslayla/butler-publish-itchio-action@v1.2.0
         with:
           butlerApiKey: ${{ secrets.BUTLER_API_KEY }}
           gameData: build/web
