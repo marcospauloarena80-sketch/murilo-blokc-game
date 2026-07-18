@@ -36,6 +36,7 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] Criar personagem → escolher cores → jogar funciona ponta a ponta — verificado por teste (clique simulado em canvas WebGL não é confiável nesta ferramenta de automação, mesmo problema do F1/F2; validado via `test_character_creator.gd`: seleção de cor atualiza `GameState` + tinge o player ao vivo, confirmar muda estado pra PLAYING, movimento fica mudo fora de PLAYING)
   - [x] Câmera nunca atravessa terreno (SpringArm3D já cuida disso, herdado do F1)
   - [x] 25/25 testes GUT passando
+  - [x] **CI verde real no GitHub Actions** — lint (12s) + test (2m1s) + export-web (1m39s), [run](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29659121197), artifact `web-build`
   - [ ] Controle responsivo (validação Murilo: "gostoso de andar?") — fica pra sessão de validação com o Murilo (não é algo que eu meço sozinho)
 
 ## F4 — Inventário + coleta + craft
