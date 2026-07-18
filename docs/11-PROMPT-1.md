@@ -2,16 +2,16 @@
 
 O Prompt 0 está concluído (só planejamento). O Prompt 1 executa a **F1 do [Roadmap](04-ROADMAP.md)**: esqueleto profissional rodando no navegador. Nada além da F1.
 
-**Status: F1 concluída localmente em 18/jul/2026.** Único pendente é a criação do repo remoto no GitHub (ação de conta, ver nota abaixo).
+**Status: F1 100% concluída em 18/jul/2026, com CI verde no GitHub Actions real.** Repo: https://github.com/marcospauloarena80-sketch/murilo-blokc-game — [run verde](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29656429725).
 
 ## Pré-requisitos (checklist de preparação)
 
 - [x] **Instalar Godot 4.7.x estável** (via `brew install --cask godot`; a stable disponível é 4.7.1, não 4.4.x — ADR-001 atualizado)
 - [x] Baixar os **export templates** da mesma versão (1,28GB, autorizado pelo usuário, instalado em `~/Library/Application Support/Godot/export_templates/4.7.1.stable/`)
 - [x] `git init` local na raiz `jogo do murilo/` — 3 commits feitos
-- [ ] **Criar repo remoto no GitHub** `murilo-blocks-game` — **pendente do usuário**: exige `gh auth login` (OAuth interativo) ou criar manualmente em github.com e me passar a URL para `git remote add origin` + push
+- [x] **Repo remoto no GitHub** criado pelo usuário + `gh auth login` (token só digitado no terminal dele, nunca em chat) + push feito — `github.com/marcospauloarena80-sketch/murilo-blokc-game`
 - [x] Hosting do build web: decidido via **ADR-013** — CI publica sempre como artifact do GitHub Actions; deploy itch.io fica pronto no workflow mas inativo até o usuário criar a página e adicionar o secret `BUTLER_API_KEY`
-- [ ] Confirmar acesso do tablet/celular real do Murilo — testei em emulação de viewport tablet (768×1024) no navegador; teste no dispositivo físico fica para quando o usuário rodar a sessão de validação
+- [ ] Confirmar acesso do tablet/celular real do Murilo — testei em emulação de viewport tablet (768×1024) no navegador; teste no dispositivo físico fica para a sessão de validação com o Murilo
 
 ## Escopo exato da F1 (nada a mais) — ✅ tudo entregue
 
@@ -25,9 +25,9 @@ O Prompt 0 está concluído (só planejamento). O Prompt 1 executa a **F1 do [Ro
 
 ## Critérios de conclusão (gate para a F2)
 
-- [ ] CI verde de ponta a ponta **no GitHub Actions real** — não testável até existir o repo remoto; localmente replicei os 3 passos (lint, GUT, export) manualmente com sucesso
+- [x] **CI verde de ponta a ponta no GitHub Actions real** — 3 jobs (lint 11s, test 1m18s, export-web 1m45s), todos ✓, artifact `web-build` publicado. [Run](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29656429725). 1ª tentativa falhou (tag `butler-publish-itchio-action@v1` não existe — corrigida para `@v1.2.0`, fix commitado e run seguinte passou)
 - [x] Build abre e roda no navegador (desktop real testado; tablet testado via emulação de viewport) — engine carrega, renderiza, responde a input, sem erros de console
-- [x] `git log` limpo com commits semânticos (2 commits: docs Prompt 0 + feat Fase 1)
+- [x] `git log` limpo com commits semânticos (5 commits: docs Prompt 0 + feat Fase 1 + fechamento checklist + fix CI + este)
 - [x] ADRs novos registrados: ADR-001 atualizado (versão real 4.7.x) + ADR-013 (hosting)
 
 ## Texto sugerido para abrir o Prompt 1
