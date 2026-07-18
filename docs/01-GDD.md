@@ -47,6 +47,15 @@ Ferramentas melhores → Biomas mais distantes → Recursos raros + Cubelins mai
 - **Atributos:** Vida (F5) · Fome (F6) · Energia (F6). Sem fôlego/sede — YAGNI.
 - **Morte (F6):** respawn na cama/Vilarejo; dropa itens da mochila no local (hotbar preservada). Recuperável ao voltar. Sem perda de XP de Cubelins.
 
+### Personalização do Murilo (F3)
+
+Inspirado em Minecraft (escolher aparência) e Roblox (visual customizável), mas com escopo enxuto pro MVP — decisão do usuário (2026-07-18): **editor de cores, sem itens equipáveis ainda**.
+
+- **Modelo:** blocky/low-poly (partes: cabeça, cabelo, tronco, 2 braços, 2 pernas) — mesma linguagem visual do mundo voxel, construído com primitivas da própria Godot (sem depender de pack externo nesta fase).
+- **Customização:** 4 categorias, cada uma com paleta fixa de cores pra escolher — **pele**, **cabelo**, **camisa**, **calça**. Sem desbloqueáveis, sem tela de inventário de roupas.
+- **Tela de criação:** aparece antes do jogo começar (estado `CHARACTER_CREATION`), com preview ao vivo do próprio Murilo já no mundo; botão "Jogar" confirma e libera o controle.
+- **Fora do MVP de customização (backlog P4):** guarda-roupa com itens equipáveis desbloqueáveis (chapéus, camisas, acessórios) como recompensa das Arenas Elementais (F10) — ideia natural de progressão, mas não faz parte da F3.
+
 ## 3. Mundo
 
 - **Estrutura (F2):** mundo finito de 128×128×64 blocos (8×8 chunks de 16×16×64), gerado proceduralmente por seed (noise de altura + camadas). Sem mundo infinito (ADR-005).

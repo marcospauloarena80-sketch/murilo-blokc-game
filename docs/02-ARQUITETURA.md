@@ -43,7 +43,7 @@ game/
 | Autoload | Responsabilidade | O que NÃO faz |
 |---|---|---|
 | `EventBus` | Catálogo central de signals do jogo | Não guarda estado |
-| `GameState` | Máquina de estados global (Boot→Menu→Playing⇄Paused⇄Battle), sessão atual (seed, tempo de jogo) | Não conhece UI |
+| `GameState` | Máquina de estados global (Boot→Menu→CharacterCreation→Playing⇄Paused⇄Battle), sessão atual (seed, tempo de jogo, aparência do Murilo) | Não conhece UI |
 | `SaveManager` | Serializar/desserializar save, versões, migrações | Não decide *o que* salvar (cada sistema fornece seu snapshot) |
 | `AudioManager` | Buses, pools de players, tocar música/SFX por nome | Não conhece gameplay |
 | `Logger` | Log com níveis (debug/info/warn/error), silencioso em release | — |

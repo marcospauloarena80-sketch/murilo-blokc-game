@@ -18,9 +18,12 @@ Regra: **entregar funcional antes de adicionar novo**. IDs `MB-xxx` estáveis pa
 | MB-010 | Re-mesh incremental ao editar bloco | F2 |
 | MB-011 | 6 BlockDef (grama, terra, pedra, tronco, folhas, areia) | F2 |
 | MB-012 | Quebrar bloco (tempo por dureza×ferramenta) + colocar com preview | F2 |
-| MB-013 | Modelo do Murilo + animações | F3 |
+| MB-013 | Modelo blocky do Murilo (partes primitivas) + animação procedural de membros | F3 |
 | MB-014 | Câmera 3ª pessoa orbital com colisão | F3 |
 | MB-015 | InputMap completo remapeável | F3 |
+| MB-013b | `CharacterAppearance` (pele/cabelo/camisa/calça) + paletas + GameState.aparencia_atual | F3 |
+| MB-013c | Estado `CHARACTER_CREATION` no GameState + gate de input no player | F3 |
+| MB-013d | Tela de criação de personagem (swatches de cor + preview ao vivo + botão Jogar) | F3 |
 | MB-016 | `InventoryModel` puro + testes (slots, stack 64, mover) | F4 |
 | MB-017 | Drops físicos + ItemMagnet | F4 |
 | MB-018 | Hotbar 8 + mochila 24 + tela inventário/craft | F4 |
@@ -90,5 +93,5 @@ Regra: **entregar funcional antes de adicionar novo**. IDs `MB-xxx` estáveis pa
 - Novos modos (criativo puro, boss rush de Arenas)
 - Criaturas lendárias raras + eventos sazonais
 - Sistema de pets seguindo o jogador fora de batalha
-- Editor de skins do Murilo
+- Guarda-roupa com itens equipáveis desbloqueáveis (chapéus, camisas, acessórios) — recompensa das Arenas Elementais (F10); editor de cor básico já sai na F3
 - Conquistas

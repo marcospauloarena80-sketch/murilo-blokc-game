@@ -1,29 +1,45 @@
+class_name Player
 extends CharacterBody3D
-## Movimento e interação com o mundo do Murilo (F1: movimento; F2: mirar/quebrar/colocar).
-## Ver docs/02-ARQUITETURA.md §4.1 e §4.2.
+## Movimento e interação com o mundo do Murilo.
+## Ver docs/02-ARQUITETURA.md §4.1/§4.2 e docs/07-DECISOES.md ADR-014/ADR-015.
 ##
 ## Física começa pausada e só liga quando o mundo termina de gerar (sinal
-## mundo_gerado do ChunkManager). Sem isso, o player pode cair mais rápido do
-## que o meshing time-sliced consegue construir a colisão do próprio chunk
-## e atravessar o chão (bug real encontrado e corrigido nesta fase).
+## mundo_gerado do ChunkManager). Movimento/quebrar/colocar só respondem no
+## estado GameState.PLAYING — durante CHARACTER_CREATION a gravidade continua
+## (o personagem se assenta no chão pro preview), mas os controles ficam mudos.
 
 const VELOCIDADE: float = 5.0
 const VELOCIDADE_CORRIDA: float = 8.0
 const FORCA_PULO: float = 4.5
 const GRAVIDADE: float = 9.8
 const ALCANCE: float = 5.0
+const AMPLITUDE_MAX_BALANCO: float = 0.6
 
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
 var _bloco_a_colocar: int = 3
 var _progresso_quebra: float = 0.0
 var _bloco_em_quebra: Vector3i = Vector3i(0, -999, 0)
+var _fase_balanco: float = 0.0
+
+var _mat_pele: StandardMaterial3D
+var _mat_cabelo: StandardMaterial3D
+var _mat_camisa: StandardMaterial3D
+var _mat_calca: StandardMaterial3D
 
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var _camera: Camera3D = $CameraPivot/SpringArm3D/Camera3D
+@onready var _ombro_esquerdo: Node3D = $Corpo/OmbroEsquerdo
+@onready var _ombro_direito: Node3D = $Corpo/OmbroDireito
+@onready var _quadril_esquerdo: Node3D = $Corpo/QuadrilEsquerdo
+@onready var _quadril_direito: Node3D = $Corpo/QuadrilDireito
 
 
 func _ready() -> void:
+	add_to_group("player")
+	_configurar_materiais()
+	aplicar_aparencia(GameState.aparencia_atual)
+
 	_outline = _criar_outline()
 	add_child(_outline)
 	_outline.visible = false
@@ -36,6 +52,28 @@ func _ready() -> void:
 		_chunk_manager.mundo_gerado.connect(_ao_mundo_pronto)
 	else:
 		_ao_mundo_pronto()
+
+
+func _configurar_materiais() -> void:
+	_mat_pele = StandardMaterial3D.new()
+	_mat_cabelo = StandardMaterial3D.new()
+	_mat_camisa = StandardMaterial3D.new()
+	_mat_calca = StandardMaterial3D.new()
+
+	$Corpo/Cabeca.material_override = _mat_pele
+	$Corpo/OmbroEsquerdo/BracoEsquerdo.material_override = _mat_pele
+	$Corpo/OmbroDireito/BracoDireito.material_override = _mat_pele
+	$Corpo/Cabelo.material_override = _mat_cabelo
+	$Corpo/Tronco.material_override = _mat_camisa
+	$Corpo/QuadrilEsquerdo/PernaEsquerda.material_override = _mat_calca
+	$Corpo/QuadrilDireito/PernaDireita.material_override = _mat_calca
+
+
+func aplicar_aparencia(aparencia: CharacterAppearance) -> void:
+	_mat_pele.albedo_color = aparencia.cor_pele
+	_mat_cabelo.albedo_color = aparencia.cor_cabelo
+	_mat_camisa.albedo_color = aparencia.cor_camisa
+	_mat_calca.albedo_color = aparencia.cor_calca
 
 
 func _ao_mundo_pronto() -> void:
@@ -60,25 +98,51 @@ func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
 
-	if Input.is_action_just_pressed("pular") and is_on_floor():
-		velocity.y = FORCA_PULO
+	var jogando := GameState.current_state == GameState.State.PLAYING
 
-	var input_dir := Input.get_vector(
-		"mover_esquerda", "mover_direita", "mover_frente", "mover_tras"
-	)
-	var direcao := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-	var velocidade_atual := VELOCIDADE_CORRIDA if Input.is_action_pressed("correr") else VELOCIDADE
+	if jogando:
+		if Input.is_action_just_pressed("pular") and is_on_floor():
+			velocity.y = FORCA_PULO
 
-	if direcao:
-		velocity.x = direcao.x * velocidade_atual
-		velocity.z = direcao.z * velocidade_atual
+		var input_dir := Input.get_vector(
+			"mover_esquerda", "mover_direita", "mover_frente", "mover_tras"
+		)
+		var direcao := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+		var velocidade_atual := (
+			VELOCIDADE_CORRIDA if Input.is_action_pressed("correr") else VELOCIDADE
+		)
+
+		if direcao:
+			velocity.x = direcao.x * velocidade_atual
+			velocity.z = direcao.z * velocidade_atual
+		else:
+			velocity.x = move_toward(velocity.x, 0, velocidade_atual)
+			velocity.z = move_toward(velocity.z, 0, velocidade_atual)
 	else:
-		velocity.x = move_toward(velocity.x, 0, velocidade_atual)
-		velocity.z = move_toward(velocity.z, 0, velocidade_atual)
+		velocity.x = move_toward(velocity.x, 0, VELOCIDADE)
+		velocity.z = move_toward(velocity.z, 0, VELOCIDADE)
 
 	move_and_slide()
-	_processar_selecao_de_bloco()
-	_processar_mira_e_interacao(delta)
+	_animar_membros(delta)
+
+	if jogando:
+		_processar_selecao_de_bloco()
+		_processar_mira_e_interacao(delta)
+	elif _outline:
+		_outline.visible = false
+
+
+func _animar_membros(delta: float) -> void:
+	var velocidade_horizontal := Vector2(velocity.x, velocity.z).length()
+	if is_on_floor() and velocidade_horizontal > 0.1:
+		_fase_balanco += delta * velocidade_horizontal * 3.0
+	var fator: float = clamp(velocidade_horizontal / VELOCIDADE_CORRIDA, 0.0, 1.0)
+	var amplitude: float = fator * AMPLITUDE_MAX_BALANCO
+	var angulo: float = sin(_fase_balanco) * amplitude
+	_ombro_esquerdo.rotation.x = angulo
+	_ombro_direito.rotation.x = -angulo
+	_quadril_esquerdo.rotation.x = -angulo
+	_quadril_direito.rotation.x = angulo
 
 
 func _processar_selecao_de_bloco() -> void:

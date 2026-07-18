@@ -22,14 +22,21 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] Mundo 128×128×64 gera em <5s → **535ms** medido (`Time.get_ticks_msec()`, worldgen puro sem meshing)
   - [x] Editar bloco re-mesha só o chunk afetado (+ vizinho na borda) — testado (`test_chunk_manager.gd`)
   - [x] Testes de worldgen/chunk passando — **19/19** (GUT headless)
+  - [x] **CI verde real no GitHub Actions** — lint (13s) + test (1m49s) + export-web (1m40s), [run](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29658031161), artifact `web-build`
   - [ ] 60 FPS desktop / ≥30 FPS tablet — não medido com precisão nesta sessão (ferramenta de browser automatizado sofre throttling de aba em background, não reflete FPS real); confirmar na sessão de validação com o Murilo em dispositivo real
   - **Bug real encontrado e corrigido:** física do player rodava mais rápido que o meshing time-sliced e atravessava o mundo inteiro (caía até y≈0,9 em vez de parar em ~y=32). Corrigido com ADR-014 (player espera `mundo_gerado` antes de ligar a física) + teste de regressão.
 
-## F3 — Murilo (personagem)
-- **Objetivo:** substituir a cápsula pelo personagem jogável definitivo.
-- **Entregas:** modelo low-poly (pack CC0 adaptado), câmera 3ª pessoa orbital com colisão, animações (parado/andar/correr/pular/minerar), InputMap completo remapeável.
-- **Dependências:** F2 · **Estimativa:** 1–2 sessões · **Risco:** baixo
-- **Critérios:** controle responsivo (validação Murilo: "gostoso de andar?"); câmera nunca atravessa terreno.
+## F3 — Murilo (personagem + personalização)
+- **Objetivo:** substituir a cápsula pelo personagem jogável definitivo, com customização de aparência (escopo ampliado por decisão do usuário em 18/jul/2026 — ver ADR-015).
+- **Entregas:** modelo blocky low-poly (partes primitivas Godot: cabeça/cabelo/tronco/braços/pernas — sem pack externo nesta fase), animação procedural de membros (sem skeleton/AnimationPlayer), câmera 3ª pessoa orbital com colisão, InputMap completo remapeável, tela de criação de personagem (4 categorias de cor: pele/cabelo/camisa/calça) com preview ao vivo, novo estado `CHARACTER_CREATION` no GameState.
+- **Dependências:** F2 · **Estimativa:** 1–2 sessões · **Risco:** baixo (customização é só cor, não itens/geometria variável)
+- **Critérios — ✅ concluída em 18/jul/2026:**
+  - [x] Modelo blocky renderiza correto no navegador (cabeça/cabelo/tronco/braços/pernas, cores aplicadas nas partes certas) — confirmado via screenshot
+  - [x] Tela de criação de personagem aparece antes do jogo, com swatches corretos por categoria e botão Jogar
+  - [x] Criar personagem → escolher cores → jogar funciona ponta a ponta — verificado por teste (clique simulado em canvas WebGL não é confiável nesta ferramenta de automação, mesmo problema do F1/F2; validado via `test_character_creator.gd`: seleção de cor atualiza `GameState` + tinge o player ao vivo, confirmar muda estado pra PLAYING, movimento fica mudo fora de PLAYING)
+  - [x] Câmera nunca atravessa terreno (SpringArm3D já cuida disso, herdado do F1)
+  - [x] 25/25 testes GUT passando
+  - [ ] Controle responsivo (validação Murilo: "gostoso de andar?") — fica pra sessão de validação com o Murilo (não é algo que eu meço sozinho)
 
 ## F4 — Inventário + coleta + craft
 - **Objetivo:** fechar o loop minerar→coletar→craftar→construir.

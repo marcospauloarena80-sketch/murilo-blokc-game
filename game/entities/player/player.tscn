@@ -1,17 +1,25 @@
-[gd_scene load_steps=5 format=3 uid="uid://c0player001"]
+[gd_scene load_steps=8 format=3 uid="uid://c0player001"]
 
 [ext_resource type="Script" path="res://entities/player/player.gd" id="1"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
-radius = 0.4
-height = 1.8
+radius = 0.35
+height = 1.9
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
-radius = 0.4
-height = 1.8
+[sub_resource type="BoxMesh" id="BoxMesh_cabeca"]
+size = Vector3(0.45, 0.45, 0.45)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
-albedo_color = Color(0.9, 0.6, 0.2, 1)
+[sub_resource type="BoxMesh" id="BoxMesh_cabelo"]
+size = Vector3(0.47, 0.12, 0.47)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tronco"]
+size = Vector3(0.5, 0.7, 0.28)
+
+[sub_resource type="BoxMesh" id="BoxMesh_braco"]
+size = Vector3(0.22, 0.7, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_perna"]
+size = Vector3(0.24, 0.8, 0.24)
 
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1")
@@ -19,9 +27,47 @@ script = ExtResource("1")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("CapsuleMesh_1")
-surface_material_override/0 = SubResource("StandardMaterial3D_1")
+[node name="Corpo" type="Node3D" parent="."]
+
+[node name="Cabeca" type="MeshInstance3D" parent="Corpo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.775, 0)
+mesh = SubResource("BoxMesh_cabeca")
+
+[node name="Cabelo" type="MeshInstance3D" parent="Corpo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.06, 0)
+mesh = SubResource("BoxMesh_cabelo")
+
+[node name="Tronco" type="MeshInstance3D" parent="Corpo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+mesh = SubResource("BoxMesh_tronco")
+
+[node name="OmbroEsquerdo" type="Node3D" parent="Corpo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.37, 0.45, 0)
+
+[node name="BracoEsquerdo" type="MeshInstance3D" parent="Corpo/OmbroEsquerdo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.35, 0)
+mesh = SubResource("BoxMesh_braco")
+
+[node name="OmbroDireito" type="Node3D" parent="Corpo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37, 0.45, 0)
+
+[node name="BracoDireito" type="MeshInstance3D" parent="Corpo/OmbroDireito"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.35, 0)
+mesh = SubResource("BoxMesh_braco")
+
+[node name="QuadrilEsquerdo" type="Node3D" parent="Corpo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, -0.15, 0)
+
+[node name="PernaEsquerda" type="MeshInstance3D" parent="Corpo/QuadrilEsquerdo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+mesh = SubResource("BoxMesh_perna")
+
+[node name="QuadrilDireito" type="Node3D" parent="Corpo"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, -0.15, 0)
+
+[node name="PernaDireita" type="MeshInstance3D" parent="Corpo/QuadrilDireito"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+mesh = SubResource("BoxMesh_perna")
 
 [node name="CameraPivot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
