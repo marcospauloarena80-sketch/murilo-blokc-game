@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="BlockDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/worldgen/block_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = 1
+nome = "Grama"
+dureza = 0.6
+drop_id = "terra"
+cor = Color(0.31, 0.75, 0.31, 1)
+solido = true

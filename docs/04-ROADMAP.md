@@ -18,7 +18,12 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
 - **Objetivo:** o coração técnico: mundo gerado, minerável e construível.
 - **Entregas:** `core/worldgen` por seed (testado); ChunkManager + meshing com face culling e time-slicing; 6 `BlockDef`; quebrar/colocar com preview; colisão.
 - **Dependências:** F1 · **Estimativa:** 2–4 sessões · **Risco:** **alto** (performance de meshing na web — maior risco técnico do projeto)
-- **Critérios:** mundo 128×128×64 gera em <5s; editar bloco re-mesha só o chunk afetado sem hitch perceptível; 60 FPS no navegador desktop, ≥30 FPS no tablet; testes de worldgen/chunk passando.
+- **Critérios — ✅ concluída em 18/jul/2026:**
+  - [x] Mundo 128×128×64 gera em <5s → **535ms** medido (`Time.get_ticks_msec()`, worldgen puro sem meshing)
+  - [x] Editar bloco re-mesha só o chunk afetado (+ vizinho na borda) — testado (`test_chunk_manager.gd`)
+  - [x] Testes de worldgen/chunk passando — **19/19** (GUT headless)
+  - [ ] 60 FPS desktop / ≥30 FPS tablet — não medido com precisão nesta sessão (ferramenta de browser automatizado sofre throttling de aba em background, não reflete FPS real); confirmar na sessão de validação com o Murilo em dispositivo real
+  - **Bug real encontrado e corrigido:** física do player rodava mais rápido que o meshing time-sliced e atravessava o mundo inteiro (caía até y≈0,9 em vez de parar em ~y=32). Corrigido com ADR-014 (player espera `mundo_gerado` antes de ligar a física) + teste de regressão.
 
 ## F3 — Murilo (personagem)
 - **Objetivo:** substituir a cápsula pelo personagem jogável definitivo.

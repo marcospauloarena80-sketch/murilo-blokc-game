@@ -66,3 +66,8 @@ Formato curto: contexto → decisão → consequências. Toda decisão nova entr
 - **Contexto:** grid estilo Minecraft exige descoberta por tentativa e UI complexa; lista estilo livro de receitas é mais direta, mais acessível e trivial de testar.
 - **Decisão:** UI de craft em lista com receitas destacadas quando os ingredientes existem.
 - **Consequências:** receitas novas aparecem automaticamente; descoberta vem de desbloqueios (bancada, insígnias), não de adivinhação.
+
+## ADR-014 — Player espera o mundo terminar de gerar antes de ligar a física
+- **Contexto:** bug real encontrado na F2 — o meshing time-sliced (2 chunks/frame) tem custo de CPU real por chunk, então o clock de física (60Hz fixo) avança mais rápido que o idle process consegue mesh+colisão dos 64 chunks. O player caía do spawn e atravessava toda a coluna de terreno sólido (chegava a y≈0,9 em vez de parar na superfície ~y=32), porque a colisão do próprio chunk ainda não existia quando ele chegava lá. Descoberto via prints de debug comparando dados do mundo (corretos) com a física real (furava tudo).
+- **Decisão:** `Player._ready()` chama `set_physics_process(false)` imediatamente; só liga (`set_physics_process(true)`) quando `ChunkManager.mundo_gerado` dispara (ou de imediato se o mundo já estiver pronto).
+- **Consequências:** pequena pausa (imperceptível para mundo 8x8 chunks) antes do jogador começar a cair/andar; zero risco de atravessar geometria não meshada. Teste de regressão em `tests/integration/test_player_world_ready_gate.gd`. Se o mundo crescer (fases futuras), reavaliar se o tempo de espera incomoda — mitigação seria priorizar meshing dos chunks perto do spawn primeiro.
