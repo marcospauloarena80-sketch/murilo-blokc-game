@@ -1,0 +1,18 @@
+# Godot 4+ specific ignores
+game/.godot/
+# export_presets.cfg é versionado propositalmente (sem credenciais) — export
+# web reproduzível no CI depende dele.
+
+# Imported translations (automatically generated from CSV files)
+game/*.translation
+
+# Mono-specific ignores
+game/.mono/
+game/data_*/
+
+# System/tool-specific
+.DS_Store
+*.log
+
+# Build output local (o CI gera o dele próprio; não versionar binários)
+build/
