@@ -102,6 +102,7 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] Bug real de ordem de nós encontrado e corrigido: `CreatureSpawner` nunca spawnava nada porque `Player` vem depois dele em `main.tscn` — resolvido com busca preguiçosa (lazy) auto-curativa em vez de depender de ordem (ADR-020)
   - [x] 151/151 testes GUT (31 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu + main, 60/180 frames) sem erros; export web local ok
   - [x] Confirmado no navegador: menu renderiza, zero erros de console
+  - [x] CI verde (commit `b1ee8f1`): [run 29675878010](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29675878010) — lint 13s, test 4m35s, export-web 1m46s
   - [ ] Cubelins vagam sem travar/atravessar blocos **na prática** / noite perigosa mas justa — validação com o Murilo jogando
 
 ## F8 — Captura e batalha
