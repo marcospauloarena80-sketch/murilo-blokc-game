@@ -49,6 +49,7 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] Drops com atração magnética (`ItemDrop`: flutua, gira, atrai no raio de 3 e coleta em contato) + `LootSpawner` reagindo a `EventBus.block_broken`
   - [x] Hotbar real substitui o seletor numérico temporário do F2; ferramentas (`multiplicador_velocidade`) afetam velocidade de quebra (MB-020)
   - [x] Tela de inventário/craft (`inventory_screen.gd`, toggle pela tecla I) + HUD com hotbar sempre visível — decisão de fluxo em ADR-016
+  - [x] **CI verde real no GitHub Actions** — lint (17s) + test (2m2s) + export-web (2m38s), [run](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29671117638), artifact `web-build`
   - [ ] Validação de UX com o Murilo (fica pra sessão de validação, não é algo que eu meço sozinho)
 
 ## F5 — Save + HUD → **MVP 0.1 🎉**
