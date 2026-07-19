@@ -10,3 +10,4 @@ extends Resource
 @export var resultado_quantidade: int = 1
 @export var exige_bancada: bool = false
 @export var exige_fornalha: bool = false
+@export var requer_quest: String = ""  ## "" = sempre disponível (F9, docs/07-DECISOES.md ADR-022)

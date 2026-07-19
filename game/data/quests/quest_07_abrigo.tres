@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuestDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/quests/quest_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quest_id = "quest_07_abrigo"
+nome = "Um Teto Sobre a Cabeça"
+descricao = "Construa colocando 10 blocos de pedra."
+tipo = "construir"
+alvo_id = "3"
+quantidade_alvo = 10
+recompensa_itens = {
+"tocha": 2
+}
+proxima_quest_id = "quest_08_ferramentas_de_pedra"
+npc_id = "construtor"

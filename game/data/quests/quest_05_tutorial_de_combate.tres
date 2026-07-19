@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/quests/quest_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quest_id = "quest_05_tutorial_de_combate"
+nome = "Cuidado com a Noite"
+descricao = "Derrote um Pedrolim selvagem."
+tipo = "derrotar"
+alvo_id = "pedrolim"
+quantidade_alvo = 1
+proxima_quest_id = "quest_06_primeira_captura"
+npc_id = "lina"

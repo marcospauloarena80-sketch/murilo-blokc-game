@@ -6,12 +6,16 @@
 [ext_resource type="Script" path="res://systems/loot_spawner.gd" id="4"]
 [ext_resource type="Script" path="res://systems/torch_light_manager.gd" id="10"]
 [ext_resource type="Script" path="res://systems/creature_spawner.gd" id="11"]
+[ext_resource type="Script" path="res://systems/quest_tracker.gd" id="13"]
 [ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://ui/inventory_screen/inventory_screen.tscn" id="6"]
 [ext_resource type="Script" path="res://scenes/main.gd" id="7"]
 [ext_resource type="PackedScene" path="res://ui/pause_screen/pause_screen.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://ui/chest_screen/chest_screen.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://ui/battle_screen/battle_screen.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://ui/dialogue_screen/dialogue_screen.tscn" id="14"]
+[ext_resource type="PackedScene" path="res://ui/laboratorio_screen/laboratorio_screen.tscn" id="15"]
+[ext_resource type="PackedScene" path="res://entities/npcs/npc.tscn" id="16"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -43,6 +47,9 @@ script = ExtResource("10")
 [node name="CreatureSpawner" type="Node3D" parent="."]
 script = ExtResource("11")
 
+[node name="QuestTracker" type="Node" parent="."]
+script = ExtResource("13")
+
 [node name="Player" parent="." instance=ExtResource("1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 45, 64)
 
@@ -57,3 +64,23 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 45, 64)
 [node name="ChestScreen" parent="." instance=ExtResource("9")]
 
 [node name="BattleScreen" parent="." instance=ExtResource("12")]
+
+[node name="DialogueScreen" parent="." instance=ExtResource("14")]
+
+[node name="LaboratorioScreen" parent="." instance=ExtResource("15")]
+
+[node name="NpcLina" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 45, 66)
+npc_id_inicial = "lina"
+
+[node name="NpcRefugio" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70, 45, 64)
+npc_id_inicial = "refugio"
+
+[node name="NpcComerciante" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62, 45, 66)
+npc_id_inicial = "comerciante"
+
+[node name="NpcConstrutor" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 45, 62)
+npc_id_inicial = "construtor"

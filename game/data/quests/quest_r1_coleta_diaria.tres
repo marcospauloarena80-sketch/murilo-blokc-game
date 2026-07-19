@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuestDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/quests/quest_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quest_id = "quest_r1_coleta_diaria"
+nome = "Coleta Diária"
+descricao = "Colete 10 troncos de madeira."
+tipo = "coletar"
+alvo_id = "tronco"
+quantidade_alvo = 10
+recompensa_itens = {
+"tabua": 2
+}
+repetivel = true
+npc_id = "lina"

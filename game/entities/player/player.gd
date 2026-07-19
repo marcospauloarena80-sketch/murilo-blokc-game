@@ -257,6 +257,13 @@ func _processar_mira_e_interacao(delta: float) -> void:
 			EventBus.battle_started.emit(colisor)
 		return
 
+	if colisor != null and colisor.is_in_group("npc"):
+		_outline.visible = false
+		_progresso_quebra = 0.0
+		if Input.is_action_just_pressed("interagir"):
+			EventBus.dialogue_started.emit(colisor)
+		return
+
 	var normal: Vector3 = resultado["normal"]
 	var ponto_dentro: Vector3 = resultado["position"] - normal * 0.5
 	var bloco_mirado := Vector3i(

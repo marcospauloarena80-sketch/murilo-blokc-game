@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuestDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/quests/quest_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quest_id = "quest_r2_pedreiro"
+nome = "Pedreiro"
+descricao = "Construa colocando 5 blocos de pedra."
+tipo = "construir"
+alvo_id = "3"
+quantidade_alvo = 5
+recompensa_itens = {
+"tocha": 1
+}
+repetivel = true
+npc_id = "construtor"

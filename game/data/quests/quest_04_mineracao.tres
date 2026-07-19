@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/quests/quest_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quest_id = "quest_04_mineracao"
+nome = "Primeira Mineração"
+descricao = "Colete 5 blocos de pedra."
+tipo = "coletar"
+alvo_id = "pedra"
+quantidade_alvo = 5
+proxima_quest_id = "quest_05_tutorial_de_combate"
+npc_id = "lina"

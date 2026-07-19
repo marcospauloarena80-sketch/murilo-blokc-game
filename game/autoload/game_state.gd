@@ -7,6 +7,7 @@ enum State { BOOT, MENU, CHARACTER_CREATION, PLAYING, PAUSED, BATTLE }
 const DURACAO_CICLO_SEG: float = 900.0  ## dia 10min + noite 5min (GDD F6)
 const FRACAO_DIA: float = 600.0 / 900.0
 const MAX_EQUIPE: int = 3  ## docs/01-GDD.md §10 (F8)
+const PONTO_REFUGIO: Vector3 = Vector3(70, 45, 64)  ## Vilarejo Raiz, perto do spawn (F9)
 
 var current_state: State = State.BOOT
 var seed_atual: int = 0
@@ -26,6 +27,9 @@ var ponto_respawn: Vector3 = Vector3(64, 45, 64)
 var baus: Dictionary = {}  ## "x,y,z" -> InventoryModel(24)
 var equipe_cubelins: Array[CreatureInstance] = []  ## até MAX_EQUIPE (F8)
 var deposito_cubelins: Array[CreatureInstance] = []  ## excedente — vira tela do Laboratório na F9
+var quest_atual_id: String = ""  ## "" = nenhuma ativa (F9)
+var progresso_quest_atual: int = 0
+var quests_concluidas: Array[String] = []
 
 ## Preenchidos pelo menu antes de trocar pra scenes/main.tscn (F5).
 var veio_de_continuar: bool = false
@@ -52,6 +56,9 @@ func reiniciar_para_novo_jogo() -> void:
 	baus = {}
 	equipe_cubelins = []
 	deposito_cubelins = []
+	quest_atual_id = ""
+	progresso_quest_atual = 0
+	quests_concluidas = []
 	veio_de_continuar = false
 	delta_blocos_carregado = {}
 
@@ -102,6 +109,34 @@ func tem_cubelin_disponivel() -> bool:
 		if not cubelin.esta_desmaiado():
 			return true
 	return false
+
+
+func curar_no_refugio() -> void:
+	## "Cura rápida" do Refúgio (F9): jogador e equipe inteira, sempre.
+	vida_atual = vida_maxima
+	fome_atual = fome_maxima
+	energia_atual = energia_maxima
+	for cubelin: CreatureInstance in equipe_cubelins:
+		cubelin.vida_atual = cubelin.vida_maxima_efetiva()
+		cubelin.energia_atual = cubelin.energia_maxima_efetiva()
+
+
+func iniciar_quest(quest_id: String) -> void:
+	quest_atual_id = quest_id
+	progresso_quest_atual = 0
+
+
+func quest_atual() -> QuestDef:
+	if quest_atual_id == "":
+		return null
+	return QuestRegistry.get_quest(quest_atual_id)
+
+
+func quest_atual_completa() -> bool:
+	var quest := quest_atual()
+	if quest == null:
+		return false
+	return progresso_quest_atual >= quest.quantidade_alvo
 
 
 func obter_bau(chave: String) -> InventoryModel:

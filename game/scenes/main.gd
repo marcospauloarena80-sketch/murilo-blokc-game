@@ -26,6 +26,26 @@ func _ready() -> void:
 		_chunk_manager.aplicar_delta(GameState.delta_blocos_carregado)
 	_era_noite = GameState.eh_noite()
 	_atualizar_iluminacao()
+	_posicionar_npcs_no_chao()
+
+
+func _posicionar_npcs_no_chao() -> void:
+	## NPCs (F9) são colocados no .tscn com Y aproximado — reajusta pra
+	## superfície real do terreno gerado (sem arquitetura de vilarejo, ADR-022).
+	for no: Node in get_tree().get_nodes_in_group("npc"):
+		var npc := no as Node3D
+		var x: int = int(floor(npc.global_position.x))
+		var z: int = int(floor(npc.global_position.z))
+		var y := _altura_da_superficie_em(x, z)
+		if y >= 0:
+			npc.global_position.y = float(y) + 1.0
+
+
+func _altura_da_superficie_em(x: int, z: int) -> int:
+	for y in range(ChunkData.SIZE_V - 1, -1, -1):
+		if BlockRegistry.e_solido(_chunk_manager.get_block(Vector3i(x, y, z))):
+			return y
+	return -1
 
 
 func _process(delta: float) -> void:
@@ -122,6 +142,9 @@ func salvar_jogo() -> void:
 		"baus": _serializar_baus(),
 		"equipe_cubelins": _serializar_cubelins(GameState.equipe_cubelins),
 		"deposito_cubelins": _serializar_cubelins(GameState.deposito_cubelins),
+		"quest_atual_id": GameState.quest_atual_id,
+		"progresso_quest_atual": GameState.progresso_quest_atual,
+		"quests_concluidas": GameState.quests_concluidas,
 	}
 	SaveManager.salvar(dados)
 	EventBus.game_saved.emit()

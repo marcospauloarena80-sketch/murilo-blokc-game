@@ -78,6 +78,25 @@ func test_receitas_do_mvp_existem() -> void:
 	assert_eq(RecipeRegistry.todas().size(), ids.size())
 
 
+func test_receita_bloqueada_por_quest_nao_pode_craftar_mesmo_com_ingredientes() -> void:
+	var inv := InventoryModel.new(8)
+	inv.adicionar("tronco", 1)
+	var servico := CraftService.new()
+	var receita := RecipeRegistry.get_receita("tabua")
+	assert_false(servico.pode_craftar(inv, receita, false, false, false))
+	assert_false(servico.craftar(inv, receita, false, false, false))
+	assert_eq(inv.contar("tronco"), 1, "não deveria ter consumido nada")
+
+
+func test_receita_desbloqueada_por_padrao_continua_funcionando() -> void:
+	var inv := InventoryModel.new(8)
+	inv.adicionar("tronco", 1)
+	var servico := CraftService.new()
+	var receita := RecipeRegistry.get_receita("tabua")
+	assert_true(servico.pode_craftar(inv, receita, false))
+	assert_true(servico.craftar(inv, receita, false))
+
+
 func test_craftar_cadeia_completa_arvore_ate_picareta_pedra() -> void:
 	# Simula o loop MVP: madeira -> tábua -> graveto + pedra -> picareta de pedra
 	var inv := InventoryModel.new(24)

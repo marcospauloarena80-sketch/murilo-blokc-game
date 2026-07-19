@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="NpcDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/npcs/npc_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+npc_id = "comerciante"
+nome = "Comerciante"
+cor = Color(0.6, 0.45, 0.2, 1)
+linhas_dialogo = PackedStringArray("Quer fazer negócio?")
+troca_pede_item = "pedra"
+troca_pede_quantidade = 5
+troca_oferece_item = "ferrite"
+troca_oferece_quantidade = 1

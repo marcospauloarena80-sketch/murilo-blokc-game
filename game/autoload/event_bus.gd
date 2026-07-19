@@ -14,5 +14,8 @@ signal night_started
 signal battle_started(criatura: Creature)
 signal battle_ended
 signal creature_captured(species_id: String)
+signal creature_defeated(species_id: String)
 signal quest_completed(quest_id: String)
+signal dialogue_started(npc: Npc)
+signal laboratorio_requested
 signal game_saved

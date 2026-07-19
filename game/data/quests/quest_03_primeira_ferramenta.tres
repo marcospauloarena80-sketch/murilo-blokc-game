@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuestDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/quests/quest_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quest_id = "quest_03_primeira_ferramenta"
+nome = "Primeira Ferramenta"
+descricao = "Fabrique uma picareta de madeira."
+tipo = "craftar"
+alvo_id = "picareta_madeira"
+quantidade_alvo = 1
+recompensa_itens = {
+"cubo_captura": 2
+}
+proxima_quest_id = "quest_04_mineracao"
+npc_id = "lina"

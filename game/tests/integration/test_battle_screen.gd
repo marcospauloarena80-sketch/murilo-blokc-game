@@ -5,6 +5,7 @@ extends GutTest
 
 const BattleScreenScene := preload("res://ui/battle_screen/battle_screen.tscn")
 const CreatureScene := preload("res://entities/creatures/creature.tscn")
+const PlayerScene := preload("res://entities/player/player.tscn")
 
 
 func _criatura_selvagem(especie_id: String) -> Creature:
@@ -154,3 +155,22 @@ func test_vitoria_remove_a_criatura_do_mundo() -> void:
 
 	assert_eq(tela._batalha.resultado, BattleService.Resultado.VITORIA)
 	assert_true(criatura.is_queued_for_deletion())
+
+
+func test_fechar_apos_derrota_teleporta_pro_refugio_e_cura() -> void:
+	var equipe := CreatureInstance.new("brotinho", 1)
+	GameState.equipe_cubelins = [equipe]
+	var tela := BattleScreenScene.instantiate() as BattleScreen
+	add_child_autofree(tela)
+	tela._abrir(_criatura_selvagem("pedrolim"))
+	tela._batalha.selvagem_ataca("pedra_investida", 1.1)
+	assert_eq(tela._batalha.resultado, BattleService.Resultado.DERROTA)
+
+	var jogador := PlayerScene.instantiate() as Player
+	add_child_autofree(jogador)
+	jogador.global_position = Vector3(1, 1, 1)
+
+	tela._fechar()
+
+	assert_eq(jogador.global_position, GameState.PONTO_REFUGIO)
+	assert_false(equipe.esta_desmaiado())

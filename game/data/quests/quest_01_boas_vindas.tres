@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuestDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/quests/quest_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quest_id = "quest_01_boas_vindas"
+nome = "Boas-vindas ao Vale"
+descricao = "Colete 5 troncos de madeira."
+tipo = "coletar"
+alvo_id = "tronco"
+quantidade_alvo = 5
+recompensa_itens = {
+"graveto": 2
+}
+proxima_quest_id = "quest_02_madeira_util"
+npc_id = "lina"

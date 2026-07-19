@@ -56,12 +56,24 @@ func _abrir(criatura: Creature) -> void:
 
 
 func _fechar() -> void:
+	if _batalha != null and _batalha.resultado == BattleService.Resultado.DERROTA:
+		_enviar_pro_refugio()
 	_aberto = false
 	visible = false
 	_batalha = null
 	_criatura_mundo = null
 	GameState.mudar_estado(GameState.State.PLAYING)
 	EventBus.battle_ended.emit()
+
+
+func _enviar_pro_refugio() -> void:
+	## Derrota manda o jogador pro Refúgio, que já cura tudo (F9, ADR-022) —
+	## sem perda de itens, só o trajeto de volta (docs/01-GDD.md §11).
+	GameState.curar_no_refugio()
+	var jogador := get_tree().get_first_node_in_group("player") as Player
+	if jogador != null:
+		jogador.global_position = GameState.PONTO_REFUGIO
+		jogador.velocity = Vector3.ZERO
 
 
 func _pode_agir() -> bool:
@@ -226,6 +238,7 @@ func _atualizar() -> void:
 	_label_status.text = _texto_resultado()
 
 	if _batalha.resultado == BattleService.Resultado.VITORIA and _criatura_mundo != null:
+		EventBus.creature_defeated.emit(_batalha.selvagem.especie_id)
 		if is_instance_valid(_criatura_mundo):
 			_criatura_mundo.queue_free()
 		_criatura_mundo = null

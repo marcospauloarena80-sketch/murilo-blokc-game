@@ -67,8 +67,20 @@ func _criar_linha_receita(receita: RecipeDef) -> void:
 	_lista_receitas.add_child(linha)
 
 
+func _receita_desbloqueada(receita: RecipeDef) -> bool:
+	return receita.requer_quest == "" or GameState.quests_concluidas.has(receita.requer_quest)
+
+
 func _ao_craftar(receita: RecipeDef) -> void:
-	_craft_service.craftar(GameState.inventario_mochila, receita, GameState.tem_bancada())
+	var sucesso := _craft_service.craftar(
+		GameState.inventario_mochila,
+		receita,
+		GameState.tem_bancada(),
+		GameState.tem_fornalha(),
+		_receita_desbloqueada(receita)
+	)
+	if sucesso:
+		EventBus.recipe_crafted.emit(receita.id)
 	_atualizar()
 
 
@@ -93,5 +105,9 @@ func _atualizar() -> void:
 		var receita: RecipeDef = receitas[i]
 		var botao_craftar: Button = linha.get_child(1)
 		botao_craftar.disabled = not _craft_service.pode_craftar(
-			GameState.inventario_mochila, receita, GameState.tem_bancada()
+			GameState.inventario_mochila,
+			receita,
+			GameState.tem_bancada(),
+			GameState.tem_fornalha(),
+			_receita_desbloqueada(receita)
 		)

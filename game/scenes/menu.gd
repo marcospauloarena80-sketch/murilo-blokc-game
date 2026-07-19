@@ -46,6 +46,9 @@ func _ao_continuar() -> void:
 	GameState.baus = _dicionario_para_baus(dados.get("baus", {}))
 	GameState.equipe_cubelins = _array_para_cubelins(dados.get("equipe_cubelins", []))
 	GameState.deposito_cubelins = _array_para_cubelins(dados.get("deposito_cubelins", []))
+	GameState.quest_atual_id = String(dados.get("quest_atual_id", ""))
+	GameState.progresso_quest_atual = int(dados.get("progresso_quest_atual", 0))
+	GameState.quests_concluidas = _array_para_strings(dados.get("quests_concluidas", []))
 	GameState.veio_de_continuar = true
 
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
@@ -70,4 +73,11 @@ static func _array_para_cubelins(dados: Array) -> Array[CreatureInstance]:
 	var resultado: Array[CreatureInstance] = []
 	for item: Dictionary in dados:
 		resultado.append(CreatureInstance.carregar_serializado(item))
+	return resultado
+
+
+static func _array_para_strings(dados: Array) -> Array[String]:
+	var resultado: Array[String] = []
+	for item: String in dados:
+		resultado.append(item)
 	return resultado

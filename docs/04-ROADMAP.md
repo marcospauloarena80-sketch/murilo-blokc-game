@@ -129,7 +129,21 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
 - **Objetivo:** estrutura social e direção: o jogo passa a guiar o jogador.
 - **Entregas:** Vilarejo Raiz (Professora Lina + laboratório com armazém de Cubelins, Refúgio, comerciante, construtor); diálogos; `QuestDef` + cadeia principal (~8 missões) + 4 repetíveis.
 - **Dependências:** F8 · **Estimativa:** 3–4 sessões · **Risco:** médio (conteúdo dá trabalho)
-- **Critérios:** jogador novo chega às Arenas guiado só pelas missões, sem explicação externa.
+- **Critérios — ✅ concluída em 19/jul/2026:**
+  - [x] `QuestDef` (Resource data-driven) + `QuestRegistry` (padrão `BlockDef`/`ItemDef`) — tipos "coletar"/"construir"/"derrotar"/"capturar"/"craftar"
+  - [x] `GameState`: 1 missão ativa por vez (`quest_atual_id`/`progresso_quest_atual`) + `quests_concluidas`; `iniciar_quest()`/`quest_atual()`/`quest_atual_completa()`
+  - [x] `QuestTracker` liga progresso automático escutando `item_collected`/`creature_captured`/`creature_defeated`/`block_placed`/`recipe_crafted` (sinal `recipe_crafted` existia sem uso — finalmente emitido por `inventory_screen.gd`); entrega recompensa de itens e encadeia `proxima_quest_id` (ou zera progresso mantendo ativa se repetível)
+  - [x] `NpcDef` (Resource, campos aditivos por papel) + `NpcRegistry` + `Npc` entity (`StaticBody3D`, auto-configura por `npc_id_inicial`) — ADR-022
+  - [x] 4 NPCs no mundo perto do spawn: Lina (abre Laboratório), Refúgio (cura ao interagir), Comerciante (troca item por item), Construtor — ground-snap real via `_posicionar_npcs_no_chao()`
+  - [x] `DialogueScreen`: linhas sequenciais + aceitar/recusar missão + botão Laboratório + botão troca, condicionais por NPC
+  - [x] `LaboratorioScreen`: gerencia `equipe_cubelins` (≤3) ↔ `deposito_cubelins` (sem limite), listas reconstruídas dinamicamente
+  - [x] Refúgio vira destino real de derrota em batalha: `BattleScreen` teleporta + cura via `GameState.curar_no_refugio()`/`PONTO_REFUGIO` (fecha pendência do ADR-021)
+  - [x] 12 missões de conteúdo real: cadeia principal de 8 dividida em 2 sub-cadeias por NPC (Lina: 01→06, Construtor: 07→08), cada uma terminando numa repetível (r1/r2); r3/r4 existem como conteúdo testado, não amarradas a NPC ainda (ADR-022)
+  - [x] Bug real corrigido: `inventory_screen.gd` nunca passava `tem_fornalha()` pro `CraftService` — receitas com fornalha eram impossíveis de craftar pela UI real apesar dos testes unitários passarem
+  - [x] 300/300 testes GUT (50 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu 60 frames + main 180 frames) sem erros; export web local ok
+  - [x] Confirmado no navegador: menu renderiza, zero erros de console
+  - [ ] CI verde — verificação em andamento
+  - [ ] Validação com o Murilo jogando: chegar às Arenas guiado só pelas missões, sem explicação externa
 
 ## F10 — Arenas Elementais
 - **Objetivo:** objetivo de longo prazo e final de jogo.

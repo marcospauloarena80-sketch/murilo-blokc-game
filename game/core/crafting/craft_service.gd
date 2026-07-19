@@ -5,8 +5,14 @@ extends RefCounted
 
 
 func pode_craftar(
-	inventario: InventoryModel, receita: RecipeDef, tem_bancada: bool, tem_fornalha: bool = false
+	inventario: InventoryModel,
+	receita: RecipeDef,
+	tem_bancada: bool,
+	tem_fornalha: bool = false,
+	receita_desbloqueada: bool = true
 ) -> bool:
+	if not receita_desbloqueada:
+		return false
 	if receita.exige_bancada and not tem_bancada:
 		return false
 	if receita.exige_fornalha and not tem_fornalha:
@@ -19,9 +25,13 @@ func pode_craftar(
 
 
 func craftar(
-	inventario: InventoryModel, receita: RecipeDef, tem_bancada: bool, tem_fornalha: bool = false
+	inventario: InventoryModel,
+	receita: RecipeDef,
+	tem_bancada: bool,
+	tem_fornalha: bool = false,
+	receita_desbloqueada: bool = true
 ) -> bool:
-	if not pode_craftar(inventario, receita, tem_bancada, tem_fornalha):
+	if not pode_craftar(inventario, receita, tem_bancada, tem_fornalha, receita_desbloqueada):
 		return false
 	for item_id: String in receita.ingredientes:
 		inventario.remover(item_id, int(receita.ingredientes[item_id]))

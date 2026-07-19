@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NpcDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/npcs/npc_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+npc_id = "construtor"
+nome = "Construtor"
+cor = Color(0.5, 0.5, 0.55, 1)
+linhas_dialogo = PackedStringArray("Sempre há algo pra construir por aqui.", "Topa ajudar com uma obra?")
+oferece_quest_id = "quest_07_abrigo"

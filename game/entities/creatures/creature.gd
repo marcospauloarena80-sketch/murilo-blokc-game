@@ -56,6 +56,7 @@ func _physics_process(delta: float) -> void:
 func receber_dano(quantidade: int) -> void:
 	vida_atual = max(0, vida_atual - quantidade)
 	if vida_atual <= 0:
+		EventBus.creature_defeated.emit(especie.especie_id)
 		queue_free()
 
 

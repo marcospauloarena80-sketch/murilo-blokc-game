@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuestDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/quests/quest_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quest_id = "quest_08_ferramentas_de_pedra"
+nome = "Ferramentas de Pedra"
+descricao = "Fabrique uma picareta de pedra."
+tipo = "craftar"
+alvo_id = "picareta_pedra"
+quantidade_alvo = 1
+recompensa_itens = {
+"maca_assada": 3
+}
+proxima_quest_id = "quest_r2_pedreiro"
+npc_id = "construtor"
