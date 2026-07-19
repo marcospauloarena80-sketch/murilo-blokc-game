@@ -149,7 +149,21 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
 - **Objetivo:** objetivo de longo prazo e final de jogo.
 - **Entregas:** 4 Arenas com Guardiões (equipes crescentes); insígnias com recompensas (receitas/áreas); roster completo (12 espécies, 6 evoluções); cristal dourado + tier final; desafio final do Coração Dourado.
 - **Dependências:** F9 · **Estimativa:** 2–3 sessões · **Risco:** baixo (sistemas prontos; é conteúdo)
-- **Critérios:** campanha completável do zero ao desafio final; dificuldade crescente validada com Murilo.
+- **Critérios — ✅ concluída em 19/jul/2026:**
+  - [x] Roster completo: 12 espécies (2 por elemento) + 6 evoluções = 18 formas — 8 espécies novas com `pode_ser_selvagem=false` (sem bioma até a F11, ADR-023)
+  - [x] Cristal dourado: novo minério (bloco id 12, raríssimo — `CHANCE_CRISTAL_DOURADO`) + item, mesmo mecanismo de ferrite/carvão no `WorldGenerator`
+  - [x] `GameState.insignias_conquistadas` (idempotente) persistido no save (mesmo padrão de `quests_concluidas`)
+  - [x] `RecipeDef.requer_insignia` + 4 receitas exclusivas (picareta/espada de cristal dourado, poção maior, Cubo de Captura Avançado tier 2) — `CaptureService` já aceitava tier crescente desde a F8 (ADR-021), só usado agora
+  - [x] `ArenaDef`/`ArenaRegistry`: 4 Arenas (Pedra/Brasa/Gota/Faísca, 2-3 membros cada) + Guardião do Coração Dourado (3 membros, exige as 4 insígnias)
+  - [x] `GuardianBattle` (pura, RefCounted) — encadeia `BattleService` pelos membros do Guardião sem alterar a lógica de batalha da F8; equipe/vida/XP do jogador continuam entre as lutas do mesmo Guardião
+  - [x] 5 NPCs Guardião no mundo + `DialogueScreen` ganha botão "Desafiar" (bloqueado com mensagem até ter as 4 insígnias, no caso do Coração Dourado)
+  - [x] `BattleScreen` integra `GuardianBattle`: sem Cubo/Fugir contra Guardião (GDD: "impossível vs Guardiões"); vitória sobre o último membro concede a insígnia
+  - [x] `quest_r3_cacador`/`quest_r4_capturador` (órfãs desde a F9) ganham dono: oferecidas pelos Guardiões de Faísca/Pedra
+  - [x] `CreditsScreen` ao vencer o Coração Dourado — fecha "campanha completável do zero ao desafio final" sem antecipar o balanceamento geral da F12
+  - [x] 351/351 testes GUT (58 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu 60 frames + main 180 frames) sem erros; export web local ok
+  - [x] Confirmado no navegador: menu renderiza, zero erros de console
+  - [ ] CI verde — verificação em andamento
+  - [ ] Dificuldade crescente das 4 Arenas + desafio final validada com o Murilo jogando
 
 ## F11 — Mundo completo
 - **Objetivo:** riqueza: todos os biomas, clima, áudio.

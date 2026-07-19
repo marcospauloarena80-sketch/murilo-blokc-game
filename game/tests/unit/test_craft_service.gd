@@ -72,6 +72,10 @@ func test_receitas_do_mvp_existem() -> void:
 		"espada_pedra",
 		"cubo_captura",
 		"pocao_cura",
+		"picareta_cristal_dourado",
+		"espada_cristal_dourado",
+		"pocao_maior",
+		"cubo_captura_avancado",
 	]
 	for id: String in ids:
 		assert_not_null(RecipeRegistry.get_receita(id), "receita %s deveria existir" % id)

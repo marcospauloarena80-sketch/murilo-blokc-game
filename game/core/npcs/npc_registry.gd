@@ -9,6 +9,11 @@ static var _npcs: Dictionary = {
 	"refugio": preload("res://data/npcs/refugio.tres"),
 	"comerciante": preload("res://data/npcs/comerciante.tres"),
 	"construtor": preload("res://data/npcs/construtor.tres"),
+	"guardiao_pedra": preload("res://data/npcs/guardiao_pedra.tres"),
+	"guardiao_brasa": preload("res://data/npcs/guardiao_brasa.tres"),
+	"guardiao_gota": preload("res://data/npcs/guardiao_gota.tres"),
+	"guardiao_faisca": preload("res://data/npcs/guardiao_faisca.tres"),
+	"guardiao_final": preload("res://data/npcs/guardiao_final.tres"),
 }
 
 

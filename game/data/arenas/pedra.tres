@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ArenaDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/arenas/arena_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+arena_id = "pedra"
+elemento = "pedra"
+guardiao_nome = "Renato"
+equipe = [{
+"especie_id": "pedrolim",
+"nivel": 8
+}, {
+"especie_id": "rochedo",
+"nivel": 10
+}]
+recompensa_receita = "picareta_cristal_dourado"

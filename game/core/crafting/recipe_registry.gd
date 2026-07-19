@@ -20,6 +20,10 @@ static var _receitas: Array[RecipeDef] = [
 	preload("res://data/recipes/espada_pedra.tres"),
 	preload("res://data/recipes/cubo_captura.tres"),
 	preload("res://data/recipes/pocao_cura.tres"),
+	preload("res://data/recipes/picareta_cristal_dourado.tres"),
+	preload("res://data/recipes/espada_cristal_dourado.tres"),
+	preload("res://data/recipes/pocao_maior.tres"),
+	preload("res://data/recipes/cubo_captura_avancado.tres"),
 ]
 
 

@@ -79,6 +79,21 @@ func test_minerio_aparece_no_subsolo_em_area_grande_o_suficiente() -> void:
 	assert_true(achou_ferrite, "ferrite deveria aparecer em alguma das 16 chunks varridas")
 
 
+func test_cristal_dourado_aparece_em_area_grande_o_suficiente() -> void:
+	## Bem mais raro que ferrite/carvão (F10, ADR-023) — precisa de mais chunks.
+	var gerador := WorldGenerator.new(2024)
+	var achou := false
+	for cx in range(8):
+		for cz in range(8):
+			var chunk := gerador.gerar_chunk(cx, cz)
+			for x in range(16):
+				for z in range(16):
+					for y in range(20):
+						if chunk.get_block(x, y, z) == 12:
+							achou = true
+	assert_true(achou, "cristal dourado deveria aparecer em alguma das 64 chunks varridas")
+
+
 func test_minerio_so_substitui_pedra_nao_terra_nem_grama() -> void:
 	var gerador := WorldGenerator.new(5)
 	var chunk := gerador.gerar_chunk(0, 0)

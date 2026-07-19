@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/crafting/recipe_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "pocao_maior"
+nome = "Poção Maior"
+ingredientes = {
+"maca": 2,
+"cristal_dourado": 1
+}
+resultado_id = "pocao_maior"
+resultado_quantidade = 1
+exige_bancada = false
+exige_fornalha = true
+requer_insignia = "gota"

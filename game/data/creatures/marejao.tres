@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CreatureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/creatures/creature_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+especie_id = "marejao"
+nome = "Marejão"
+elemento = "gota"
+cor = Color(0.08, 0.25, 0.55, 1)
+vida_maxima = 18
+velocidade = 1.3
+raio_deteccao = 6.5
+eh_agressivo = true
+dano_contato = 3
+periodo_spawn = "noite"
+pode_ser_selvagem = false
+forca = 13
+guarda = 15
+agilidade = 6
+energia_maxima = 16
+aprendizado_ataques = {
+1: "gota_respingo",
+12: "gota_mare"
+}

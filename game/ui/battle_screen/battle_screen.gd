@@ -14,6 +14,8 @@ const NIVEL_SELVAGEM_PADRAO: int = 5
 
 var _batalha: BattleService
 var _criatura_mundo: Creature
+var _guardiao: GuardianBattle
+var _arena: ArenaDef
 var _aberto: bool = false
 var _botoes_ataque: Array[Button] = []
 
@@ -43,12 +45,26 @@ func _ready() -> void:
 	_botao_fechar.pressed.connect(_fechar)
 
 	EventBus.battle_started.connect(_abrir)
+	EventBus.arena_challenge_started.connect(_abrir_arena)
 
 
 func _abrir(criatura: Creature) -> void:
 	_criatura_mundo = criatura
+	_guardiao = null
+	_arena = null
 	var selvagem := CreatureInstance.new(criatura.especie.especie_id, NIVEL_SELVAGEM_PADRAO)
 	_batalha = BattleService.new(GameState.equipe_cubelins, selvagem)
+	_aberto = true
+	visible = true
+	GameState.mudar_estado(GameState.State.PAUSED)
+	_atualizar()
+
+
+func _abrir_arena(arena_id: String) -> void:
+	_criatura_mundo = null
+	_arena = ArenaRegistry.get_arena(arena_id)
+	_guardiao = GuardianBattle.new(GameState.equipe_cubelins, _arena.construir_equipe())
+	_batalha = _guardiao.batalha_atual
 	_aberto = true
 	visible = true
 	GameState.mudar_estado(GameState.State.PAUSED)
@@ -58,10 +74,18 @@ func _abrir(criatura: Creature) -> void:
 func _fechar() -> void:
 	if _batalha != null and _batalha.resultado == BattleService.Resultado.DERROTA:
 		_enviar_pro_refugio()
+	if (
+		_arena != null
+		and _arena.arena_id == "coracao_dourado"
+		and _batalha.resultado == BattleService.Resultado.VITORIA
+	):
+		EventBus.game_completed.emit()
 	_aberto = false
 	visible = false
 	_batalha = null
 	_criatura_mundo = null
+	_guardiao = null
+	_arena = null
 	GameState.mudar_estado(GameState.State.PLAYING)
 	EventBus.battle_ended.emit()
 
@@ -91,7 +115,20 @@ func _ao_atacar(indice_ataque: int) -> void:
 		return
 	var ataque_id: String = conhecidos[indice_ataque]
 	_resolver_turno_com_ataque(ataque_id)
+	_avancar_guardiao_se_necessario()
 	_atualizar()
+
+
+func _avancar_guardiao_se_necessario() -> void:
+	## Vitória contra 1 membro do Guardião não encerra a luta se houver mais
+	## (F10, ADR-023) — encadeia pro próximo mantendo a equipe do jogador.
+	if _guardiao == null or _batalha.resultado != BattleService.Resultado.VITORIA:
+		return
+	if _guardiao.tem_proximo_adversario():
+		_guardiao.avancar_para_proximo()
+		_batalha = _guardiao.batalha_atual
+	elif not GameState.tem_insignia(_arena.arena_id):
+		GameState.conquistar_insignia(_arena.arena_id)
 
 
 func _resolver_turno_com_ataque(ataque_id: String) -> void:
@@ -161,11 +198,14 @@ func _ao_usar_cubo() -> void:
 
 
 func _usar_cubo_com_sorteio(sorteio: float) -> void:
-	if not _pode_agir():
+	if not _pode_agir() or _guardiao != null:
 		return
-	if not _consumir_item("cubo_captura"):
-		return
-	var sucesso := CaptureService.tentar_capturar(_batalha.selvagem, 1, sorteio)
+	var tier := 2
+	if not _consumir_item("cubo_captura_avancado"):
+		tier = 1
+		if not _consumir_item("cubo_captura"):
+			return
+	var sucesso := CaptureService.tentar_capturar(_batalha.selvagem, tier, sorteio)
 	if sucesso:
 		_batalha.capturar()
 		GameState.adicionar_cubelin(_batalha.selvagem)
@@ -182,7 +222,7 @@ func _ao_fugir() -> void:
 
 
 func _fugir_com_sorteio(sorteio: float) -> void:
-	if not _pode_agir():
+	if not _pode_agir() or _guardiao != null:
 		return
 	var sucesso := _batalha.tentar_fugir(sorteio)
 	if not sucesso:
@@ -213,10 +253,23 @@ func _atualizar() -> void:
 			]
 		)
 	var selvagem := _batalha.selvagem
-	_label_selvagem.text = (
-		"%s selvagem — HP %d/%d"
-		% [selvagem.especie_def().nome, selvagem.vida_atual, selvagem.vida_maxima_efetiva()]
-	)
+	if _guardiao != null:
+		_label_selvagem.text = (
+			"%s (%d/%d): %s — HP %d/%d"
+			% [
+				_arena.guardiao_nome,
+				_guardiao.indice_guardiao + 1,
+				_guardiao.equipe_guardiao.size(),
+				selvagem.especie_def().nome,
+				selvagem.vida_atual,
+				selvagem.vida_maxima_efetiva()
+			]
+		)
+	else:
+		_label_selvagem.text = (
+			"%s selvagem — HP %d/%d"
+			% [selvagem.especie_def().nome, selvagem.vida_atual, selvagem.vida_maxima_efetiva()]
+		)
 
 	for i in range(4):
 		var botao: Button = _botoes_ataque[i]
@@ -229,9 +282,15 @@ func _atualizar() -> void:
 			botao.visible = false
 
 	var em_andamento := _batalha.resultado == BattleService.Resultado.EM_ANDAMENTO
+	var eh_guardiao := _guardiao != null
 	_botao_trocar.disabled = not em_andamento or _proximo_indice_disponivel() == -1
 	_botao_pocao.disabled = not pode_agir or _contar_item("pocao_cura") <= 0
-	_botao_cubo.disabled = not pode_agir or _contar_item("cubo_captura") <= 0
+	_botao_cubo.visible = not eh_guardiao
+	_botao_cubo.disabled = (
+		not pode_agir
+		or (_contar_item("cubo_captura") <= 0 and _contar_item("cubo_captura_avancado") <= 0)
+	)
+	_botao_fugir.visible = not eh_guardiao
 	_botao_fugir.disabled = not pode_agir
 
 	_botao_fechar.visible = not em_andamento

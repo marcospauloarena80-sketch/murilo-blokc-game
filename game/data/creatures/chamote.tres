@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/creatures/creature_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+especie_id = "chamote"
+nome = "Chamote"
+elemento = "brasa"
+cor = Color(0.85, 0.3, 0.1, 1)
+vida_maxima = 10
+velocidade = 1.6
+raio_deteccao = 7.0
+eh_agressivo = true
+dano_contato = 2
+periodo_spawn = "noite"
+pode_ser_selvagem = false
+forca = 9
+guarda = 7
+agilidade = 6
+energia_maxima = 11
+aprendizado_ataques = {
+1: "brasa_labareda",
+12: "brasa_combustao"
+}
+nivel_evolucao = 12
+especie_evolucao = "chamarao"

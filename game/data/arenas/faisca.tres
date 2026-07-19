@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ArenaDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/arenas/arena_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+arena_id = "faisca"
+elemento = "faisca"
+guardiao_nome = "Diego"
+equipe = [{
+"especie_id": "faiscolt",
+"nivel": 14
+}, {
+"especie_id": "centelha",
+"nivel": 15
+}, {
+"especie_id": "faiscozap",
+"nivel": 17
+}]
+recompensa_receita = "cubo_captura_avancado"

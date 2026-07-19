@@ -27,6 +27,11 @@ static var _itens: Dictionary = {
 	"espada_pedra": preload("res://data/items/espada_pedra.tres"),
 	"cubo_captura": preload("res://data/items/cubo_captura.tres"),
 	"pocao_cura": preload("res://data/items/pocao_cura.tres"),
+	"cristal_dourado": preload("res://data/items/cristal_dourado.tres"),
+	"picareta_cristal_dourado": preload("res://data/items/picareta_cristal_dourado.tres"),
+	"espada_cristal_dourado": preload("res://data/items/espada_cristal_dourado.tres"),
+	"pocao_maior": preload("res://data/items/pocao_maior.tres"),
+	"cubo_captura_avancado": preload("res://data/items/cubo_captura_avancado.tres"),
 }
 
 

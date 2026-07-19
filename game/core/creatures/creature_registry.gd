@@ -10,6 +10,18 @@ static var _criaturas: Dictionary = {
 	"faiscolt": preload("res://data/creatures/faiscolt.tres"),
 	"pedrargo": preload("res://data/creatures/pedrargo.tres"),
 	"faiscozap": preload("res://data/creatures/faiscozap.tres"),
+	"brasita": preload("res://data/creatures/brasita.tres"),
+	"gotelo": preload("res://data/creatures/gotelo.tres"),
+	"rochedo": preload("res://data/creatures/rochedo.tres"),
+	"centelha": preload("res://data/creatures/centelha.tres"),
+	"folhaz": preload("res://data/creatures/folhaz.tres"),
+	"folharaiz": preload("res://data/creatures/folharaiz.tres"),
+	"brisim": preload("res://data/creatures/brisim.tres"),
+	"brisura": preload("res://data/creatures/brisura.tres"),
+	"chamote": preload("res://data/creatures/chamote.tres"),
+	"chamarao": preload("res://data/creatures/chamarao.tres"),
+	"maruja": preload("res://data/creatures/maruja.tres"),
+	"marejao": preload("res://data/creatures/marejao.tres"),
 }
 
 

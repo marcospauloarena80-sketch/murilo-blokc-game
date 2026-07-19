@@ -10,6 +10,7 @@ const CHANCE_ARVORE: float = 0.04
 const MARGEM_ARVORE: int = 2
 const CHANCE_FERRITE: float = 0.018
 const CHANCE_CARVAO: float = 0.035
+const CHANCE_CRISTAL_DOURADO: float = 0.003  ## raro — tier de ferramenta final (F10, ADR-023)
 const SEMENTE_MINERIO: int = 7919  ## offset pra descorrelacionar do hash de árvores
 
 var _seed: int
@@ -36,6 +37,8 @@ func _bloco_de_subsolo(world_x: int, y: int, world_z: int) -> int:
 		return 11  # ferrite
 	if h < CHANCE_FERRITE + CHANCE_CARVAO:
 		return 10  # carvao
+	if h < CHANCE_FERRITE + CHANCE_CARVAO + CHANCE_CRISTAL_DOURADO:
+		return 12  # cristal dourado
 	return 3  # pedra
 
 

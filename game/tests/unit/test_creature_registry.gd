@@ -9,8 +9,9 @@ func test_4_especies_iniciais_existem() -> void:
 		assert_not_null(CreatureRegistry.get_creature(id), "espécie '%s' deveria existir" % id)
 
 
-func test_6_especies_no_total_incluindo_evolucoes() -> void:
-	assert_eq(CreatureRegistry.todos_os_ids().size(), 6)
+func test_18_especies_no_total_incluindo_evolucoes() -> void:
+	## 12 espécies base + 6 evoluções = 18 (F10, docs/01-GDD.md §9/§13)
+	assert_eq(CreatureRegistry.todos_os_ids().size(), 18)
 
 
 func test_formas_evoluidas_nao_spawnam_selvagens() -> void:

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/creatures/creature_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+especie_id = "brisim"
+nome = "Brisim"
+elemento = "vento"
+cor = Color(0.75, 0.85, 0.9, 1)
+vida_maxima = 6
+velocidade = 2.8
+raio_deteccao = 6.5
+eh_agressivo = false
+dano_contato = 0
+periodo_spawn = "dia"
+pode_ser_selvagem = false
+forca = 4
+guarda = 5
+agilidade = 10
+energia_maxima = 11
+aprendizado_ataques = {
+1: "vento_rajada",
+6: "vento_vendaval"
+}
+nivel_evolucao = 10
+especie_evolucao = "brisura"

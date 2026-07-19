@@ -14,3 +14,4 @@ extends Resource
 @export var troca_pede_quantidade: int = 0
 @export var troca_oferece_item: String = ""
 @export var troca_oferece_quantidade: int = 0
+@export var abre_arena: String = ""  ## Guardião de Arena (F10) — "" = não é Guardião

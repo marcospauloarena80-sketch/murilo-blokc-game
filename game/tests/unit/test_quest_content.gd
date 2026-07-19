@@ -42,6 +42,18 @@ func test_construtor_oferece_uma_missao_que_existe_de_verdade() -> void:
 	assert_not_null(QuestRegistry.get_quest(construtor.oferece_quest_id))
 
 
+func test_guardiao_pedra_oferece_a_missao_repetivel_de_captura() -> void:
+	var guardiao := NpcRegistry.get_npc("guardiao_pedra")
+	assert_eq(guardiao.oferece_quest_id, "quest_r4_capturador")
+	assert_not_null(QuestRegistry.get_quest(guardiao.oferece_quest_id))
+
+
+func test_guardiao_faisca_oferece_a_missao_repetivel_de_caca() -> void:
+	var guardiao := NpcRegistry.get_npc("guardiao_faisca")
+	assert_eq(guardiao.oferece_quest_id, "quest_r3_cacador")
+	assert_not_null(QuestRegistry.get_quest(guardiao.oferece_quest_id))
+
+
 func test_cadeia_de_lina_termina_numa_repetivel() -> void:
 	var atual := QuestRegistry.get_quest("quest_01_boas_vindas")
 	var guarda := 0

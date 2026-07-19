@@ -72,6 +72,10 @@ text = "Laboratório"
 layout_mode = 2
 text = "Trocar"
 
+[node name="BotaoDesafiar" type="Button" parent="Control/Painel/Margem/VBox/Acoes"]
+layout_mode = 2
+text = "Desafiar"
+
 [node name="BotaoFechar" type="Button" parent="Control/Painel/Margem/VBox/Acoes"]
 layout_mode = 2
 text = "Fechar"

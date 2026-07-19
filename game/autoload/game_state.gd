@@ -30,6 +30,7 @@ var deposito_cubelins: Array[CreatureInstance] = []  ## excedente — vira tela 
 var quest_atual_id: String = ""  ## "" = nenhuma ativa (F9)
 var progresso_quest_atual: int = 0
 var quests_concluidas: Array[String] = []
+var insignias_conquistadas: Array[String] = []  ## ids das Arenas vencidas (F10)
 
 ## Preenchidos pelo menu antes de trocar pra scenes/main.tscn (F5).
 var veio_de_continuar: bool = false
@@ -59,6 +60,7 @@ func reiniciar_para_novo_jogo() -> void:
 	quest_atual_id = ""
 	progresso_quest_atual = 0
 	quests_concluidas = []
+	insignias_conquistadas = []
 	veio_de_continuar = false
 	delta_blocos_carregado = {}
 
@@ -137,6 +139,15 @@ func quest_atual_completa() -> bool:
 	if quest == null:
 		return false
 	return progresso_quest_atual >= quest.quantidade_alvo
+
+
+func conquistar_insignia(arena_id: String) -> void:
+	if not insignias_conquistadas.has(arena_id):
+		insignias_conquistadas.append(arena_id)
+
+
+func tem_insignia(arena_id: String) -> bool:
+	return insignias_conquistadas.has(arena_id)
 
 
 func obter_bau(chave: String) -> InventoryModel:

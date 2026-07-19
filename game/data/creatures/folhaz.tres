@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/creatures/creature_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+especie_id = "folhaz"
+nome = "Folhaz"
+elemento = "mato"
+cor = Color(0.35, 0.6, 0.3, 1)
+vida_maxima = 9
+velocidade = 1.4
+raio_deteccao = 5.5
+eh_agressivo = false
+dano_contato = 0
+periodo_spawn = "dia"
+pode_ser_selvagem = false
+forca = 6
+guarda = 8
+agilidade = 5
+energia_maxima = 12
+aprendizado_ataques = {
+1: "mato_investida",
+6: "mato_raizes"
+}
+nivel_evolucao = 10
+especie_evolucao = "folharaiz"

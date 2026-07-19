@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" path="res://ui/dialogue_screen/dialogue_screen.tscn" id="14"]
 [ext_resource type="PackedScene" path="res://ui/laboratorio_screen/laboratorio_screen.tscn" id="15"]
 [ext_resource type="PackedScene" path="res://entities/npcs/npc.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://ui/credits_screen/credits_screen.tscn" id="17"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -69,6 +70,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 45, 64)
 
 [node name="LaboratorioScreen" parent="." instance=ExtResource("15")]
 
+[node name="CreditsScreen" parent="." instance=ExtResource("17")]
+
 [node name="NpcLina" parent="." instance=ExtResource("16")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 45, 66)
 npc_id_inicial = "lina"
@@ -84,3 +87,23 @@ npc_id_inicial = "comerciante"
 [node name="NpcConstrutor" parent="." instance=ExtResource("16")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 45, 62)
 npc_id_inicial = "construtor"
+
+[node name="NpcGuardiaoPedra" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 74, 45, 74)
+npc_id_inicial = "guardiao_pedra"
+
+[node name="NpcGuardiaoBrasa" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 45, 74)
+npc_id_inicial = "guardiao_brasa"
+
+[node name="NpcGuardiaoGota" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 45, 54)
+npc_id_inicial = "guardiao_gota"
+
+[node name="NpcGuardiaoFaisca" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 74, 45, 54)
+npc_id_inicial = "guardiao_faisca"
+
+[node name="NpcGuardiaoFinal" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 45, 80)
+npc_id_inicial = "guardiao_final"

@@ -213,6 +213,64 @@ func test_troca_consome_o_item_pedido_e_da_o_oferecido() -> void:
 	assert_eq(GameState.inventario_mochila.contar("ferrite"), 1)
 
 
+func test_guardiao_mostra_desafiar_apos_as_linhas() -> void:
+	var def := NpcDef.new()
+	def.linhas_dialogo = ["Oi"]
+	def.abre_arena = "pedra"
+	var tela := DialogueScreenScene.instantiate() as DialogueScreen
+	add_child_autofree(tela)
+	tela._abrir(_npc_com_def(def))
+
+	tela._ao_avancar()
+
+	assert_true(tela._botao_desafiar.visible)
+
+
+func test_desafiar_emite_o_sinal_com_o_arena_id_e_fecha() -> void:
+	var def := NpcDef.new()
+	def.linhas_dialogo = []
+	def.abre_arena = "pedra"
+	var tela := DialogueScreenScene.instantiate() as DialogueScreen
+	add_child_autofree(tela)
+	tela._abrir(_npc_com_def(def))
+
+	var recebido: Array = [""]
+	var callback := func(arena_id: String) -> void: recebido[0] = arena_id
+	EventBus.arena_challenge_started.connect(callback)
+
+	tela._ao_desafiar()
+
+	EventBus.arena_challenge_started.disconnect(callback)
+	assert_eq(recebido[0], "pedra")
+	assert_false(tela.visible)
+
+
+func test_guardiao_final_bloqueado_sem_as_4_insignias() -> void:
+	GameState.insignias_conquistadas = ["pedra"]
+	var def := NpcDef.new()
+	def.linhas_dialogo = []
+	def.abre_arena = "coracao_dourado"
+	var tela := DialogueScreenScene.instantiate() as DialogueScreen
+	add_child_autofree(tela)
+	tela._abrir(_npc_com_def(def))
+
+	assert_false(tela._botao_desafiar.visible)
+	GameState.insignias_conquistadas = []
+
+
+func test_guardiao_final_liberado_com_as_4_insignias() -> void:
+	GameState.insignias_conquistadas = ["pedra", "brasa", "gota", "faisca"]
+	var def := NpcDef.new()
+	def.linhas_dialogo = []
+	def.abre_arena = "coracao_dourado"
+	var tela := DialogueScreenScene.instantiate() as DialogueScreen
+	add_child_autofree(tela)
+	tela._abrir(_npc_com_def(def))
+
+	assert_true(tela._botao_desafiar.visible)
+	GameState.insignias_conquistadas = []
+
+
 func test_troca_sem_item_suficiente_nao_faz_nada() -> void:
 	GameState.inventario_mochila.adicionar("pedra", 2)
 	var def := NpcDef.new()

@@ -68,7 +68,13 @@ func _criar_linha_receita(receita: RecipeDef) -> void:
 
 
 func _receita_desbloqueada(receita: RecipeDef) -> bool:
-	return receita.requer_quest == "" or GameState.quests_concluidas.has(receita.requer_quest)
+	var quest_ok := (
+		receita.requer_quest == "" or GameState.quests_concluidas.has(receita.requer_quest)
+	)
+	var insignia_ok := (
+		receita.requer_insignia == "" or GameState.tem_insignia(receita.requer_insignia)
+	)
+	return quest_ok and insignia_ok
 
 
 func _ao_craftar(receita: RecipeDef) -> void:

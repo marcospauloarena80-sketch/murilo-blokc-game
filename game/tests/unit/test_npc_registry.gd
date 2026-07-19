@@ -2,10 +2,11 @@ extends GutTest
 ## Ver docs/01-GDD.md §12 e docs/07-DECISOES.md ADR-022.
 
 
-func test_4_npcs_existem() -> void:
+func test_9_npcs_existem() -> void:
+	## 4 da F9 + 5 Guardiões de Arena da F10 (docs/07-DECISOES.md ADR-023)
 	for id: String in ["lina", "refugio", "comerciante", "construtor"]:
 		assert_not_null(NpcRegistry.get_npc(id), "NPC '%s' deveria existir" % id)
-	assert_eq(NpcRegistry.todos_os_ids().size(), 4)
+	assert_eq(NpcRegistry.todos_os_ids().size(), 9)
 
 
 func test_lina_abre_laboratorio_e_oferece_missao() -> void:

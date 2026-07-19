@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CreatureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/creatures/creature_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+especie_id = "centelha"
+nome = "Centelha"
+elemento = "faisca"
+cor = Color(0.9, 0.7, 0.15, 1)
+vida_maxima = 9
+velocidade = 3.2
+raio_deteccao = 8.5
+eh_agressivo = true
+dano_contato = 1
+periodo_spawn = "noite"
+pode_ser_selvagem = false
+forca = 8
+guarda = 6
+agilidade = 9
+energia_maxima = 11
+aprendizado_ataques = {
+1: "faisca_choque",
+10: "faisca_sobrecarga"
+}

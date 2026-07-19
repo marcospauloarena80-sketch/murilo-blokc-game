@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ArenaDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/arenas/arena_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+arena_id = "coracao_dourado"
+elemento = ""
+guardiao_nome = "Guardião do Coração Dourado"
+equipe = [{
+"especie_id": "pedrargo",
+"nivel": 20
+}, {
+"especie_id": "folharaiz",
+"nivel": 20
+}, {
+"especie_id": "brisura",
+"nivel": 20
+}]
+requer_todas_insignias = true

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/creatures/creature_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+especie_id = "maruja"
+nome = "Maruja"
+elemento = "gota"
+cor = Color(0.15, 0.4, 0.75, 1)
+vida_maxima = 11
+velocidade = 1.4
+raio_deteccao = 6.5
+eh_agressivo = true
+dano_contato = 2
+periodo_spawn = "noite"
+pode_ser_selvagem = false
+forca = 8
+guarda = 9
+agilidade = 5
+energia_maxima = 12
+aprendizado_ataques = {
+1: "gota_respingo",
+12: "gota_mare"
+}
+nivel_evolucao = 12
+especie_evolucao = "marejao"

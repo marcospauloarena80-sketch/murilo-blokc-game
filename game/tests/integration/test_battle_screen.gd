@@ -122,6 +122,24 @@ func test_usar_cubo_com_sorteio_alto_falha_mas_consome_o_cubo() -> void:
 	assert_eq(GameState.equipe_cubelins.size(), 1, "captura falhou, ninguém novo na equipe")
 
 
+func test_usar_cubo_prefere_o_avancado_quando_ambos_existem() -> void:
+	## Cubo avançado (tier 2) tem chance melhor de captura (F10, ADR-023) —
+	## a tela usa o avançado primeiro se o jogador tiver os dois.
+	GameState.equipe_cubelins = [CreatureInstance.new("pedrolim", 20)]
+	GameState.inventario_hotbar.adicionar("cubo_captura", 1)
+	GameState.inventario_hotbar.adicionar("cubo_captura_avancado", 1)
+	var tela := BattleScreenScene.instantiate() as BattleScreen
+	add_child_autofree(tela)
+	tela._abrir(_criatura_selvagem("brotinho"))
+
+	tela._usar_cubo_com_sorteio(0.0)
+
+	assert_eq(GameState.inventario_hotbar.contar("cubo_captura_avancado"), 0)
+	assert_eq(
+		GameState.inventario_hotbar.contar("cubo_captura"), 1, "normal não deveria ser tocado"
+	)
+
+
 func test_fugir_com_sorteio_baixo_sucesso() -> void:
 	GameState.equipe_cubelins = [CreatureInstance.new("pedrolim", 20)]
 	var tela := BattleScreenScene.instantiate() as BattleScreen
