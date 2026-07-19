@@ -1,10 +1,15 @@
 class_name TouchControls
 extends CanvasLayer
 ## Controles touch (F12, ADR-025): joystick flutuante (esquerda) pra
-## movimento + arrasto (direita) pra olhar + botões de ação. Só aparece
-## quando há tela sensível ao toque (DisplayServer.is_touchscreen_available).
-## Suporta os dois dedos ao mesmo tempo (mover E olhar juntos), por isso usa
-## InputEventScreenTouch/Drag direto — mouse emulado só dá 1 ponteiro.
+## movimento + arrasto (direita) pra olhar + botões de ação.
+## Joystick/arrasto só respondem a toque de verdade (tela sensível ao
+## toque) — suportam os dois dedos ao mesmo tempo (mover E olhar juntos),
+## por isso usam InputEventScreenTouch/Drag direto (mouse emulado só dá 1
+## ponteiro). Os botões de ação (pular/quebrar/colocar/interagir/inventário)
+## são Button comuns e ficam visíveis em qualquer plataforma — mouse/trackpad
+## clicam neles igual — porque clicar-e-segurar pelo teclado/mouse pode falhar
+## em navegador dependendo do hardware (achado real: "quebrar" não respondia
+## no Chrome/Mac com trackpad mesmo com o mapa de input correto, ADR-026).
 
 const RAIO_JOYSTICK: float = 60.0
 const SENSIBILIDADE_ARRASTO: float = 0.006
@@ -24,7 +29,6 @@ var _jogador: Node3D
 
 
 func _ready() -> void:
-	visible = DisplayServer.is_touchscreen_available()
 	$Joystick.visible = false
 	_conectar_botao(_botao_pular, "pular")
 	_conectar_botao(_botao_quebrar, "quebrar")
@@ -44,7 +48,7 @@ func _garantir_jogador() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not visible:
+	if not DisplayServer.is_touchscreen_available():
 		return
 	if event is InputEventScreenTouch:
 		_ao_tocar(event)

@@ -34,6 +34,18 @@ func _arrasto(index: int, posicao: Vector2, relativo: Vector2) -> InputEventScre
 	return evento
 
 
+func test_botoes_de_acao_ficam_visiveis_mesmo_sem_tela_de_toque() -> void:
+	## Regressão: clicar-e-segurar (mouse/trackpad) pra minerar podia falhar
+	## dependendo do navegador/hardware (achado real: Chrome/Mac, ADR-026) —
+	## os botões de ação são Button comuns, então ficam visíveis em qualquer
+	## plataforma como alternativa clicável, não só quando há tela de toque.
+	var controles := TouchControlsScene.instantiate() as TouchControls
+	add_child_autofree(controles)
+
+	assert_true(controles.visible, "os botões de ação devem ficar visíveis")
+	assert_false(controles.get_node("Joystick").visible, "joystick continua só sob demanda")
+
+
 func test_tocar_no_lado_esquerdo_mostra_o_joystick() -> void:
 	var controles := TouchControlsScene.instantiate() as TouchControls
 	add_child_autofree(controles)
