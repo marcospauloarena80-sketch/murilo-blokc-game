@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/crafting/recipe_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cubo_captura"
+nome = "Cubo de Captura"
+ingredientes = {
+"ferrite": 2,
+"carvao": 3
+}
+resultado_id = "cubo_captura"
+resultado_quantidade = 1
+exige_bancada = true

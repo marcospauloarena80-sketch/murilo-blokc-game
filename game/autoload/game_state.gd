@@ -6,6 +6,7 @@ enum State { BOOT, MENU, CHARACTER_CREATION, PLAYING, PAUSED, BATTLE }
 
 const DURACAO_CICLO_SEG: float = 900.0  ## dia 10min + noite 5min (GDD F6)
 const FRACAO_DIA: float = 600.0 / 900.0
+const MAX_EQUIPE: int = 3  ## docs/01-GDD.md §10 (F8)
 
 var current_state: State = State.BOOT
 var seed_atual: int = 0
@@ -23,6 +24,8 @@ var energia_maxima: int = 20
 var ciclo_dia_noite_seg: float = DURACAO_CICLO_SEG * 0.25  ## começa de manhã
 var ponto_respawn: Vector3 = Vector3(64, 45, 64)
 var baus: Dictionary = {}  ## "x,y,z" -> InventoryModel(24)
+var equipe_cubelins: Array[CreatureInstance] = []  ## até MAX_EQUIPE (F8)
+var deposito_cubelins: Array[CreatureInstance] = []  ## excedente — vira tela do Laboratório na F9
 
 ## Preenchidos pelo menu antes de trocar pra scenes/main.tscn (F5).
 var veio_de_continuar: bool = false
@@ -47,6 +50,8 @@ func reiniciar_para_novo_jogo() -> void:
 	ciclo_dia_noite_seg = DURACAO_CICLO_SEG * 0.25
 	ponto_respawn = Vector3(64, 45, 64)
 	baus = {}
+	equipe_cubelins = []
+	deposito_cubelins = []
 	veio_de_continuar = false
 	delta_blocos_carregado = {}
 
@@ -82,6 +87,21 @@ func tem_fornalha() -> bool:
 func eh_noite() -> bool:
 	var fase: float = fmod(ciclo_dia_noite_seg, DURACAO_CICLO_SEG) / DURACAO_CICLO_SEG
 	return fase >= FRACAO_DIA
+
+
+func adicionar_cubelin(instancia: CreatureInstance) -> void:
+	## Equipe até MAX_EQUIPE; excedente vai pro depósito (Laboratório na F9).
+	if equipe_cubelins.size() < MAX_EQUIPE:
+		equipe_cubelins.append(instancia)
+	else:
+		deposito_cubelins.append(instancia)
+
+
+func tem_cubelin_disponivel() -> bool:
+	for cubelin: CreatureInstance in equipe_cubelins:
+		if not cubelin.esta_desmaiado():
+			return true
+	return false
 
 
 func obter_bau(chave: String) -> InventoryModel:

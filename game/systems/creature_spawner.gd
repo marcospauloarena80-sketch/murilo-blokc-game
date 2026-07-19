@@ -67,7 +67,7 @@ func _especies_do_periodo(periodo: String) -> Array[CreatureDef]:
 	var resultado: Array[CreatureDef] = []
 	for id: String in CreatureRegistry.todos_os_ids():
 		var def: CreatureDef = CreatureRegistry.get_creature(id)
-		if def.periodo_spawn == periodo:
+		if def.periodo_spawn == periodo and def.pode_ser_selvagem:
 			resultado.append(def)
 	return resultado
 

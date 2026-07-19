@@ -14,3 +14,11 @@ raio_deteccao = 6.0
 eh_agressivo = false
 dano_contato = 0
 periodo_spawn = "dia"
+forca = 4
+guarda = 4
+agilidade = 9
+energia_maxima = 10
+aprendizado_ataques = {
+1: "vento_rajada",
+6: "vento_vendaval"
+}

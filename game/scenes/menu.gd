@@ -44,6 +44,8 @@ func _ao_continuar() -> void:
 	GameState.posicao_salva = _array_para_vector3(dados.get("jogador_posicao", []))
 	GameState.ponto_respawn = _array_para_vector3(dados.get("ponto_respawn", []))
 	GameState.baus = _dicionario_para_baus(dados.get("baus", {}))
+	GameState.equipe_cubelins = _array_para_cubelins(dados.get("equipe_cubelins", []))
+	GameState.deposito_cubelins = _array_para_cubelins(dados.get("deposito_cubelins", []))
 	GameState.veio_de_continuar = true
 
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
@@ -61,4 +63,11 @@ static func _dicionario_para_baus(dados: Dictionary) -> Dictionary:
 		var inventario := InventoryModel.new(24)
 		inventario.carregar_serializado(dados[chave])
 		resultado[chave] = inventario
+	return resultado
+
+
+static func _array_para_cubelins(dados: Array) -> Array[CreatureInstance]:
+	var resultado: Array[CreatureInstance] = []
+	for item: Dictionary in dados:
+		resultado.append(CreatureInstance.carregar_serializado(item))
 	return resultado

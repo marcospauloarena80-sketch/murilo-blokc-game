@@ -25,6 +25,8 @@ static var _itens: Dictionary = {
 	"maca_assada": preload("res://data/items/maca_assada.tres"),
 	"fornalha": preload("res://data/items/fornalha.tres"),
 	"espada_pedra": preload("res://data/items/espada_pedra.tres"),
+	"cubo_captura": preload("res://data/items/cubo_captura.tres"),
+	"pocao_cura": preload("res://data/items/pocao_cura.tres"),
 }
 
 

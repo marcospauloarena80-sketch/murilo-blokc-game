@@ -14,3 +14,13 @@ raio_deteccao = 7.0
 eh_agressivo = true
 dano_contato = 2
 periodo_spawn = "noite"
+forca = 8
+guarda = 9
+agilidade = 3
+energia_maxima = 10
+aprendizado_ataques = {
+1: "pedra_investida",
+12: "pedra_avalanche"
+}
+nivel_evolucao = 12
+especie_evolucao = "pedrargo"

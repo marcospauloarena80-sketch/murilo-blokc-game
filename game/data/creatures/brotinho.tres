@@ -14,3 +14,11 @@ raio_deteccao = 5.0
 eh_agressivo = false
 dano_contato = 0
 periodo_spawn = "dia"
+forca = 4
+guarda = 6
+agilidade = 5
+energia_maxima = 10
+aprendizado_ataques = {
+1: "mato_investida",
+6: "mato_raizes"
+}

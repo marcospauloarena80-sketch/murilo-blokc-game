@@ -169,3 +169,43 @@ func test_tocha_colocada_reacende_ao_continuar() -> void:
 
 	var gerenciador: TorchLightManager = main2.get_node("TorchLightManager")
 	assert_eq(gerenciador.get_child_count(), 1, "tocha salva deveria reacender ao continuar")
+
+
+func test_equipe_e_deposito_de_cubelins_sobrevivem_a_salvar_sair_continuar() -> void:
+	var menu := MenuScene.instantiate()
+	add_child_autofree(menu)
+	menu._ao_novo_jogo()
+	remove_child(menu)
+	menu.free()
+
+	var main1 := MainScene.instantiate()
+	add_child_autofree(main1)
+	_drenar_fila(main1)
+
+	var pedrolim := CreatureInstance.new("pedrolim", 7)
+	pedrolim.xp = 42
+	pedrolim.vida_atual = 3
+	GameState.adicionar_cubelin(pedrolim)
+	for i in range(GameState.MAX_EQUIPE):
+		GameState.adicionar_cubelin(CreatureInstance.new("brotinho", 1))
+
+	main1.call("salvar_jogo")
+	remove_child(main1)
+	main1.free()
+
+	GameState.reiniciar_para_novo_jogo()
+
+	var menu2 := MenuScene.instantiate()
+	add_child_autofree(menu2)
+	menu2._ao_continuar()
+	remove_child(menu2)
+	menu2.free()
+
+	assert_eq(GameState.equipe_cubelins.size(), GameState.MAX_EQUIPE)
+	assert_eq(GameState.deposito_cubelins.size(), 1)
+
+	var restaurado: CreatureInstance = GameState.equipe_cubelins[0]
+	assert_eq(restaurado.especie_id, "pedrolim")
+	assert_eq(restaurado.nivel, 7)
+	assert_eq(restaurado.xp, 42)
+	assert_eq(restaurado.vida_atual, 3)

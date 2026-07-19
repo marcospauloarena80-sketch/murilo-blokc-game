@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="CreatureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/creatures/creature_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+especie_id = "pedrargo"
+nome = "Pedrargo"
+elemento = "pedra"
+cor = Color(0.3, 0.28, 0.26, 1)
+vida_maxima = 22
+velocidade = 1.0
+raio_deteccao = 7.0
+eh_agressivo = true
+dano_contato = 3
+periodo_spawn = "noite"
+pode_ser_selvagem = false
+forca = 13
+guarda = 14
+agilidade = 4
+energia_maxima = 14
+aprendizado_ataques = {
+1: "pedra_investida",
+12: "pedra_avalanche"
+}
+nivel_evolucao = 0
+especie_evolucao = ""

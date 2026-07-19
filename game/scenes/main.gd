@@ -120,6 +120,8 @@ func salvar_jogo() -> void:
 		"jogador_posicao": _vector3_para_array(_player.global_position),
 		"ponto_respawn": _vector3_para_array(GameState.ponto_respawn),
 		"baus": _serializar_baus(),
+		"equipe_cubelins": _serializar_cubelins(GameState.equipe_cubelins),
+		"deposito_cubelins": _serializar_cubelins(GameState.deposito_cubelins),
 	}
 	SaveManager.salvar(dados)
 	EventBus.game_saved.emit()
@@ -129,6 +131,13 @@ func _serializar_baus() -> Dictionary:
 	var resultado: Dictionary = {}
 	for chave: String in GameState.baus:
 		resultado[chave] = GameState.baus[chave].serializar()
+	return resultado
+
+
+func _serializar_cubelins(lista: Array[CreatureInstance]) -> Array:
+	var resultado: Array = []
+	for instancia: CreatureInstance in lista:
+		resultado.append(instancia.serializar())
 	return resultado
 
 

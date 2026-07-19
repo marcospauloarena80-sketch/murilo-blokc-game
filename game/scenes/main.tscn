@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://scenes/main.gd" id="7"]
 [ext_resource type="PackedScene" path="res://ui/pause_screen/pause_screen.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://ui/chest_screen/chest_screen.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://ui/battle_screen/battle_screen.tscn" id="12"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -54,3 +55,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 45, 64)
 [node name="PauseScreen" parent="." instance=ExtResource("8")]
 
 [node name="ChestScreen" parent="." instance=ExtResource("9")]
+
+[node name="BattleScreen" parent="." instance=ExtResource("12")]

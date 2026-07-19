@@ -253,6 +253,8 @@ func _processar_mira_e_interacao(delta: float) -> void:
 		if Input.is_action_just_pressed("quebrar") and _tempo_desde_ataque >= INTERVALO_ATAQUE_SEG:
 			_tempo_desde_ataque = 0.0
 			(colisor as Creature).receber_dano(_dano_de_ataque_atual())
+		elif Input.is_action_just_pressed("interagir") and GameState.tem_cubelin_disponivel():
+			EventBus.battle_started.emit(colisor)
 		return
 
 	var normal: Vector3 = resultado["normal"]

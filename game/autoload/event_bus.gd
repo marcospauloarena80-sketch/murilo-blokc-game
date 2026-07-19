@@ -11,7 +11,7 @@ signal recipe_crafted(recipe_id: String)
 signal player_died
 signal day_started
 signal night_started
-signal battle_started
+signal battle_started(criatura: Creature)
 signal battle_ended
 signal creature_captured(species_id: String)
 signal quest_completed(quest_id: String)

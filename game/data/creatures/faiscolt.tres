@@ -14,3 +14,13 @@ raio_deteccao = 8.0
 eh_agressivo = true
 dano_contato = 1
 periodo_spawn = "noite"
+forca = 7
+guarda = 5
+agilidade = 8
+energia_maxima = 10
+aprendizado_ataques = {
+1: "faisca_choque",
+10: "faisca_sobrecarga"
+}
+nivel_evolucao = 10
+especie_evolucao = "faiscozap"

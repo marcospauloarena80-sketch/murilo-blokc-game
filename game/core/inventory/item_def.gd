@@ -14,3 +14,5 @@ extends Resource
 @export var restaura_fome: int = 0
 @export var eh_arma: bool = false
 @export var dano_ataque: int = 0
+@export var eh_pocao: bool = false
+@export var cura_pontos: int = 0

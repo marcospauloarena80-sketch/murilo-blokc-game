@@ -8,6 +8,8 @@ static var _criaturas: Dictionary = {
 	"ventim": preload("res://data/creatures/ventim.tres"),
 	"pedrolim": preload("res://data/creatures/pedrolim.tres"),
 	"faiscolt": preload("res://data/creatures/faiscolt.tres"),
+	"pedrargo": preload("res://data/creatures/pedrargo.tres"),
+	"faiscozap": preload("res://data/creatures/faiscozap.tres"),
 }
 
 

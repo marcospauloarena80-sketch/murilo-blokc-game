@@ -109,7 +109,20 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
 - **Objetivo:** o segundo pilar do jogo: capturar, batalhar, evoluir.
 - **Entregas:** `battle_service` puro (turnos) + testes completos; cena de batalha; Cubo de Captura; equipe (3); XP/níveis/evolução (2 espécies evoluem); 12+ ataques; poções.
 - **Dependências:** F7 · **Estimativa:** 3–4 sessões · **Risco:** médio (design/balanceamento)
-- **Critérios:** capturar → treinar → evoluir funciona ponta a ponta; batalha justa nos 2 sentidos; lógica de batalha 100% coberta por testes.
+- **Critérios — ✅ concluída em 19/jul/2026:**
+  - [x] `BattleService` puro (turnos 1x1): ordem por agilidade, dano = poder×(força/guarda)×elemento×variação(0,9–1,1), vantagem elemental (2 triângulos, ×1,5/×0,75), ações atacar/trocar/item/fugir, vitória/derrota — toda aleatoriedade injetada por parâmetro (testável sem mockar RNG)
+  - [x] `CreatureInstance` (nível/XP/vida/energia/ataques conhecidos mutáveis) distinto do `CreatureDef` (template imutável); stats crescem ~10%/nível
+  - [x] 12 ataques (2 por elemento × 6 elementos) via `AttackDef`/`AttackRegistry`
+  - [x] Cubo de Captura (ferrite+carvão, substitui o "cristal" nunca implementado — ADR-021) + `CaptureService` puro (chance = f(hp%, tier))
+  - [x] Equipe até 3 (`GameState.equipe_cubelins`) + depósito de excedente (`deposito_cubelins`, vira tela do Laboratório na F9) — persistidos no save
+  - [x] XP por vitória, nível máx. 30, cura total ao subir de nível
+  - [x] 2 espécies evoluem: Pedrolim→Pedrargo (nível 12), Faiscolt→Faiscozap (nível 10) — muda espécie, stats e destrava ataque
+  - [x] Poção de Cura (2 maçã, fornalha) usável em batalha
+  - [x] `BattleScreen`: HP dos dois lados, até 4 botões de ataque, trocar/poção/cubo/fugir; abre pausando o mundo ao interagir (E) com uma criatura selvagem quando a equipe tem ao menos 1 Cubelin apto — sem equipe, o combate de espada da F7 continua funcionando sem regressão
+  - [x] 240/240 testes GUT (41 scripts) — cobertura extensa da lógica de batalha (triângulo elemental, dano, ordem de turno, troca, fuga, poção, captura, XP/evolução) + testes de orquestração da tela
+  - [x] gdformat/gdlint limpos no projeto inteiro; smoke headless (menu + main, 60/180 frames) sem erros; export web local ok
+  - [x] Confirmado no navegador: menu renderiza, zero erros de console
+  - [ ] Validação com o Murilo jogando: capturar → treinar → evoluir sentido como justo e satisfatório na prática (balanceamento fino fica pra depois do playtest)
 
 ## F9 — Vilarejo, NPCs e missões
 - **Objetivo:** estrutura social e direção: o jogo passa a guiar o jogador.
