@@ -34,7 +34,7 @@ jobs:
       - name: Import project
         run: godot --headless --path $GAME_DIR --import
       - name: Run GUT tests
-        run: godot --headless --path $GAME_DIR -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
+        run: godot --headless --audio-driver Dummy --path $GAME_DIR -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
 
   export-web:
     runs-on: ubuntu-latest
