@@ -62,3 +62,19 @@ func test_captura_e_liberacao_do_mouse_nao_geram_erro() -> void:
 	player._liberar_mouse_se_necessario(true)
 
 	assert_true(true, "chamadas não deveriam gerar erro")
+
+
+func test_capturar_mouse_repetido_nao_gera_erro() -> void:
+	## Regressão: chamar _talvez_capturar_mouse() de novo enquanto já está
+	## capturado (ex.: segurar clique pra quebrar bloco, que reemite
+	## InputEventMouseButton) não deve pedir Pointer Lock de novo — isso
+	## reconfirma o gesto no navegador à toa e pode soltar o estado do botão
+	## no meio da ação ("quebrar" parava de funcionar no Chrome/Mac, ADR-026).
+	var player := PlayerScene.instantiate() as Player
+	add_child_autofree(player)
+	GameState.mudar_estado(GameState.State.PLAYING)
+
+	for i in range(5):
+		player._talvez_capturar_mouse()
+
+	assert_true(true, "chamadas repetidas não deveriam gerar erro")

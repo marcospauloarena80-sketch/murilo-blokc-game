@@ -124,9 +124,17 @@ func _talvez_capturar_mouse() -> void:
 	## (ex.: a cada frame) trava a exportação web, porque a API de Pointer
 	## Lock do navegador exige um gesto real do usuário e rejeita chamadas
 	## fora disso (achado real reportado pelo usuário na F12, ADR-025).
+	## Só pede se AINDA não está capturado — repetir o pedido em todo clique
+	## (inclusive os cliques de segurar pra quebrar bloco) faz o navegador
+	## reconfirmar o Pointer Lock à toa, o que pode soltar/reiniciar o estado
+	## do botão do mouse no meio da ação (achado real: "quebrar" não
+	## funcionava no Chrome/Mac mesmo com o mapa de input correto, ADR-026).
 	if DisplayServer.is_touchscreen_available():
 		return  # toque olha por arrasto de tela, não por captura de mouse
-	if GameState.current_state == GameState.State.PLAYING:
+	if (
+		GameState.current_state == GameState.State.PLAYING
+		and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED
+	):
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
