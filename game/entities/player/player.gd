@@ -14,12 +14,17 @@ const FORCA_PULO: float = 4.5
 const GRAVIDADE: float = 9.8
 const ALCANCE: float = 5.0
 const AMPLITUDE_MAX_BALANCO: float = 0.6
+const SEGUNDOS_POR_PONTO_ENERGIA: float = 2.0
+const ALTURA_QUEDA_SEGURA: float = 3.0
 
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
 var _progresso_quebra: float = 0.0
 var _bloco_em_quebra: Vector3i = Vector3i(0, -999, 0)
 var _fase_balanco: float = 0.0
+var _tempo_energia: float = 0.0
+var _estava_no_ar: bool = false
+var _y_inicio_queda: float = 0.0
 
 var _mat_pele: StandardMaterial3D
 var _mat_cabelo: StandardMaterial3D
@@ -99,6 +104,13 @@ func _criar_outline() -> MeshInstance3D:
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
+		if not _estava_no_ar:
+			_estava_no_ar = true
+			_y_inicio_queda = global_position.y
+	elif _estava_no_ar:
+		_estava_no_ar = false
+		if GameState.current_state == GameState.State.PLAYING:
+			_aplicar_dano_de_queda(_y_inicio_queda - global_position.y)
 
 	var jogando := GameState.current_state == GameState.State.PLAYING
 
@@ -110,9 +122,13 @@ func _physics_process(delta: float) -> void:
 			"mover_esquerda", "mover_direita", "mover_frente", "mover_tras"
 		)
 		var direcao := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-		var velocidade_atual := (
-			VELOCIDADE_CORRIDA if Input.is_action_pressed("correr") else VELOCIDADE
+		var esta_correndo := (
+			Input.is_action_pressed("correr")
+			and direcao != Vector3.ZERO
+			and GameState.energia_atual > 0
 		)
+		var velocidade_atual := VELOCIDADE_CORRIDA if esta_correndo else VELOCIDADE
+		_atualizar_energia(delta, esta_correndo)
 
 		if direcao:
 			velocity.x = direcao.x * velocidade_atual
@@ -130,6 +146,8 @@ func _physics_process(delta: float) -> void:
 	if jogando:
 		_processar_selecao_de_bloco()
 		_processar_mira_e_interacao(delta)
+		if Input.is_action_just_pressed("comer"):
+			_tentar_comer()
 	elif _outline:
 		_outline.visible = false
 
@@ -151,6 +169,38 @@ func _processar_selecao_de_bloco() -> void:
 	for i in range(1, 9):
 		if Input.is_action_just_pressed("hotbar_%d" % i):
 			GameState.hotbar_selecionado = i - 1
+
+
+func _aplicar_dano_de_queda(altura_queda: float) -> void:
+	var excesso: float = altura_queda - ALTURA_QUEDA_SEGURA
+	if excesso <= 0.0:
+		return
+	GameState.vida_atual = max(0, GameState.vida_atual - int(floor(excesso)))
+
+
+func _atualizar_energia(delta: float, esta_correndo: bool) -> void:
+	_tempo_energia += delta
+	if _tempo_energia < SEGUNDOS_POR_PONTO_ENERGIA:
+		return
+	_tempo_energia = 0.0
+	if esta_correndo:
+		GameState.energia_atual = max(0, GameState.energia_atual - 1)
+	else:
+		GameState.energia_atual = min(GameState.energia_maxima, GameState.energia_atual + 1)
+
+
+func _tentar_comer() -> void:
+	var item_id: String = GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
+	if item_id == "":
+		return
+	var def := ItemRegistry.get_item(item_id)
+	if def == null or not def.eh_comida:
+		return
+	if GameState.fome_atual >= GameState.fome_maxima:
+		return
+	if not GameState.inventario_hotbar.remover(item_id, 1):
+		return
+	GameState.fome_atual = min(GameState.fome_maxima, GameState.fome_atual + def.restaura_fome)
 
 
 func _multiplicador_ferramenta_atual() -> float:
@@ -209,6 +259,20 @@ func _processar_mira_e_interacao(delta: float) -> void:
 		var adjacente := bloco_mirado + Vector3i(normal.round())
 		if _chunk_manager.get_block(adjacente) == BlockRegistry.AR_ID:
 			_tentar_colocar_bloco(adjacente)
+
+	if Input.is_action_just_pressed("interagir"):
+		_processar_interacao(bloco_mirado)
+
+
+func _processar_interacao(bloco_mirado: Vector3i) -> void:
+	var id_alvo := _chunk_manager.get_block(bloco_mirado)
+	var def := BlockRegistry.get_block(id_alvo)
+	if def == null:
+		return
+	if def.tipo_especial == "cama":
+		GameState.ponto_respawn = Vector3(bloco_mirado) + Vector3(0.5, 1.0, 0.5)
+	elif def.tipo_especial == "bau":
+		EventBus.chest_requested.emit(GameState.chave_posicao(bloco_mirado))
 
 
 func _tentar_colocar_bloco(adjacente: Vector3i) -> void:

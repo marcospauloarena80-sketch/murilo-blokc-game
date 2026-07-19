@@ -6,6 +6,7 @@ extends Node
 signal block_broken(pos: Vector3i, block_id: int)
 signal block_placed(pos: Vector3i, block_id: int)
 signal item_collected(item_id: String, amount: int)
+signal chest_requested(chave: String)
 signal recipe_crafted(recipe_id: String)
 signal player_died
 signal day_started

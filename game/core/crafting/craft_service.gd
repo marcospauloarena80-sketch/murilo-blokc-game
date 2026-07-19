@@ -4,8 +4,12 @@ extends RefCounted
 ## Ver docs/02-ARQUITETURA.md §4.5.
 
 
-func pode_craftar(inventario: InventoryModel, receita: RecipeDef, tem_bancada: bool) -> bool:
+func pode_craftar(
+	inventario: InventoryModel, receita: RecipeDef, tem_bancada: bool, tem_fornalha: bool = false
+) -> bool:
 	if receita.exige_bancada and not tem_bancada:
+		return false
+	if receita.exige_fornalha and not tem_fornalha:
 		return false
 	for item_id: String in receita.ingredientes:
 		var necessario: int = int(receita.ingredientes[item_id])
@@ -14,8 +18,10 @@ func pode_craftar(inventario: InventoryModel, receita: RecipeDef, tem_bancada: b
 	return true
 
 
-func craftar(inventario: InventoryModel, receita: RecipeDef, tem_bancada: bool) -> bool:
-	if not pode_craftar(inventario, receita, tem_bancada):
+func craftar(
+	inventario: InventoryModel, receita: RecipeDef, tem_bancada: bool, tem_fornalha: bool = false
+) -> bool:
+	if not pode_craftar(inventario, receita, tem_bancada, tem_fornalha):
 		return false
 	for item_id: String in receita.ingredientes:
 		inventario.remover(item_id, int(receita.ingredientes[item_id]))

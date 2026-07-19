@@ -9,3 +9,4 @@ extends Resource
 @export var resultado_id: String = ""
 @export var resultado_quantidade: int = 1
 @export var exige_bancada: bool = false
+@export var exige_fornalha: bool = false

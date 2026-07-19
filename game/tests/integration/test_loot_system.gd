@@ -20,7 +20,7 @@ func test_bloco_sem_drop_nao_spawna_nada() -> void:
 	var spawner := LootSpawner.new()
 	add_child_autofree(spawner)
 
-	EventBus.block_broken.emit(Vector3i(0, 0, 0), 5)  # folhas -> drop_id vazio
+	EventBus.block_broken.emit(Vector3i(0, 0, 0), 999)  # id inexistente -> BlockRegistry retorna null
 
 	assert_eq(spawner.get_child_count(), 0)
 
@@ -42,6 +42,32 @@ func test_coletar_drop_adiciona_ao_inventario_e_remove_o_drop() -> void:
 
 	assert_eq(GameState.inventario_mochila.contar("tronco"), 3, "coleta vai pra mochila primeiro")
 	assert_true(drop.is_queued_for_deletion())
+
+
+func test_quebrar_bau_dropa_conteudo_e_limpa_registro() -> void:
+	GameState.baus = {}
+	var spawner := LootSpawner.new()
+	add_child_autofree(spawner)
+
+	var chave := GameState.chave_posicao(Vector3i(2, 10, 2))
+	var bau := GameState.obter_bau(chave)
+	bau.adicionar("pedra", 4)
+
+	EventBus.block_broken.emit(Vector3i(2, 10, 2), 8)  # bau
+
+	# 1 drop do conteúdo (pedra) + 1 drop do próprio bloco baú
+	assert_eq(spawner.get_child_count(), 2)
+	assert_false(GameState.baus.has(chave), "registro do baú devia ser removido ao quebrar")
+
+
+func test_quebrar_bau_vazio_so_dropa_o_proprio_bloco() -> void:
+	GameState.baus = {}
+	var spawner := LootSpawner.new()
+	add_child_autofree(spawner)
+
+	EventBus.block_broken.emit(Vector3i(9, 10, 9), 8)  # bau sem registro em GameState.baus
+
+	assert_eq(spawner.get_child_count(), 1)
 
 
 func test_corpo_que_nao_e_player_nao_coleta() -> void:

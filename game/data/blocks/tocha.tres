@@ -4,9 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-id = 5
-nome = "Folhas"
+id = 9
+nome = "Tocha"
 dureza = 0.2
-drop_id = "maca"
-cor = Color(0.18, 0.47, 0.18, 1)
+drop_id = "tocha"
+cor = Color(1.0, 0.85, 0.3, 1)
 solido = true
+emite_luz = true

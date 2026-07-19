@@ -9,3 +9,5 @@ extends Resource
 @export var drop_id: String = ""
 @export var cor: Color = Color.WHITE
 @export var solido: bool = true
+@export var emite_luz: bool = false
+@export var tipo_especial: String = ""  ## "" | "cama" | "bau" — interação especial (F6)

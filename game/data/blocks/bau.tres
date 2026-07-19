@@ -4,9 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-id = 5
-nome = "Folhas"
-dureza = 0.2
-drop_id = "maca"
-cor = Color(0.18, 0.47, 0.18, 1)
+id = 8
+nome = "Baú"
+dureza = 0.8
+drop_id = "bau"
+cor = Color(0.55, 0.35, 0.15, 1)
 solido = true
+tipo_especial = "bau"

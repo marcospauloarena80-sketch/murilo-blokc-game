@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RecipeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/crafting/recipe_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "tocha"
+nome = "Tocha"
+ingredientes = {
+"carvao": 1,
+"graveto": 1
+}
+resultado_id = "tocha"
+resultado_quantidade = 4
+exige_bancada = false
+exige_fornalha = false

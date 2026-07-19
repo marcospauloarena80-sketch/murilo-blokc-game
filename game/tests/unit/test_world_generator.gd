@@ -56,3 +56,41 @@ func test_chunk_gerado_nao_e_totalmente_vazio() -> void:
 			if chunk.get_block(x, 30, z) != BlockRegistry.AR_ID:
 				tem_bloco = true
 	assert_true(tem_bloco, "chunk deveria ter blocos sólidos")
+
+
+func test_minerio_aparece_no_subsolo_em_area_grande_o_suficiente() -> void:
+	# Um chunk sozinho pode não ter minério (raro); varre vários pra garantir
+	# que a substituição realmente acontece em algum lugar.
+	var gerador := WorldGenerator.new(2024)
+	var achou_carvao := false
+	var achou_ferrite := false
+	for cx in range(4):
+		for cz in range(4):
+			var chunk := gerador.gerar_chunk(cx, cz)
+			for x in range(16):
+				for z in range(16):
+					for y in range(20):
+						var id := chunk.get_block(x, y, z)
+						if id == 10:
+							achou_carvao = true
+						elif id == 11:
+							achou_ferrite = true
+	assert_true(achou_carvao, "carvão deveria aparecer em alguma das 16 chunks varridas")
+	assert_true(achou_ferrite, "ferrite deveria aparecer em alguma das 16 chunks varridas")
+
+
+func test_minerio_so_substitui_pedra_nao_terra_nem_grama() -> void:
+	var gerador := WorldGenerator.new(5)
+	var chunk := gerador.gerar_chunk(0, 0)
+	for x in range(16):
+		for z in range(16):
+			var topo_solido := -1
+			for y in range(64):
+				if chunk.get_block(x, y, z) == 1:
+					topo_solido = y
+			# as 2 camadas abaixo do topo (grama) devem ser terra, nunca minério
+			assert_eq(
+				chunk.get_block(x, topo_solido - 1, z),
+				2,
+				"camada logo abaixo da grama deveria ser terra"
+			)

@@ -12,6 +12,11 @@ static var _blocos: Dictionary = {
 	4: preload("res://data/blocks/tronco.tres"),
 	5: preload("res://data/blocks/folhas.tres"),
 	6: preload("res://data/blocks/areia.tres"),
+	7: preload("res://data/blocks/cama.tres"),
+	8: preload("res://data/blocks/bau.tres"),
+	9: preload("res://data/blocks/tocha.tres"),
+	10: preload("res://data/blocks/carvao.tres"),
+	11: preload("res://data/blocks/ferrite.tres"),
 }
 
 

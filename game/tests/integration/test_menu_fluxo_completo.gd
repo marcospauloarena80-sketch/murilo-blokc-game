@@ -104,3 +104,68 @@ func test_ciclo_completo_novo_jogo_salvar_sair_continuar() -> void:
 	_drenar_fila(main2)
 	var player2: Player = main2.get_node("Player")
 	assert_eq(player2.global_position, posicao_jogador, "player deveria voltar pra posição salva")
+
+
+func test_bau_com_itens_sobrevive_a_salvar_sair_continuar() -> void:
+	var menu := MenuScene.instantiate()
+	add_child_autofree(menu)
+	menu._ao_novo_jogo()
+	remove_child(menu)
+	menu.free()
+
+	var main1 := MainScene.instantiate()
+	add_child_autofree(main1)
+	_drenar_fila(main1)
+	var chave := GameState.chave_posicao(Vector3i(9, 40, 9))
+	GameState.obter_bau(chave).adicionar("carvao", 6)
+
+	main1.call("salvar_jogo")
+	remove_child(main1)
+	main1.free()
+
+	GameState.reiniciar_para_novo_jogo()
+
+	var menu2 := MenuScene.instantiate()
+	add_child_autofree(menu2)
+	menu2._ao_continuar()
+	remove_child(menu2)
+	menu2.free()
+
+	assert_eq(
+		GameState.obter_bau(chave).contar("carvao"),
+		6,
+		"conteúdo do baú deveria sobreviver ao save/continue"
+	)
+
+
+func test_tocha_colocada_reacende_ao_continuar() -> void:
+	var menu := MenuScene.instantiate()
+	add_child_autofree(menu)
+	menu._ao_novo_jogo()
+	remove_child(menu)
+	menu.free()
+
+	var main1 := MainScene.instantiate()
+	add_child_autofree(main1)
+	_drenar_fila(main1)
+	var cm1: ChunkManager = main1.get_node("ChunkManager")
+	cm1.set_block(Vector3i(8, 40, 8), 9)  # tocha
+
+	main1.call("salvar_jogo")
+	remove_child(main1)
+	main1.free()
+
+	GameState.reiniciar_para_novo_jogo()
+
+	var menu2 := MenuScene.instantiate()
+	add_child_autofree(menu2)
+	menu2._ao_continuar()
+	remove_child(menu2)
+	menu2.free()
+
+	var main2 := MainScene.instantiate()
+	add_child_autofree(main2)
+	_drenar_fila(main2)
+
+	var gerenciador: TorchLightManager = main2.get_node("TorchLightManager")
+	assert_eq(gerenciador.get_child_count(), 1, "tocha salva deveria reacender ao continuar")

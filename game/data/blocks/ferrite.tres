@@ -4,9 +4,9 @@
 
 [resource]
 script = ExtResource("1")
-id = 5
-nome = "Folhas"
-dureza = 0.2
-drop_id = "maca"
-cor = Color(0.18, 0.47, 0.18, 1)
+id = 11
+nome = "Minério de Ferrite"
+dureza = 2.5
+drop_id = "ferrite"
+cor = Color(0.72, 0.53, 0.4, 1)
 solido = true

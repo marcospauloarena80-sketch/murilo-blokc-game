@@ -4,6 +4,9 @@ extends Node
 
 enum State { BOOT, MENU, CHARACTER_CREATION, PLAYING, PAUSED, BATTLE }
 
+const DURACAO_CICLO_SEG: float = 900.0  ## dia 10min + noite 5min (GDD F6)
+const FRACAO_DIA: float = 600.0 / 900.0
+
 var current_state: State = State.BOOT
 var seed_atual: int = 0
 var tempo_de_jogo_seg: float = 0.0
@@ -13,6 +16,13 @@ var inventario_mochila: InventoryModel = InventoryModel.new(24)
 var hotbar_selecionado: int = 0
 var vida_atual: int = 20
 var vida_maxima: int = 20
+var fome_atual: int = 20
+var fome_maxima: int = 20
+var energia_atual: int = 20
+var energia_maxima: int = 20
+var ciclo_dia_noite_seg: float = DURACAO_CICLO_SEG * 0.25  ## começa de manhã
+var ponto_respawn: Vector3 = Vector3(64, 45, 64)
+var baus: Dictionary = {}  ## "x,y,z" -> InventoryModel(24)
 
 ## Preenchidos pelo menu antes de trocar pra scenes/main.tscn (F5).
 var veio_de_continuar: bool = false
@@ -32,6 +42,11 @@ func reiniciar_para_novo_jogo() -> void:
 	inventario_mochila = InventoryModel.new(24)
 	hotbar_selecionado = 0
 	vida_atual = vida_maxima
+	fome_atual = fome_maxima
+	energia_atual = energia_maxima
+	ciclo_dia_noite_seg = DURACAO_CICLO_SEG * 0.25
+	ponto_respawn = Vector3(64, 45, 64)
+	baus = {}
 	veio_de_continuar = false
 	delta_blocos_carregado = {}
 
@@ -58,3 +73,22 @@ func mover_para_hotbar(indice_mochila: int) -> void:
 
 func tem_bancada() -> bool:
 	return inventario_hotbar.contar("bancada") > 0 or inventario_mochila.contar("bancada") > 0
+
+
+func tem_fornalha() -> bool:
+	return inventario_hotbar.contar("fornalha") > 0 or inventario_mochila.contar("fornalha") > 0
+
+
+func eh_noite() -> bool:
+	var fase: float = fmod(ciclo_dia_noite_seg, DURACAO_CICLO_SEG) / DURACAO_CICLO_SEG
+	return fase >= FRACAO_DIA
+
+
+func obter_bau(chave: String) -> InventoryModel:
+	if not baus.has(chave):
+		baus[chave] = InventoryModel.new(24)
+	return baus[chave]
+
+
+static func chave_posicao(pos: Vector3i) -> String:
+	return "%d,%d,%d" % [pos.x, pos.y, pos.z]

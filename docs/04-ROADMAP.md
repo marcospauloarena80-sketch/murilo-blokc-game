@@ -72,7 +72,19 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
 - **Objetivo:** dar propósito e ritmo ao mundo.
 - **Entregas:** ciclo dia/noite; fome + comida (frutas/cogumelos + fornalha); energia; cama (respawn); baús; tochas; minérios (carvão, ferrite) + tier ferrite; morte com drop recuperável.
 - **Dependências:** F5 · **Estimativa:** 2–3 sessões · **Risco:** baixo
-- **Critérios:** noite muda o jogo (visibilidade/planejamento); balanceamento inicial de fome não frustra (validação Murilo).
+- **Critérios — ✅ concluída em 19/jul/2026:**
+  - [x] Blocos/itens novos: cama, baú, tocha, carvão, ferrite (+ picareta/machado ferrite, maçã crua/assada, fornalha) — 5 blocos, 10 itens, 7 receitas novas. Minério (carvão/ferrite) no subsolo via `WorldGenerator._bloco_de_subsolo()` (hash determinístico, mesma seed → mesmo mundo)
+  - [x] Ciclo dia/noite: 10min dia + 5min noite (`GameState.DURACAO_CICLO_SEG`), `DayNightCalculator` (puro, testado) controla ângulo do sol/energia solar/luz ambiente; `main.gd` aplica por frame e emite `EventBus.day_started`/`night_started`
+  - [x] Fome: decai 1 ponto/60s de jogo; fome zerada causa dano de 1 vida/10s (até vida=1, nunca mata sozinha). Comida (maçã crua/assada) via tecla `comer` (R) restaura `restaura_fome`, consumida da hotbar
+  - [x] Energia: corrida (`Shift`) drena 1 ponto/2s enquanto anda; sem energia, corrida é bloqueada; regenera 1 ponto/2s parado ou andando devagar
+  - [x] Cama define ponto de respawn (interagir/E); persistido no save. Morte (por queda) dropa toda a mochila no local (hotbar preservada), restaura vida cheia, teleporta pro respawn — `_processar_morte()` reaproveitável quando Cubelins hostis chegarem (F7)
+  - [x] Dano de queda: seguro até 3 blocos, 1 vida por bloco excedente (ADR-017)
+  - [x] Baús: inventário 24 slots por posição (`GameState.baus`), abre com `interagir` (E), tela dupla baú↔mochila, persistido no save, quebrar o baú dropa todo o conteúdo (nunca perde item)
+  - [x] Tochas: iluminam ao colocar (`OmniLight3D` via `TorchLightManager`, reage a `block_placed`/`block_broken`), reacendem sozinhas ao continuar o jogo (sem persistência própria — reaproveita o delta de blocos)
+  - [x] 118/118 testes GUT (25 scripts) — cobre fome/energia/comer, dano de queda, cama/respawn/morte+drop, baú (interação/UI/quebra/save-continue), tocha (spawn/remove/duplicata/save-continue)
+  - [x] gdformat/gdlint limpos no projeto inteiro; smoke headless (menu + main, 60/120 frames) sem erros; export web local ok (~41MB)
+  - [x] Confirmado no navegador: menu renderiza, zero erros de console (mesmo gotcha de clique WebGL do F3/F4/F5 — lógica verificada via GUT, não clique simulado)
+  - [ ] Noite muda o jogo na prática / balanceamento de fome não frustra — validação com o Murilo jogando
 
 ## F7 — Cubelins no mundo
 - **Objetivo:** o vale ganha vida — criaturas visíveis com comportamento.

@@ -10,3 +10,5 @@ extends Resource
 @export var bloco_id: int = 0
 @export var eh_ferramenta: bool = false
 @export var multiplicador_velocidade: float = 1.0
+@export var eh_comida: bool = false
+@export var restaura_fome: int = 0

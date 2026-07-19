@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/inventory/item_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "maca"
+nome = "Maçã"
+stack_maximo = 64
+cor = Color(0.8, 0.15, 0.15, 1)
+bloco_id = 0
+eh_comida = true
+restaura_fome = 3

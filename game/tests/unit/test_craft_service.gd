@@ -54,13 +54,25 @@ func test_craftar_picareta_madeira_com_bancada() -> void:
 	assert_eq(inv.contar("picareta_madeira"), 1)
 
 
-func test_todas_as_6_receitas_existem() -> void:
+func test_receitas_do_mvp_existem() -> void:
 	var ids := [
-		"tabua", "graveto", "bancada", "picareta_madeira", "machado_madeira", "picareta_pedra"
+		"tabua",
+		"graveto",
+		"bancada",
+		"picareta_madeira",
+		"machado_madeira",
+		"picareta_pedra",
+		"cama",
+		"bau",
+		"tocha",
+		"fornalha",
+		"picareta_ferrite",
+		"machado_ferrite",
+		"maca_assada",
 	]
 	for id: String in ids:
 		assert_not_null(RecipeRegistry.get_receita(id), "receita %s deveria existir" % id)
-	assert_eq(RecipeRegistry.todas().size(), 6)
+	assert_eq(RecipeRegistry.todas().size(), ids.size())
 
 
 func test_craftar_cadeia_completa_arvore_ate_picareta_pedra() -> void:

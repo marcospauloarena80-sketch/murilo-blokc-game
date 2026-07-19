@@ -24,7 +24,12 @@ func _ao_continuar() -> void:
 
 	GameState.seed_atual = int(dados.get("seed", 0))
 	GameState.tempo_de_jogo_seg = float(dados.get("tempo_de_jogo_seg", 0.0))
+	GameState.ciclo_dia_noite_seg = float(
+		dados.get("ciclo_dia_noite_seg", GameState.DURACAO_CICLO_SEG * 0.25)
+	)
 	GameState.vida_atual = int(dados.get("vida_atual", GameState.vida_maxima))
+	GameState.fome_atual = int(dados.get("fome_atual", GameState.fome_maxima))
+	GameState.energia_atual = int(dados.get("energia_atual", GameState.energia_maxima))
 	GameState.hotbar_selecionado = int(dados.get("hotbar_selecionado", 0))
 
 	GameState.aparencia_atual = CharacterAppearance.new()
@@ -37,6 +42,8 @@ func _ao_continuar() -> void:
 
 	GameState.delta_blocos_carregado = dados.get("delta_blocos", {})
 	GameState.posicao_salva = _array_para_vector3(dados.get("jogador_posicao", []))
+	GameState.ponto_respawn = _array_para_vector3(dados.get("ponto_respawn", []))
+	GameState.baus = _dicionario_para_baus(dados.get("baus", {}))
 	GameState.veio_de_continuar = true
 
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
@@ -46,3 +53,12 @@ static func _array_para_vector3(dados: Array) -> Vector3:
 	if dados.size() < 3:
 		return Vector3(64, 45, 64)
 	return Vector3(dados[0], dados[1], dados[2])
+
+
+static func _dicionario_para_baus(dados: Dictionary) -> Dictionary:
+	var resultado: Dictionary = {}
+	for chave: String in dados:
+		var inventario := InventoryModel.new(24)
+		inventario.carregar_serializado(dados[chave])
+		resultado[chave] = inventario
+	return resultado

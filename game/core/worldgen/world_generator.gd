@@ -8,6 +8,9 @@ const ALTURA_BASE: int = 30
 const ALTURA_AMPLITUDE: float = 8.0
 const CHANCE_ARVORE: float = 0.04
 const MARGEM_ARVORE: int = 2
+const CHANCE_FERRITE: float = 0.018
+const CHANCE_CARVAO: float = 0.035
+const SEMENTE_MINERIO: int = 7919  ## offset pra descorrelacionar do hash de árvores
 
 var _seed: int
 var _ruido: FastNoiseLite
@@ -23,6 +26,17 @@ func _init(mundo_seed: int) -> void:
 func _altura_em(world_x: int, world_z: int) -> int:
 	var n := _ruido.get_noise_2d(float(world_x), float(world_z))
 	return ALTURA_BASE + int(round(n * ALTURA_AMPLITUDE))
+
+
+func _bloco_de_subsolo(world_x: int, y: int, world_z: int) -> int:
+	## Minérios em clusters determinísticos dentro da pedra (sem cavernas
+	## de verdade — "strip mining" cavando reto pra baixo já funciona; F6).
+	var h := _hash01(_seed + SEMENTE_MINERIO, world_x, world_z * 10007 + y)
+	if h < CHANCE_FERRITE:
+		return 11  # ferrite
+	if h < CHANCE_FERRITE + CHANCE_CARVAO:
+		return 10  # carvao
+	return 3  # pedra
 
 
 static func _hash01(seed: int, x: int, z: int) -> float:
@@ -45,7 +59,7 @@ func gerar_chunk(cx: int, cz: int) -> ChunkData:
 			var altura := _altura_em(world_x, world_z)
 			alturas[Vector2i(lx, lz)] = altura
 			for y in range(0, altura - 2):
-				chunk.set_block(lx, y, lz, 3)  # pedra
+				chunk.set_block(lx, y, lz, _bloco_de_subsolo(world_x, y, world_z))
 			for y in range(max(altura - 2, 0), altura):
 				chunk.set_block(lx, y, lz, 2)  # terra
 			chunk.set_block(lx, altura, lz, 1)  # grama
