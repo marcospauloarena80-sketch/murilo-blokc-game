@@ -16,6 +16,8 @@ const ALCANCE: float = 5.0
 const AMPLITUDE_MAX_BALANCO: float = 0.6
 const SEGUNDOS_POR_PONTO_ENERGIA: float = 2.0
 const ALTURA_QUEDA_SEGURA: float = 3.0
+const INTERVALO_ATAQUE_SEG: float = 0.5
+const DANO_MAO_NUA: int = 1
 
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
@@ -25,6 +27,7 @@ var _fase_balanco: float = 0.0
 var _tempo_energia: float = 0.0
 var _estava_no_ar: bool = false
 var _y_inicio_queda: float = 0.0
+var _tempo_desde_ataque: float = INTERVALO_ATAQUE_SEG
 
 var _mat_pele: StandardMaterial3D
 var _mat_cabelo: StandardMaterial3D
@@ -224,11 +227,32 @@ func _raycast_mira() -> Dictionary:
 	return espaco.intersect_ray(query)
 
 
+func _dano_de_ataque_atual() -> int:
+	var item_id: String = GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
+	if item_id == "":
+		return DANO_MAO_NUA
+	var def := ItemRegistry.get_item(item_id)
+	if def == null or not def.eh_arma:
+		return DANO_MAO_NUA
+	return def.dano_ataque
+
+
 func _processar_mira_e_interacao(delta: float) -> void:
+	_tempo_desde_ataque += delta
+
 	var resultado := _raycast_mira()
 	if resultado.is_empty():
 		_outline.visible = false
 		_progresso_quebra = 0.0
+		return
+
+	var colisor: Node = resultado.get("collider")
+	if colisor != null and colisor.is_in_group("creature"):
+		_outline.visible = false
+		_progresso_quebra = 0.0
+		if Input.is_action_just_pressed("quebrar") and _tempo_desde_ataque >= INTERVALO_ATAQUE_SEG:
+			_tempo_desde_ataque = 0.0
+			(colisor as Creature).receber_dano(_dano_de_ataque_atual())
 		return
 
 	var normal: Vector3 = resultado["normal"]

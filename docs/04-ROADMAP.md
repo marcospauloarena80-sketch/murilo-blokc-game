@@ -91,7 +91,18 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
 - **Objetivo:** o vale ganha vida — criaturas visíveis com comportamento.
 - **Entregas:** `CreatureDef` + 4 espécies iniciais (modelos CC0 adaptados); spawn por bioma/hora; FSM Idle/Wander/Flee/Aggro; espada de pedra (defesa noturna); dano por contato de agressivos.
 - **Dependências:** F6 (dia/noite) · **Estimativa:** 2–3 sessões · **Risco:** médio (steering em terreno voxel)
-- **Critérios:** Cubelins vagam sem travar/atravessar blocos; noite é perigosa mas justa.
+- **Critérios — ✅ concluída em 19/jul/2026:**
+  - [x] `CreatureDef` (Resource data-driven) + `CreatureRegistry` (padrão `BlockDef`/`ItemDef`) + 4 espécies: Brotinho (Mato, passivo/dia), Ventim (Vento, passivo/dia), Pedrolim (Pedra, agressivo/noite), Faiscolt (Faísca, agressivo/noite) — nomes do próprio GDD §9
+  - [x] Modelo blocky: cubo único colorido pelo elemento (`Creature`/`creature.tscn`), consistente com "criaturas cúbicas" do GDD, sem depender de asset externo (mesma lógica do ADR-015 do Murilo)
+  - [x] FSM pura Idle/Wander/Flee/Aggro (`CreatureBehavior`, testável sem Node) — passivo foge, agressivo persegue, idle↔wander por tempo quando o jogador está longe
+  - [x] Movimento real com colisão no terreno voxel: `move_and_slide()` + gravidade, sem pathfinding — validado com física de verdade em `test_creature_world_physics.gd` (spawna no mundo real, roda várias frames, confirma que se move e não atravessa o chão)
+  - [x] `CreatureSpawner`: passivos de dia, agressivos de noite, sempre na superfície (sem geração de cavernas ainda — ADR-020); limite de 8 criaturas simultâneas; despawn além de 48 blocos do jogador
+  - [x] Espada de pedra (2 pedra + 1 graveto, bancada) — mão nua causa 1 de dano, espada causa 4; ataque por clique com cooldown de 0,5s
+  - [x] Criatura agressiva causa dano de contato no jogador (cooldown de 1s, evita dano por frame)
+  - [x] Bug real de ordem de nós encontrado e corrigido: `CreatureSpawner` nunca spawnava nada porque `Player` vem depois dele em `main.tscn` — resolvido com busca preguiçosa (lazy) auto-curativa em vez de depender de ordem (ADR-020)
+  - [x] 151/151 testes GUT (31 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu + main, 60/180 frames) sem erros; export web local ok
+  - [x] Confirmado no navegador: menu renderiza, zero erros de console
+  - [ ] Cubelins vagam sem travar/atravessar blocos **na prática** / noite perigosa mas justa — validação com o Murilo jogando
 
 ## F8 — Captura e batalha
 - **Objetivo:** o segundo pilar do jogo: capturar, batalhar, evoluir.

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CreatureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/creatures/creature_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+especie_id = "faiscolt"
+nome = "Faiscolt"
+elemento = "faisca"
+cor = Color(0.95, 0.85, 0.2, 1)
+vida_maxima = 8
+velocidade = 3.0
+raio_deteccao = 8.0
+eh_agressivo = true
+dano_contato = 1
+periodo_spawn = "noite"

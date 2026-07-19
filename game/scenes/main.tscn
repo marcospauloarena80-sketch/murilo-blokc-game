@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://ui/character_creator/character_creator.tscn" id="3"]
 [ext_resource type="Script" path="res://systems/loot_spawner.gd" id="4"]
 [ext_resource type="Script" path="res://systems/torch_light_manager.gd" id="10"]
+[ext_resource type="Script" path="res://systems/creature_spawner.gd" id="11"]
 [ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://ui/inventory_screen/inventory_screen.tscn" id="6"]
 [ext_resource type="Script" path="res://scenes/main.gd" id="7"]
@@ -37,6 +38,9 @@ script = ExtResource("4")
 
 [node name="TorchLightManager" type="Node3D" parent="."]
 script = ExtResource("10")
+
+[node name="CreatureSpawner" type="Node3D" parent="."]
+script = ExtResource("11")
 
 [node name="Player" parent="." instance=ExtResource("1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 45, 64)

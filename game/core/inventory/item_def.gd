@@ -12,3 +12,5 @@ extends Resource
 @export var multiplicador_velocidade: float = 1.0
 @export var eh_comida: bool = false
 @export var restaura_fome: int = 0
+@export var eh_arma: bool = false
+@export var dano_ataque: int = 0

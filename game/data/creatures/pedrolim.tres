@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CreatureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/creatures/creature_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+especie_id = "pedrolim"
+nome = "Pedrolim"
+elemento = "pedra"
+cor = Color(0.45, 0.42, 0.4, 1)
+vida_maxima = 14
+velocidade = 1.2
+raio_deteccao = 7.0
+eh_agressivo = true
+dano_contato = 2
+periodo_spawn = "noite"
