@@ -162,7 +162,7 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] `CreditsScreen` ao vencer o Coração Dourado — fecha "campanha completável do zero ao desafio final" sem antecipar o balanceamento geral da F12
   - [x] 351/351 testes GUT (58 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu 60 frames + main 180 frames) sem erros; export web local ok
   - [x] Confirmado no navegador: menu renderiza, zero erros de console
-  - [ ] CI verde — verificação em andamento
+  - [x] CI verde (commit `62739f1`): [run 29683170836](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29683170836) — lint, test, export-web todos success
   - [ ] Dificuldade crescente das 4 Arenas + desafio final validada com o Murilo jogando
 
 ## F11 — Mundo completo
