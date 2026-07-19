@@ -142,7 +142,7 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] Bug real corrigido: `inventory_screen.gd` nunca passava `tem_fornalha()` pro `CraftService` — receitas com fornalha eram impossíveis de craftar pela UI real apesar dos testes unitários passarem
   - [x] 300/300 testes GUT (50 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu 60 frames + main 180 frames) sem erros; export web local ok
   - [x] Confirmado no navegador: menu renderiza, zero erros de console
-  - [ ] CI verde — verificação em andamento
+  - [x] CI verde (commit `d7b349b`): [run 29681866523](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29681866523) — lint, test, export-web todos success
   - [ ] Validação com o Murilo jogando: chegar às Arenas guiado só pelas missões, sem explicação externa
 
 ## F10 — Arenas Elementais
