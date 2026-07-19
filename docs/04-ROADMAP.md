@@ -187,7 +187,17 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
 - **Objetivo:** fechar: balancear, portar, polir.
 - **Entregas:** passe de balanceamento geral; controles touch; export desktop (macOS/Windows); export mobile se necessário; tela de créditos; save final v-freeze (migrações testadas).
 - **Dependências:** F11 · **Estimativa:** 2–3 sessões · **Risco:** baixo
-- **Critérios:** jogável do início ao fim em navegador, desktop e tablet; zero bugs conhecidos de perda de save; Murilo aprova a 1.0.
+- **Critérios — ✅ concluída em 19/jul/2026:**
+  - [x] Câmera com rotação de verdade (gap real encontrado nesta fase — o jogo nunca tinha isso): `girar_camera()` gira o corpo no yaw + `camera_pivot` no pitch, mouse captura automático em `PLAYING`
+  - [x] Controles touch: joystick flutuante (movimento) + arrasto de olhar, os dois ao mesmo tempo (multi-touch de verdade, não emulação de mouse) + 5 botões de ação
+  - [x] Export desktop: macOS e Windows testados localmente (build exportado e o `.app` chegou a abrir e fechar de verdade); Android/iOS documentados como pendência do dono (SDK não instalado neste ambiente)
+  - [x] Tela de créditos final: nome do jogo, Godot Engine, autor — curta porque não há asset externo (tudo procedural/sintetizado)
+  - [x] Save v-freeze: `SCHEMA_VERSION` continua 1, testado de verdade com um save mínimo sintético da própria F5 carregando sem quebrar e preenchendo defaults sãos
+  - [x] Balanceamento geral: revisão documentada (12 `AttackDef` perfeitamente simétricos entre elementos, nenhuma inconsistência) — sem dado de playtest real, nenhum número foi alterado às cegas
+  - [x] 425/425 testes GUT (73 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu 60 frames + main 180 frames) sem erros; exports web/macOS/Windows locais ok
+  - [x] Confirmado no navegador: menu renderiza, zero erros de console
+  - [ ] CI verde — verificação em andamento
+  - [ ] Murilo aprova a 1.0 — pendente do playtest real
 
 ---
 

@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" path="res://ui/credits_screen/credits_screen.tscn" id="17"]
 [ext_resource type="Script" path="res://systems/weather_system.gd" id="18"]
 [ext_resource type="Script" path="res://systems/block_break_particles.gd" id="19"]
+[ext_resource type="PackedScene" path="res://ui/touch_controls/touch_controls.tscn" id="20"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -65,6 +66,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 45, 64)
 [node name="CharacterCreator" parent="." instance=ExtResource("3")]
 
 [node name="Hud" parent="." instance=ExtResource("5")]
+
+[node name="TouchControls" parent="." instance=ExtResource("20")]
 
 [node name="InventoryScreen" parent="." instance=ExtResource("6")]
 

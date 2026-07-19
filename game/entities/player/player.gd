@@ -18,6 +18,7 @@ const SEGUNDOS_POR_PONTO_ENERGIA: float = 2.0
 const ALTURA_QUEDA_SEGURA: float = 3.0
 const INTERVALO_ATAQUE_SEG: float = 0.5
 const DANO_MAO_NUA: int = 1
+const SENSIBILIDADE_MOUSE: float = 0.003
 
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
@@ -104,6 +105,26 @@ func _criar_outline() -> MeshInstance3D:
 	return no
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		girar_camera(event.relative.x, event.relative.y, SENSIBILIDADE_MOUSE)
+
+
+func girar_camera(delta_x: float, delta_y: float, sensibilidade: float) -> void:
+	rotate_y(CameraLookMath.delta_yaw(delta_x, sensibilidade))
+	camera_pivot.rotation.x = CameraLookMath.novo_pitch(
+		camera_pivot.rotation.x, delta_y, sensibilidade
+	)
+
+
+func _atualizar_captura_do_mouse(jogando: bool) -> void:
+	if DisplayServer.is_touchscreen_available():
+		return  # toque olha por arrasto de tela, não por captura de mouse (F12)
+	var modo_desejado := Input.MOUSE_MODE_CAPTURED if jogando else Input.MOUSE_MODE_VISIBLE
+	if Input.mouse_mode != modo_desejado:
+		Input.mouse_mode = modo_desejado
+
+
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
@@ -116,6 +137,7 @@ func _physics_process(delta: float) -> void:
 			_aplicar_dano_de_queda(_y_inicio_queda - global_position.y)
 
 	var jogando := GameState.current_state == GameState.State.PLAYING
+	_atualizar_captura_do_mouse(jogando)
 
 	if jogando:
 		if Input.is_action_just_pressed("pular") and is_on_floor():

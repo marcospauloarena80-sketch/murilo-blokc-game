@@ -25,6 +25,16 @@ func test_game_completed_abre_e_pausa() -> void:
 	assert_eq(GameState.current_state, GameState.State.PAUSED)
 
 
+func test_abrir_mostra_creditos_da_engine_e_do_autor() -> void:
+	var tela := CreditsScreenScene.instantiate() as CreditsScreen
+	add_child_autofree(tela)
+
+	tela._abrir()
+
+	assert_true(tela._label_texto.text.contains("Godot Engine"))
+	assert_true(tela._label_texto.text.contains("Murilo"))
+
+
 func test_voltar_esconde_a_tela() -> void:
 	var tela := CreditsScreenScene.instantiate() as CreditsScreen
 	add_child_autofree(tela)
