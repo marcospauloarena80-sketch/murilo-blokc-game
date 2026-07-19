@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BiomeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/worldgen/biome_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+bioma_id = "deserto_de_ambar"
+nome = "Deserto de Âmbar"
+elementos_cubelin = PackedStringArray("brasa", "pedra")
+cor_ambiente = Color(1, 0.9, 0.7, 1)

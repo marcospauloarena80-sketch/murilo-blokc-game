@@ -17,6 +17,8 @@
 [ext_resource type="PackedScene" path="res://ui/laboratorio_screen/laboratorio_screen.tscn" id="15"]
 [ext_resource type="PackedScene" path="res://entities/npcs/npc.tscn" id="16"]
 [ext_resource type="PackedScene" path="res://ui/credits_screen/credits_screen.tscn" id="17"]
+[ext_resource type="Script" path="res://systems/weather_system.gd" id="18"]
+[ext_resource type="Script" path="res://systems/block_break_particles.gd" id="19"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -47,6 +49,12 @@ script = ExtResource("10")
 
 [node name="CreatureSpawner" type="Node3D" parent="."]
 script = ExtResource("11")
+
+[node name="WeatherSystem" type="Node3D" parent="."]
+script = ExtResource("18")
+
+[node name="BlockBreakParticles" type="Node3D" parent="."]
+script = ExtResource("19")
 
 [node name="QuestTracker" type="Node" parent="."]
 script = ExtResource("13")

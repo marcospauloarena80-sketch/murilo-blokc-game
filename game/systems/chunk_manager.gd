@@ -34,11 +34,30 @@ func _ready() -> void:
 
 
 func _gerar_mundo() -> void:
+	var luzes_geradas: Array[Vector3i] = []
 	for cx in range(WORLD_CHUNKS_X):
 		for cz in range(WORLD_CHUNKS_Z):
 			var coord := Vector2i(cx, cz)
 			_chunks[coord] = _worldgen.gerar_chunk(cx, cz)
 			_fila_sujos.append(coord)
+			for luz_local: Vector3i in _worldgen.luzes_locais_da_ultima_chunk():
+				luzes_geradas.append(
+					Vector3i(
+						cx * ChunkData.SIZE_H + luz_local.x,
+						luz_local.y,
+						cz * ChunkData.SIZE_H + luz_local.z
+					)
+				)
+	## Adiado pro próximo frame (call_deferred): TorchLightManager é um nó
+	## irmão declarado depois de ChunkManager em main.tscn — emitir aqui
+	## dentro de _ready() aconteceria antes dele conectar o EventBus (mesma
+	## classe de bug do CreatureSpawner na F7, ADR-020).
+	call_deferred("_emitir_luzes_das_cavernas", luzes_geradas)
+
+
+func _emitir_luzes_das_cavernas(posicoes: Array[Vector3i]) -> void:
+	for pos: Vector3i in posicoes:
+		EventBus.block_placed.emit(pos, 9)
 
 
 func _process(_delta: float) -> void:

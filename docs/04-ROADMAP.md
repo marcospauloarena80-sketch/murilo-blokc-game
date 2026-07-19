@@ -169,7 +169,19 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
 - **Objetivo:** riqueza: todos os biomas, clima, áudio.
 - **Entregas:** 4 biomas restantes + cavernas decoradas; clima (chuva/tempestade); música por bioma + SFX completos; minimapa (opcional); polimento visual (partículas, iluminação).
 - **Dependências:** F10 · **Estimativa:** 2–3 sessões · **Risco:** baixo
-- **Critérios:** cada bioma é visual e sonoramente distinto; performance mantida ([budgets](09-PERFORMANCE.md)).
+- **Critérios — ✅ concluída em 19/jul/2026:**
+  - [x] `BiomeDef`/`BiomeRegistry` + `WorldGenerator.bioma_em()`: 5 anéis por distância do centro do mundo (Campos Dourados/Floresta Cúbica/Colinas de Pedra/Deserto de Âmbar/Picos Gelados) — chunk inteiro, sem blending (ADR-024)
+  - [x] Cada bioma com material de superfície próprio (grama/pedra exposta/areia/gelo) + recurso exclusivo: madeira rara (Floresta Cúbica), âmbar (Deserto de Âmbar); Picos Gelados reaproveita cristal dourado (F10)
+  - [x] Cavernas decoradas: bolsão pequeno e determinístico (não geração 3D completa — hedge do ADR-020 fechado), com tocha automática funcional (luz de verdade, via `EventBus.block_placed` adiado)
+  - [x] `CreatureSpawner` biome-aware: as 8 espécies "sem bioma" da F10 ganham `pode_ser_selvagem=true` + habitat real; Cavernas (Pedra/Faísca) seguem onipresentes à noite, como desde a F7
+  - [x] `WeatherService` (puro) + `WeatherSystem`: clima Nenhum/Chuva/Tempestade por timer, partículas de chuva acompanhando o jogador; tempestade dobra o peso de Faísca no spawn — visual + spawn, sem dano (GDD)
+  - [x] `AudioManager` real: buses Master/Música/SFX; SFX sintetizados em código (`AudioStreamGenerator`, sem asset externo) pra quebrar/colocar bloco, craft, captura, vitória, missão, morte; `tocar_musica()` pronta por contexto (dia/noite), silenciosa até o dono trazer `.ogg` reais — zero código a mudar depois (ADR-024)
+  - [x] Polimento visual: partículas de quebra de bloco (cor por material) + luz ambiente tingida por bioma e escurecida no clima
+  - [x] Minimapa — fora de escopo por decisão (já opcional no GDD), vai pro backlog P4
+  - [x] 400/400 testes GUT (68 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu 60 frames + main 180 frames) sem erros; export web local ok
+  - [x] Confirmado no navegador: menu renderiza, zero erros de console
+  - [ ] CI verde — verificação em andamento
+  - [ ] Validação com o Murilo jogando: cada bioma sentido como visualmente distinto na prática
 
 ## F12 — Versão 1.0
 - **Objetivo:** fechar: balancear, portar, polir.

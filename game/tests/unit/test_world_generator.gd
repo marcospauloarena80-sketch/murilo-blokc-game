@@ -18,10 +18,12 @@ func test_mesma_seed_mesmo_chunk_e_deterministico() -> void:
 
 
 func test_seeds_diferentes_podem_gerar_mundos_diferentes() -> void:
+	## Chunk (4,4) é Campos Dourados (F11, ADR-024) — com árvores permitidas,
+	## preserva a variância original entre seeds que este teste depende.
 	var gerador_a := WorldGenerator.new(1)
 	var gerador_b := WorldGenerator.new(999)
-	var chunk_a := gerador_a.gerar_chunk(0, 0)
-	var chunk_b := gerador_b.gerar_chunk(0, 0)
+	var chunk_a := gerador_a.gerar_chunk(4, 4)
+	var chunk_b := gerador_b.gerar_chunk(4, 4)
 	var algum_diferente := false
 	for x in range(16):
 		for z in range(16):
@@ -33,17 +35,20 @@ func test_seeds_diferentes_podem_gerar_mundos_diferentes() -> void:
 
 
 func test_altura_fica_dentro_dos_limites_esperados() -> void:
+	## Material de superfície varia por bioma desde a F11 (ADR-024) — detecta
+	## o topo sólido genericamente, não só grama, pra continuar válido em
+	## qualquer bioma que este chunk caia.
 	var gerador := WorldGenerator.new(7)
 	var chunk := gerador.gerar_chunk(2, -3)
 	for x in range(16):
 		for z in range(16):
 			var topo_solido := -1
 			for y in range(64):
-				if chunk.get_block(x, y, z) == 1:
+				if BlockRegistry.e_solido(chunk.get_block(x, y, z)):
 					topo_solido = y
 			assert_true(
 				topo_solido >= 15 and topo_solido <= 45,
-				"altura da grama fora do esperado: %d" % topo_solido
+				"altura do topo fora do esperado: %d" % topo_solido
 			)
 
 
@@ -95,17 +100,18 @@ func test_cristal_dourado_aparece_em_area_grande_o_suficiente() -> void:
 
 
 func test_minerio_so_substitui_pedra_nao_terra_nem_grama() -> void:
+	## Chunk (0,0) cai em Picos Gelados (F11, ADR-024) — topo é gelo, não
+	## grama, mas a camada logo abaixo continua terra (nunca minério).
 	var gerador := WorldGenerator.new(5)
 	var chunk := gerador.gerar_chunk(0, 0)
 	for x in range(16):
 		for z in range(16):
 			var topo_solido := -1
 			for y in range(64):
-				if chunk.get_block(x, y, z) == 1:
+				if BlockRegistry.e_solido(chunk.get_block(x, y, z)):
 					topo_solido = y
-			# as 2 camadas abaixo do topo (grama) devem ser terra, nunca minério
 			assert_eq(
 				chunk.get_block(x, topo_solido - 1, z),
 				2,
-				"camada logo abaixo da grama deveria ser terra"
+				"camada logo abaixo do topo deveria ser terra"
 			)

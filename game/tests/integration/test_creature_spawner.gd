@@ -84,6 +84,45 @@ func test_spawn_de_noite_so_gera_especies_agressivas() -> void:
 		assert_eq(criatura.especie.periodo_spawn, "noite")
 
 
+func test_campos_dourados_de_dia_inclui_folhaz_e_brisim() -> void:
+	var spawner := CreatureSpawner.new()
+	add_child_autofree(spawner)
+
+	var candidatas := spawner._especies_do_periodo_e_bioma("dia", "campos_dourados")
+
+	var ids: Array = []
+	for def: CreatureDef in candidatas:
+		ids.append(def.especie_id)
+	assert_true(ids.has("brotinho"))
+	assert_true(ids.has("ventim"))
+	assert_true(ids.has("folhaz"))
+	assert_true(ids.has("brisim"))
+	assert_false(ids.has("gotelo"), "gotelo é de Picos Gelados, não Campos Dourados")
+
+
+func test_cavernas_ficam_disponiveis_a_noite_em_qualquer_bioma() -> void:
+	var spawner := CreatureSpawner.new()
+	add_child_autofree(spawner)
+
+	var candidatas := spawner._especies_do_periodo_e_bioma("noite", "picos_gelados")
+
+	var ids: Array = []
+	for def: CreatureDef in candidatas:
+		ids.append(def.especie_id)
+	assert_true(ids.has("pedrolim"), "Pedra é onipresente à noite (camada de Cavernas)")
+	assert_true(ids.has("faiscolt"), "Faísca é onipresente à noite (camada de Cavernas)")
+
+
+func test_deserto_de_ambar_de_noite_nao_inclui_gota() -> void:
+	var spawner := CreatureSpawner.new()
+	add_child_autofree(spawner)
+
+	var candidatas := spawner._especies_do_periodo_e_bioma("noite", "deserto_de_ambar")
+
+	for def: CreatureDef in candidatas:
+		assert_ne(def.elemento, "gota", "Deserto de Âmbar não tem elemento gota")
+
+
 func test_despawna_criatura_muito_distante() -> void:
 	var jogador := _jogador_falso(Vector3.ZERO)
 	var spawner := CreatureSpawner.new()

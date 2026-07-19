@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BiomeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/worldgen/biome_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+bioma_id = "colinas_de_pedra"
+nome = "Colinas de Pedra"
+elementos_cubelin = PackedStringArray("pedra")
+cor_ambiente = Color(0.9, 0.9, 0.9, 1)

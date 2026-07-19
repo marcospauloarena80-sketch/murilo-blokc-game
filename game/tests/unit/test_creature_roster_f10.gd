@@ -1,6 +1,8 @@
 extends GutTest
-## Ver docs/01-GDD.md §9/§13 e docs/07-DECISOES.md ADR-023 (roster 12/6 sem
-## bioma ainda — só usadas em batalhas de Guardião até a F11).
+## Ver docs/01-GDD.md §9/§13 e docs/07-DECISOES.md ADR-023/ADR-024. Roster
+## 12/6 criado na F10 (só em batalhas de Guardião); F11 dá bioma às 8
+## espécies base, que passam a `pode_ser_selvagem = true` (ADR-024) — as 4
+## formas evoluídas continuam sem spawn selvagem, igual Pedrargo/Faiscozap.
 
 const ELEMENTOS := ["pedra", "mato", "brasa", "gota", "vento", "faisca"]
 const ESPECIES_SEM_BIOMA := [
@@ -16,6 +18,9 @@ const ESPECIES_SEM_BIOMA := [
 	"chamarao",
 	"maruja",
 	"marejao"
+]
+const ESPECIES_BASE_F10 := [
+	"brasita", "gotelo", "rochedo", "centelha", "folhaz", "brisim", "chamote", "maruja"
 ]
 const EVOLUCOES_F10 := {
 	"folhaz": "folharaiz",
@@ -41,12 +46,16 @@ func test_2_especies_por_elemento() -> void:
 		)
 
 
-func test_especies_novas_nao_spawnam_selvagens_ainda() -> void:
-	for id: String in ESPECIES_SEM_BIOMA:
+func test_especies_base_da_f10_spawnam_selvagens_desde_a_f11() -> void:
+	for id: String in ESPECIES_BASE_F10:
 		var def := CreatureRegistry.get_creature(id)
-		assert_false(
-			def.pode_ser_selvagem, "%s ainda não tem bioma (F11) — não deveria spawnar" % id
-		)
+		assert_true(def.pode_ser_selvagem, "%s já tem bioma (F11) — deveria poder spawnar" % id)
+
+
+func test_formas_evoluidas_f10_nunca_spawnam_selvagens() -> void:
+	for evoluida_id: String in EVOLUCOES_F10.values():
+		var def := CreatureRegistry.get_creature(evoluida_id)
+		assert_false(def.pode_ser_selvagem, "%s é evolução — nunca spawna selvagem" % evoluida_id)
 
 
 func test_6_especies_evoluem_no_total() -> void:

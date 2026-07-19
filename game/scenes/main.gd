@@ -111,6 +111,21 @@ func _atualizar_iluminacao() -> void:
 	_luz_sol.rotation_degrees.x = r["angulo_x_graus"]
 	_luz_sol.light_energy = r["energia_sol"]
 	_ambiente.environment.ambient_light_energy = r["energia_ambiente"]
+	_atualizar_cor_ambiente()
+
+
+func _atualizar_cor_ambiente() -> void:
+	## Cada bioma tinge a luz ambiente (BiomeDef.cor_ambiente); clima escurece
+	## um pouco por cima disso — polimento visual da F11 (ADR-024).
+	var bioma_id := WorldGenerator.bioma_em(
+		int(_player.global_position.x), int(_player.global_position.z)
+	)
+	var bioma := BiomeRegistry.get_bioma(bioma_id)
+	var cor: Color = bioma.cor_ambiente if bioma != null else Color.WHITE
+	var clima := get_tree().get_first_node_in_group("weather_system") as WeatherSystem
+	if clima != null and clima.estado_atual != WeatherService.Estado.NENHUM:
+		cor = cor.darkened(0.25 if clima.eh_tempestade() else 0.12)
+	_ambiente.environment.ambient_light_color = cor
 
 
 func _verificar_transicao_dia_noite() -> void:

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BiomeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/worldgen/biome_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+bioma_id = "campos_dourados"
+nome = "Campos Dourados"
+elementos_cubelin = PackedStringArray("mato", "vento")
+cor_ambiente = Color(1, 0.98, 0.85, 1)
