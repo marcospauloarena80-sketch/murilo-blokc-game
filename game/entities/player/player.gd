@@ -17,7 +17,6 @@ const AMPLITUDE_MAX_BALANCO: float = 0.6
 
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
-var _bloco_a_colocar: int = 3
 var _progresso_quebra: float = 0.0
 var _bloco_em_quebra: Vector3i = Vector3i(0, -999, 0)
 var _fase_balanco: float = 0.0
@@ -146,9 +145,19 @@ func _animar_membros(delta: float) -> void:
 
 
 func _processar_selecao_de_bloco() -> void:
-	for i in range(1, 7):
+	for i in range(1, 9):
 		if Input.is_action_just_pressed("hotbar_%d" % i):
-			_bloco_a_colocar = i
+			GameState.hotbar_selecionado = i - 1
+
+
+func _multiplicador_ferramenta_atual() -> float:
+	var item_id: String = GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
+	if item_id == "":
+		return 1.0
+	var def := ItemRegistry.get_item(item_id)
+	if def == null or not def.eh_ferramenta:
+		return 1.0
+	return def.multiplicador_velocidade
 
 
 func _raycast_mira() -> Dictionary:
@@ -186,7 +195,7 @@ func _processar_mira_e_interacao(delta: float) -> void:
 		var id_alvo := _chunk_manager.get_block(bloco_mirado)
 		var def := BlockRegistry.get_block(id_alvo)
 		if def != null:
-			_progresso_quebra += delta
+			_progresso_quebra += delta * _multiplicador_ferramenta_atual()
 			if _progresso_quebra >= def.dureza:
 				_chunk_manager.set_block(bloco_mirado, BlockRegistry.AR_ID)
 				_progresso_quebra = 0.0
@@ -196,4 +205,16 @@ func _processar_mira_e_interacao(delta: float) -> void:
 	if Input.is_action_just_pressed("colocar"):
 		var adjacente := bloco_mirado + Vector3i(normal.round())
 		if _chunk_manager.get_block(adjacente) == BlockRegistry.AR_ID:
-			_chunk_manager.set_block(adjacente, _bloco_a_colocar)
+			_tentar_colocar_bloco(adjacente)
+
+
+func _tentar_colocar_bloco(adjacente: Vector3i) -> void:
+	var item_id: String = GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
+	if item_id == "":
+		return
+	var def := ItemRegistry.get_item(item_id)
+	if def == null or def.bloco_id == BlockRegistry.AR_ID:
+		return
+	if not GameState.inventario_hotbar.remover(item_id, 1):
+		return
+	_chunk_manager.set_block(adjacente, def.bloco_id)

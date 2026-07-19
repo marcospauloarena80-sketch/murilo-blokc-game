@@ -43,7 +43,13 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
 - **Objetivo:** fechar o loop minerar→coletar→craftar→construir.
 - **Entregas:** `InventoryModel` puro + testes; drops com atração magnética; hotbar 8 + mochila 24; tela única inventário/craft; 6 receitas; bancada; ferramentas afetam velocidade de quebra.
 - **Dependências:** F2 (blocos), F3 (interação) · **Estimativa:** 2–3 sessões · **Risco:** médio (UX de inventário)
-- **Critérios:** loop completo sem bugs: quebrar árvore → tábuas → bancada → picareta de pedra; testes de inventário/craft 100%.
+- **Critérios — ✅ concluída em 19/jul/2026:**
+  - [x] Loop completo sem bugs: quebrar árvore → tábuas → bancada → picareta de pedra — verificado por teste de integração ponta a ponta (`test_f4_loop_completo.gd`) exercitando o fluxo real de eventos (ChunkManager → EventBus → LootSpawner → ItemDrop → GameState) + confirmado visualmente no navegador (HUD hotbar, sem erros de console)
+  - [x] Testes de inventário/craft 100% — 60/60 testes GUT no total do projeto
+  - [x] Drops com atração magnética (`ItemDrop`: flutua, gira, atrai no raio de 3 e coleta em contato) + `LootSpawner` reagindo a `EventBus.block_broken`
+  - [x] Hotbar real substitui o seletor numérico temporário do F2; ferramentas (`multiplicador_velocidade`) afetam velocidade de quebra (MB-020)
+  - [x] Tela de inventário/craft (`inventory_screen.gd`, toggle pela tecla I) + HUD com hotbar sempre visível — decisão de fluxo em ADR-016
+  - [ ] Validação de UX com o Murilo (fica pra sessão de validação, não é algo que eu meço sozinho)
 
 ## F5 — Save + HUD → **MVP 0.1 🎉**
 - **Objetivo:** transformar o protótipo em jogo: progresso persiste.
