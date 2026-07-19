@@ -180,7 +180,7 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] Minimapa — fora de escopo por decisão (já opcional no GDD), vai pro backlog P4
   - [x] 400/400 testes GUT (68 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu 60 frames + main 180 frames) sem erros; export web local ok
   - [x] Confirmado no navegador: menu renderiza, zero erros de console
-  - [ ] CI verde — verificação em andamento
+  - [x] CI verde (commit `05cdde8`): [run 29689356985](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29689356985) — lint, test, export-web todos success. Achado real no caminho: o job de teste (run 29688290429) rodava os 400 testes com sucesso mas o processo do Godot nunca fechava num container Linux sem driver de áudio real — corrigido com `--audio-driver Dummy` no workflow, primeira vez que a suíte toca áudio de verdade (AudioManager)
   - [ ] Validação com o Murilo jogando: cada bioma sentido como visualmente distinto na prática
 
 ## F12 — Versão 1.0
