@@ -196,7 +196,7 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] Balanceamento geral: revisão documentada (12 `AttackDef` perfeitamente simétricos entre elementos, nenhuma inconsistência) — sem dado de playtest real, nenhum número foi alterado às cegas
   - [x] 425/425 testes GUT (73 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu 60 frames + main 180 frames) sem erros; exports web/macOS/Windows locais ok
   - [x] Confirmado no navegador: menu renderiza, zero erros de console
-  - [ ] CI verde — verificação em andamento
+  - [x] CI verde (commit `f9e76ab`): [run 29690031107](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29690031107) — lint, test, export-web todos success
   - [ ] Murilo aprova a 1.0 — pendente do playtest real
 
 ---
