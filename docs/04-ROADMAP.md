@@ -122,6 +122,7 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] 240/240 testes GUT (41 scripts) — cobertura extensa da lógica de batalha (triângulo elemental, dano, ordem de turno, troca, fuga, poção, captura, XP/evolução) + testes de orquestração da tela
   - [x] gdformat/gdlint limpos no projeto inteiro; smoke headless (menu + main, 60/180 frames) sem erros; export web local ok
   - [x] Confirmado no navegador: menu renderiza, zero erros de console
+  - [x] CI verde (commit `d3bebec`): [run 29679567695](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29679567695) — lint 17s, test 4m49s, export-web 1m44s
   - [ ] Validação com o Murilo jogando: capturar → treinar → evoluir sentido como justo e satisfatório na prática (balanceamento fino fica pra depois do playtest)
 
 ## F9 — Vilarejo, NPCs e missões
