@@ -108,6 +108,8 @@ func _criar_outline() -> MeshInstance3D:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		girar_camera(event.relative.x, event.relative.y, SENSIBILIDADE_MOUSE)
+	elif event is InputEventMouseButton and event.pressed:
+		_talvez_capturar_mouse()
 
 
 func girar_camera(delta_x: float, delta_y: float, sensibilidade: float) -> void:
@@ -117,12 +119,22 @@ func girar_camera(delta_x: float, delta_y: float, sensibilidade: float) -> void:
 	)
 
 
-func _atualizar_captura_do_mouse(jogando: bool) -> void:
+func _talvez_capturar_mouse() -> void:
+	## Só pede captura em resposta a um clique de verdade — pedir toda hora
+	## (ex.: a cada frame) trava a exportação web, porque a API de Pointer
+	## Lock do navegador exige um gesto real do usuário e rejeita chamadas
+	## fora disso (achado real reportado pelo usuário na F12, ADR-025).
 	if DisplayServer.is_touchscreen_available():
-		return  # toque olha por arrasto de tela, não por captura de mouse (F12)
-	var modo_desejado := Input.MOUSE_MODE_CAPTURED if jogando else Input.MOUSE_MODE_VISIBLE
-	if Input.mouse_mode != modo_desejado:
-		Input.mouse_mode = modo_desejado
+		return  # toque olha por arrasto de tela, não por captura de mouse
+	if GameState.current_state == GameState.State.PLAYING:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func _liberar_mouse_se_necessario(jogando: bool) -> void:
+	if DisplayServer.is_touchscreen_available():
+		return
+	if not jogando and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
 func _physics_process(delta: float) -> void:
@@ -137,7 +149,7 @@ func _physics_process(delta: float) -> void:
 			_aplicar_dano_de_queda(_y_inicio_queda - global_position.y)
 
 	var jogando := GameState.current_state == GameState.State.PLAYING
-	_atualizar_captura_do_mouse(jogando)
+	_liberar_mouse_se_necessario(jogando)
 
 	if jogando:
 		if Input.is_action_just_pressed("pular") and is_on_floor():
