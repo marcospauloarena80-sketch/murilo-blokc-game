@@ -19,6 +19,27 @@ func slot_vazio(indice: int) -> bool:
 	return _slots[indice].is_empty()
 
 
+func serializar() -> Array:
+	## Já é JSON-safe: cada slot é {} ou {"item_id": String, "quantidade": int}.
+	var resultado: Array = []
+	for slot: Dictionary in _slots:
+		resultado.append(slot.duplicate())
+	return resultado
+
+
+func carregar_serializado(dados: Array) -> void:
+	## JSON não distingue int/float — normaliza "quantidade" de volta pra int
+	## depois do round-trip (Godot faz parse de números JSON como float).
+	for i in range(tamanho):
+		var slot_bruto: Dictionary = dados[i] if i < dados.size() else {}
+		if slot_bruto.is_empty():
+			_slots[i] = {}
+			continue
+		var slot: Dictionary = slot_bruto.duplicate()
+		slot["quantidade"] = int(slot.get("quantidade", 0))
+		_slots[i] = slot
+
+
 func get_item_id(indice: int) -> String:
 	return _slots[indice].get("item_id", "")
 

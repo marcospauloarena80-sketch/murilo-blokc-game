@@ -12,6 +12,12 @@ var _player: Player = null
 
 
 func _ready() -> void:
+	if GameState.veio_de_continuar:
+		# Aparência já vem do save; a tela de criação não faz sentido aqui.
+		GameState.mudar_estado(GameState.State.PLAYING)
+		queue_free()
+		return
+
 	GameState.mudar_estado(GameState.State.CHARACTER_CREATION)
 	_player = get_tree().get_first_node_in_group("player") as Player
 

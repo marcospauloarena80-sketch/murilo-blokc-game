@@ -11,10 +11,29 @@ var aparencia_atual: CharacterAppearance = CharacterAppearance.new()
 var inventario_hotbar: InventoryModel = InventoryModel.new(8)
 var inventario_mochila: InventoryModel = InventoryModel.new(24)
 var hotbar_selecionado: int = 0
+var vida_atual: int = 20
+var vida_maxima: int = 20
+
+## Preenchidos pelo menu antes de trocar pra scenes/main.tscn (F5).
+var veio_de_continuar: bool = false
+var delta_blocos_carregado: Dictionary = {}
+var posicao_salva: Vector3 = Vector3(64, 45, 64)
 
 
 func mudar_estado(novo_estado: State) -> void:
 	current_state = novo_estado
+
+
+func reiniciar_para_novo_jogo() -> void:
+	seed_atual = randi()
+	tempo_de_jogo_seg = 0.0
+	aparencia_atual = CharacterAppearance.new()
+	inventario_hotbar = InventoryModel.new(8)
+	inventario_mochila = InventoryModel.new(24)
+	hotbar_selecionado = 0
+	vida_atual = vida_maxima
+	veio_de_continuar = false
+	delta_blocos_carregado = {}
 
 
 func adicionar_item(item_id: String, quantidade: int) -> int:

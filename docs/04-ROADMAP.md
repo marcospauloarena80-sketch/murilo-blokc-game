@@ -56,7 +56,17 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
 - **Objetivo:** transformar o protótipo em jogo: progresso persiste.
 - **Entregas:** SaveManager (JSON versionado, delta de mundo); autosave + save manual; menu principal (Novo/Continuar); HUD (hotbar, vida); tela de pausa.
 - **Dependências:** F2–F4 · **Estimativa:** 1–2 sessões · **Risco:** baixo
-- **Critérios:** fechar o navegador e voltar → mundo, posição e inventário intactos; **Murilo joga uma sessão de 30 min e quer voltar** (critério de sucesso do projeto).
+- **Critérios — ✅ concluída em 19/jul/2026:**
+  - [x] Mundo, posição e inventário intactos entre sessões — verificado ponta a ponta com o **código real** do menu (`test_menu_fluxo_completo.gd`: Novo Jogo → joga → edita bloco → ganha item → Salva → simula reinício → Continuar → confirma seed/delta/inventário/posição do player todos restaurados)
+  - [x] SaveManager: JSON versionado (`schema_version`), backup automático do save anterior (`slot1.bak.json`), hook de migração pronto pra v2+
+  - [x] Autosave (60s de tempo de jogo) + save manual (tela de pausa)
+  - [x] Menu principal: Novo Jogo (seed aleatória) / Continuar (só habilita se existe save) — vira o novo `run/main_scene`
+  - [x] HUD: hotbar (F4) + barra de vida (`GameState.vida_atual/vida_maxima` — sem fonte de dano ainda, isso é F6/F7)
+  - [x] Tela de pausa (tecla Esc): Continuar/Salvar/Sair pro menu
+  - [x] 78/78 testes GUT
+  - [x] Confirmado no navegador: menu renderiza (Novo Jogo habilitado, Continuar desabilitado sem save), zero erros de console
+  - [ ] **Persistência real IndexedDB entre recarregamentos de navegador** — não testável de forma confiável nesta ferramenta de automação (mesmo gotcha de clique do F3/F4); a lógica de save/load em si está 100% testada, mas o "fechar aba e abrir de novo" depende do Godot sincronizar `user://` pro IndexedDB do browser, que é comportamento documentado da engine, não código nosso — confirmar na sessão de validação com o Murilo
+  - [ ] Murilo joga 30 min e quer voltar (critério de sucesso do projeto — validação com o usuário)
 
 ## F6 — Sobrevivência
 - **Objetivo:** dar propósito e ritmo ao mundo.

@@ -27,3 +27,19 @@ offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_constants/separation = 6
+
+[node name="BarraVida" type="ProgressBar" parent="Control"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -84.0
+offset_right = 100.0
+offset_bottom = -66.0
+grow_horizontal = 2
+grow_vertical = 0
+max_value = 20.0
+value = 20.0
+show_percentage = false

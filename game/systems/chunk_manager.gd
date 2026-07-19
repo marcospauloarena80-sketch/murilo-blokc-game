@@ -19,10 +19,13 @@ var _material: StandardMaterial3D
 var _chunks: Dictionary = {}
 var _chunk_nodes: Dictionary = {}
 var _fila_sujos: Array[Vector2i] = []
+var _edicoes: Dictionary = {}
 
 
 func _ready() -> void:
 	add_to_group("chunk_manager")
+	if GameState.seed_atual != 0:
+		world_seed = GameState.seed_atual
 	_worldgen = WorldGenerator.new(world_seed)
 	_mesher = ChunkMesher.new()
 	_material = StandardMaterial3D.new()
@@ -79,6 +82,7 @@ func set_block(world_pos: Vector3i, id: int) -> void:
 	var chunk: ChunkData = _chunks[coord]
 	var id_anterior := chunk.get_block(local.x, local.y, local.z)
 	chunk.set_block(local.x, local.y, local.z, id)
+	_edicoes[world_pos] = id
 	if id == BlockRegistry.AR_ID:
 		EventBus.block_broken.emit(world_pos, id_anterior)
 	else:
@@ -92,6 +96,21 @@ func set_block(world_pos: Vector3i, id: int) -> void:
 		_marcar_sujo(coord + Vector2i(0, -1))
 	if local.z == ChunkData.SIZE_H - 1:
 		_marcar_sujo(coord + Vector2i(0, 1))
+
+
+func exportar_delta() -> Dictionary:
+	## Chaves viram String pra caber em JSON (ADR-006).
+	var resultado: Dictionary = {}
+	for pos: Vector3i in _edicoes:
+		resultado["%d,%d,%d" % [pos.x, pos.y, pos.z]] = _edicoes[pos]
+	return resultado
+
+
+func aplicar_delta(delta: Dictionary) -> void:
+	for chave: String in delta:
+		var partes: PackedStringArray = chave.split(",")
+		var pos := Vector3i(int(partes[0]), int(partes[1]), int(partes[2]))
+		set_block(pos, int(delta[chave]))
 
 
 func tem_chunks_pendentes() -> bool:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://b0main0001"]
+[gd_scene load_steps=10 format=3 uid="uid://b0main0001"]
 
 [ext_resource type="PackedScene" path="res://entities/player/player.tscn" id="1"]
 [ext_resource type="Script" path="res://systems/chunk_manager.gd" id="2"]
@@ -6,6 +6,8 @@
 [ext_resource type="Script" path="res://systems/loot_spawner.gd" id="4"]
 [ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://ui/inventory_screen/inventory_screen.tscn" id="6"]
+[ext_resource type="Script" path="res://scenes/main.gd" id="7"]
+[ext_resource type="PackedScene" path="res://ui/pause_screen/pause_screen.tscn" id="8"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -15,6 +17,7 @@ ambient_light_color = Color(1, 1, 1, 1)
 ambient_light_energy = 0.6
 
 [node name="Main" type="Node3D"]
+script = ExtResource("7")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
@@ -38,3 +41,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 45, 64)
 [node name="Hud" parent="." instance=ExtResource("5")]
 
 [node name="InventoryScreen" parent="." instance=ExtResource("6")]
+
+[node name="PauseScreen" parent="." instance=ExtResource("8")]

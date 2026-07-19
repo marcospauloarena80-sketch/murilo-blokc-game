@@ -76,6 +76,9 @@ func aplicar_aparencia(aparencia: CharacterAppearance) -> void:
 
 
 func _ao_mundo_pronto() -> void:
+	if GameState.veio_de_continuar:
+		global_position = GameState.posicao_salva
+		velocity = Vector3.ZERO
 	set_physics_process(true)
 
 

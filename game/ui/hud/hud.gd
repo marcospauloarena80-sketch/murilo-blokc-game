@@ -8,6 +8,7 @@ const TAMANHO_SLOT := Vector2(44, 44)
 var _botoes: Array[Button] = []
 
 @onready var _hotbar: HBoxContainer = $Control/HotbarContainer
+@onready var _barra_vida: ProgressBar = $Control/BarraVida
 
 
 func _ready() -> void:
@@ -25,6 +26,8 @@ func _process(_delta: float) -> void:
 		return
 	for i in range(8):
 		_atualizar_slot(i)
+	_barra_vida.max_value = GameState.vida_maxima
+	_barra_vida.value = GameState.vida_atual
 
 
 func _atualizar_slot(indice: int) -> void:
