@@ -84,6 +84,7 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] 118/118 testes GUT (25 scripts) — cobre fome/energia/comer, dano de queda, cama/respawn/morte+drop, baú (interação/UI/quebra/save-continue), tocha (spawn/remove/duplicata/save-continue)
   - [x] gdformat/gdlint limpos no projeto inteiro; smoke headless (menu + main, 60/120 frames) sem erros; export web local ok (~41MB)
   - [x] Confirmado no navegador: menu renderiza, zero erros de console (mesmo gotcha de clique WebGL do F3/F4/F5 — lógica verificada via GUT, não clique simulado)
+  - [x] CI verde (commit `ad5f7c8`): [run 29674711476](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29674711476) — lint 15s, test 3m34s, export-web 1m41s
   - [ ] Noite muda o jogo na prática / balanceamento de fome não frustra — validação com o Murilo jogando
 
 ## F7 — Cubelins no mundo
