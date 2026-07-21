@@ -34,7 +34,23 @@ jobs:
       - name: Import project
         run: godot --headless --path $GAME_DIR --import
       - name: Run GUT tests
-        run: godot --headless --audio-driver Dummy --path $GAME_DIR -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit
+        run: |
+          set -o pipefail
+          # Achado real (ADR-026, mesma classe do fix da F11): o processo do
+          # Godot às vezes não sai sozinho depois de "All tests passed!" —
+          # trava dentro do próprio addon GUT (error_tracker.gd/GutRunner.gd)
+          # na hora de encerrar, num jeito que parece ligado ao container
+          # Linux, não à lógica dos testes. --audio-driver Dummy já ajuda mas
+          # não elimina 100% — timeout força o encerramento e o resultado
+          # real vem do texto impresso, não do código de saída do processo.
+          timeout 480 godot --headless --audio-driver Dummy --path $GAME_DIR -s addons/gut/gut_cmdln.gd -gdir=res://tests -gexit 2>&1 | tee gut_output.log || true
+          status=${PIPESTATUS[0]}
+          if grep -q "All tests passed!" gut_output.log; then
+            echo "Todos os testes passaram (confirmado pelo texto da saída)."
+            exit 0
+          fi
+          echo "Testes não confirmaram sucesso (status=$status) — falha real ou travou antes de terminar."
+          exit 1
 
   export-web:
     runs-on: ubuntu-latest
