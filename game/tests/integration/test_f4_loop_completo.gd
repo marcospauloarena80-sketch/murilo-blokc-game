@@ -16,6 +16,10 @@ func test_quebrar_bloco_real_ate_material_utilizavel_no_craft() -> void:
 	var cm := ChunkManager.new()
 	cm.world_seed = 99
 	add_child_autofree(cm)
+	## Geração de chunk é time-sliced (ADR-026) — precisa existir antes de
+	## dar set_block na posição de teste.
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
 
 	var spawner := LootSpawner.new()
 	add_child_autofree(spawner)

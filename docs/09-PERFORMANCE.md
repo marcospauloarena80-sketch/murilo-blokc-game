@@ -21,7 +21,7 @@ Meta declarada: **60 FPS constantes** no navegador desktop, ≥30 FPS em tablet,
 ### Mundo voxel (o gastador principal)
 - 1 mesh por chunk; **só faces expostas** (face culling entre blocos sólidos).
 - **Texture atlas único** para todos os blocos → 1 material → chunks em pouquíssimos draw calls.
-- Meshing **time-sliced** (fila de chunks sujos, budget de 4ms/frame) — a web é single-thread, nunca meshar tudo num frame.
+- Meshing **e geração de dados** (`WorldGenerator.gerar_chunk`) **time-sliced**, ambos por fila (budget de poucos chunks/frame) — a web é single-thread, nunca gerar nem meshar o mundo inteiro num frame só. Achado real (ADR-026): até a v1.0, só o meshing era fatiado — a geração de dados dos 64 chunks rodava toda de uma vez dentro do `_ready()`, o que travava a aba inteira por vários segundos em navegador/hardware mais lento (sem como paralelizar, single-thread).
 - Colisão gerada junto do mesh, só de chunks próximos ao jogador.
 - Greedy meshing **só se** o budget estourar (complexidade não paga adiantado).
 - Sem LOD: mundo pequeno (ADR-005) torna desnecessário.

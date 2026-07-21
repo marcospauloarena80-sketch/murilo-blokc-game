@@ -85,6 +85,10 @@ func test_interagir_com_cama_define_ponto_respawn() -> void:
 	var cm := ChunkManager.new()
 	cm.world_seed = 42
 	add_child_autofree(cm)
+	## Geração de chunk é time-sliced (ADR-026) — precisa existir antes de
+	## dar set_block na posição de teste.
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
 
 	var pos := Vector3i(5, 40, 5)
 	cm.set_block(pos, 7)  # id da cama (data/blocks/cama.tres)

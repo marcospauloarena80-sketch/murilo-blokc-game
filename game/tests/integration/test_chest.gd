@@ -19,6 +19,10 @@ func test_interagir_com_bau_emite_chest_requested_com_chave_certa() -> void:
 	var cm := ChunkManager.new()
 	cm.world_seed = 44
 	add_child_autofree(cm)
+	## Geração de chunk é time-sliced (ADR-026) — precisa existir antes de
+	## dar set_block na posição de teste.
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
 
 	var pos := Vector3i(7, 40, 7)
 	cm.set_block(pos, 8)  # id do baú

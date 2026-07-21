@@ -36,6 +36,10 @@ func test_colocar_bloco_consome_item_placeavel_da_hotbar() -> void:
 	var cm := ChunkManager.new()
 	cm.world_seed = 1
 	add_child_autofree(cm)
+	## Geração de chunk é time-sliced (ADR-026) — precisa existir antes de
+	## colocar bloco na posição de teste.
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
 
 	GameState.inventario_hotbar.adicionar("pedra", 5)
 	var player := PlayerScene.instantiate() as Player

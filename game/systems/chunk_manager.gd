@@ -2,14 +2,19 @@ class_name ChunkManager
 extends Node3D
 ## Orquestra os chunks do mundo: geração, malha e colisão. Mundo finito 8x8 chunks
 ## (ADR-005). API pública: get_block/set_block em coordenadas de mundo.
-## Re-mesh incremental é time-sliced (docs/09-PERFORMANCE.md) — no máximo
-## CHUNKS_POR_FRAME chunks processados por frame, nunca o mundo inteiro de uma vez.
+## Geração de dados E re-mesh são time-sliced (docs/09-PERFORMANCE.md) — no
+## máximo alguns chunks processados por frame, nunca o mundo inteiro de uma
+## vez. Achado real (ADR-026): gerar os dados dos 64 chunks de uma vez só
+## dentro de _ready() travava a aba inteira por vários segundos num navegador
+## mais lento (single-threaded, sem como rodar em paralelo) — só o re-mesh
+## era fatiado antes, a geração em si não.
 
 signal mundo_gerado
 
 const WORLD_CHUNKS_X: int = 8
 const WORLD_CHUNKS_Z: int = 8
 const CHUNKS_POR_FRAME: int = 2
+const CHUNKS_GERADOS_POR_FRAME: int = 2
 
 @export var world_seed: int = 12345
 
@@ -18,8 +23,10 @@ var _mesher: ChunkMesher
 var _material: StandardMaterial3D
 var _chunks: Dictionary = {}
 var _chunk_nodes: Dictionary = {}
+var _fila_geracao: Array[Vector2i] = []
 var _fila_sujos: Array[Vector2i] = []
 var _edicoes: Dictionary = {}
+var _mundo_gerado_emitido: bool = false
 
 
 func _ready() -> void:
@@ -30,43 +37,54 @@ func _ready() -> void:
 	_mesher = ChunkMesher.new()
 	_material = StandardMaterial3D.new()
 	_material.vertex_color_use_as_albedo = true
-	_gerar_mundo()
-
-
-func _gerar_mundo() -> void:
-	var luzes_geradas: Array[Vector3i] = []
 	for cx in range(WORLD_CHUNKS_X):
 		for cz in range(WORLD_CHUNKS_Z):
-			var coord := Vector2i(cx, cz)
-			_chunks[coord] = _worldgen.gerar_chunk(cx, cz)
-			_fila_sujos.append(coord)
-			for luz_local: Vector3i in _worldgen.luzes_locais_da_ultima_chunk():
-				luzes_geradas.append(
-					Vector3i(
-						cx * ChunkData.SIZE_H + luz_local.x,
-						luz_local.y,
-						cz * ChunkData.SIZE_H + luz_local.z
-					)
-				)
-	## Adiado pro próximo frame (call_deferred): TorchLightManager é um nó
-	## irmão declarado depois de ChunkManager em main.tscn — emitir aqui
-	## dentro de _ready() aconteceria antes dele conectar o EventBus (mesma
-	## classe de bug do CreatureSpawner na F7, ADR-020).
-	call_deferred("_emitir_luzes_das_cavernas", luzes_geradas)
+			_fila_geracao.append(Vector2i(cx, cz))
 
 
-func _emitir_luzes_das_cavernas(posicoes: Array[Vector3i]) -> void:
-	for pos: Vector3i in posicoes:
+func _gerar_um_chunk(coord: Vector2i) -> void:
+	_chunks[coord] = _worldgen.gerar_chunk(coord.x, coord.y)
+	_fila_sujos.append(coord)
+	## _process só começa a rodar depois que TODOS os _ready() da árvore
+	## inicial (incluindo TorchLightManager) já rodaram, diferente de emitir
+	## isso dentro do _ready() do próprio ChunkManager (mesma classe de bug
+	## do CreatureSpawner na F7, ADR-020) — por isso não precisa call_deferred.
+	for luz_local: Vector3i in _worldgen.luzes_locais_da_ultima_chunk():
+		var pos := Vector3i(
+			coord.x * ChunkData.SIZE_H + luz_local.x,
+			luz_local.y,
+			coord.y * ChunkData.SIZE_H + luz_local.z
+		)
 		EventBus.block_placed.emit(pos, 9)
 
 
 func _process(_delta: float) -> void:
+	var houve_trabalho := false
+	var gerados := 0
+	while not _fila_geracao.is_empty() and gerados < CHUNKS_GERADOS_POR_FRAME:
+		_gerar_um_chunk(_fila_geracao.pop_front())
+		gerados += 1
+		houve_trabalho = true
 	var processados := 0
 	while not _fila_sujos.is_empty() and processados < CHUNKS_POR_FRAME:
 		var coord: Vector2i = _fila_sujos.pop_front()
 		_remesh_chunk(coord)
 		processados += 1
-	if _fila_sujos.is_empty() and processados > 0:
+		houve_trabalho = true
+	if (
+		not _mundo_gerado_emitido
+		and _fila_geracao.is_empty()
+		and _fila_sujos.is_empty()
+		and houve_trabalho
+	):
+		## Achado real (ADR-026): sem essa trava, qualquer edição de bloco
+		## durante o jogo normal (que também esvazia _fila_sujos ao terminar
+		## de remeshar) reemitia mundo_gerado — e quem escuta esse sinal só
+		## uma vez (Player, main.gd) reagia de novo, reaplicando delta/
+		## reposicionando o jogador no ponto salvo a cada bloco quebrado
+		## numa sessão "continuar". mundo_gerado agora é estritamente
+		## "mundo terminou de gerar pela primeira vez", não "fila zerou".
+		_mundo_gerado_emitido = true
 		mundo_gerado.emit()
 
 
@@ -133,7 +151,7 @@ func aplicar_delta(delta: Dictionary) -> void:
 
 
 func tem_chunks_pendentes() -> bool:
-	return not _fila_sujos.is_empty()
+	return not _fila_geracao.is_empty() or not _fila_sujos.is_empty()
 
 
 func fila_pendente_tamanho() -> int:

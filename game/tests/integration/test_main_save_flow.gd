@@ -75,6 +75,9 @@ func test_continuar_aplica_delta_salvo_num_chunk_manager_novo() -> void:
 
 	var main_instance := MainScene.instantiate()
 	add_child_autofree(main_instance)
+	## Delta só é aplicado quando o mundo termina de gerar de verdade
+	## (geração agora é time-sliced, ADR-026) — precisa drenar a fila antes.
+	_drenar_fila(main_instance)
 
 	var cm: ChunkManager = main_instance.get_node("ChunkManager")
 	assert_eq(cm.get_block(Vector3i(4, 40, 4)), 3, "delta do save deveria ter sido aplicado")

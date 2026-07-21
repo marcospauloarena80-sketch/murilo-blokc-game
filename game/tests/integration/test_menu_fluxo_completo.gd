@@ -95,13 +95,14 @@ func test_ciclo_completo_novo_jogo_salvar_sair_continuar() -> void:
 	# 6) Novo main.tscn "reaberto": delta e posição devem vir do save
 	var main2 := MainScene.instantiate()
 	add_child_autofree(main2)
+	## Geração de chunk é time-sliced (ADR-026) — drenar a fila dispara
+	## mundo_gerado -> main.gd aplica o delta salvo e Player reposiciona pra
+	## GameState.posicao_salva. Nada disso existe antes de drenar.
+	_drenar_fila(main2)
 	var cm2: ChunkManager = main2.get_node("ChunkManager")
 	assert_eq(cm2.get_block(Vector3i(7, 40, 7)), 3, "edição salva deveria estar de volta")
 	assert_eq(GameState.inventario_mochila.contar("tronco"), 5, "inventário deveria estar intacto")
 
-	# drenar a fila também dispara mundo_gerado -> Player._ao_mundo_pronto()
-	# reposiciona sozinho pra GameState.posicao_salva.
-	_drenar_fila(main2)
 	var player2: Player = main2.get_node("Player")
 	assert_eq(player2.global_position, posicao_jogador, "player deveria voltar pra posição salva")
 
@@ -167,8 +168,11 @@ func test_tocha_colocada_reacende_ao_continuar() -> void:
 	add_child_autofree(main2)
 	_drenar_fila(main2)
 
+	## Não conta filhos totais: o mundo real pode ter tochas naturais de
+	## caverna (F11) além da que este teste colocou — checa só a nossa.
 	var gerenciador: TorchLightManager = main2.get_node("TorchLightManager")
-	assert_eq(gerenciador.get_child_count(), 1, "tocha salva deveria reacender ao continuar")
+	var chave := GameState.chave_posicao(Vector3i(8, 40, 8))
+	assert_true(gerenciador._luzes.has(chave), "tocha salva deveria reacender ao continuar")
 
 
 func test_equipe_e_deposito_de_cubelins_sobrevivem_a_salvar_sair_continuar() -> void:

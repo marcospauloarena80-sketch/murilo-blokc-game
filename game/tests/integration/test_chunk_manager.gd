@@ -6,6 +6,9 @@ func test_mundo_gera_blocos_solidos_no_subsolo() -> void:
 	var cm := ChunkManager.new()
 	cm.world_seed = 1
 	add_child_autofree(cm)
+	## Geração de chunk é time-sliced (ADR-026) — precisa existir antes de ler.
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
 	assert_true(
 		BlockRegistry.e_solido(cm.get_block(Vector3i(5, 5, 5))),
 		"y=5 deveria estar bem abaixo da superfície (base ~30)"
@@ -16,6 +19,8 @@ func test_set_block_atualiza_get_block() -> void:
 	var cm := ChunkManager.new()
 	cm.world_seed = 2
 	add_child_autofree(cm)
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
 	cm.set_block(Vector3i(3, 40, 3), 3)
 	assert_eq(cm.get_block(Vector3i(3, 40, 3)), 3)
 

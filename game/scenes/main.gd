@@ -22,10 +22,20 @@ var _era_noite: bool = false
 
 
 func _ready() -> void:
-	if GameState.veio_de_continuar:
-		_chunk_manager.aplicar_delta(GameState.delta_blocos_carregado)
 	_era_noite = GameState.eh_noite()
 	_atualizar_iluminacao()
+	## Geração de chunks é time-sliced (ADR-026) — nenhum bloco existe ainda
+	## no _ready(). Delta salvo e altura dos NPCs só podem ser aplicados
+	## depois que o mundo termina de gerar de verdade (mesmo gate do Player).
+	if _chunk_manager.tem_chunks_pendentes():
+		_chunk_manager.mundo_gerado.connect(_ao_mundo_pronto)
+	else:
+		_ao_mundo_pronto()
+
+
+func _ao_mundo_pronto() -> void:
+	if GameState.veio_de_continuar:
+		_chunk_manager.aplicar_delta(GameState.delta_blocos_carregado)
 	_posicionar_npcs_no_chao()
 
 

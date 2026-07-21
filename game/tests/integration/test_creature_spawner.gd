@@ -14,6 +14,10 @@ func test_altura_da_superficie_encontra_chao_dentro_do_mundo() -> void:
 	var cm := ChunkManager.new()
 	cm.world_seed = 50
 	add_child_autofree(cm)
+	## Geração de chunk é time-sliced (ADR-026) — precisa existir antes de
+	## medir a altura da superfície.
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
 	var spawner := CreatureSpawner.new()
 	add_child_autofree(spawner)
 	spawner._chunk_manager = cm
@@ -54,6 +58,8 @@ func test_spawn_de_dia_so_gera_especies_passivas() -> void:
 	var cm := ChunkManager.new()
 	cm.world_seed = 53
 	add_child_autofree(cm)
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
 	_jogador_falso(Vector3(64, 45, 64))
 	var spawner := CreatureSpawner.new()
 	add_child_autofree(spawner)
@@ -71,6 +77,8 @@ func test_spawn_de_noite_so_gera_especies_agressivas() -> void:
 	var cm := ChunkManager.new()
 	cm.world_seed = 54
 	add_child_autofree(cm)
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
 	_jogador_falso(Vector3(64, 45, 64))
 	var spawner := CreatureSpawner.new()
 	add_child_autofree(spawner)
