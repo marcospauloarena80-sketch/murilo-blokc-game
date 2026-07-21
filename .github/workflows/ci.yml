@@ -34,6 +34,7 @@ jobs:
       - name: Import project
         run: godot --headless --path $GAME_DIR --import
       - name: Run GUT tests
+        shell: bash
         run: |
           set -o pipefail
           # Achado real (ADR-026, mesma classe do fix da F11): o processo do
