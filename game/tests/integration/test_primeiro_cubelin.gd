@@ -49,3 +49,15 @@ func test_objetivo_no_hud_guia_o_primeiro_passo_e_mostra_progresso() -> void:
 	GameState.progresso_quest_atual = 2
 
 	assert_string_contains(Hud.texto_objetivo(), "(2/5)")
+
+
+func test_primeiro_cubelin_nao_derruba_o_brotinho_num_golpe_so() -> void:
+	## A missão seguinte pede captura: se o melhor golpe já desmaia o alvo com
+	## vida cheia, a batalha vira vitória e não sobra o que capturar.
+	var quest := QuestRegistry.get_quest("quest_04_mineracao")
+	var meu := CreatureInstance.new(quest.recompensa_cubelin, QuestTracker.NIVEL_CUBELIN_PRESENTE)
+	var alvo := CreatureInstance.new("brotinho", BattleScreen.NIVEL_SELVAGEM_PADRAO)
+	for ataque_id: String in meu.ataques_conhecidos:
+		var ataque := AttackRegistry.get_ataque(ataque_id)
+		var dano := BattleService.calcular_dano(meu, alvo, ataque, BattleScreen.VARIACAO_MAX)
+		assert_lt(dano, alvo.vida_maxima_efetiva(), "%s com variação máxima" % ataque_id)

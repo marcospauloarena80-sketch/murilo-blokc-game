@@ -19,6 +19,9 @@ const RAIO_DESPAWN: float = 48.0
 const ALTURA_ACIMA_DO_CHAO: float = 0.4
 const ELEMENTOS_CAVERNA := ["pedra", "faisca"]  ## camada onipresente à noite (F6/F7), não é anel
 
+## Por que a última tentativa não gerou criatura (diagnóstico; "" = gerou).
+var ultimo_motivo_sem_spawn: String = ""
+
 var _chunk_manager: ChunkManager
 var _jogador: Node3D
 var _tempo_desde_spawn: float = 0.0
@@ -46,8 +49,10 @@ func _garantir_referencias() -> void:
 func _tentar_spawnar() -> void:
 	_garantir_referencias()
 	if _jogador == null or _chunk_manager == null:
+		ultimo_motivo_sem_spawn = "sem jogador ou chunk_manager"
 		return
 	if get_tree().get_nodes_in_group("creature").size() >= MAX_CRIATURAS:
+		ultimo_motivo_sem_spawn = "limite de criaturas"
 		return
 
 	var angulo: float = randf() * TAU
@@ -55,16 +60,20 @@ func _tentar_spawnar() -> void:
 	var x: int = int(floor(_jogador.global_position.x + cos(angulo) * raio))
 	var z: int = int(floor(_jogador.global_position.z + sin(angulo) * raio))
 	if not _chunk_manager.chunk_pronto_em(Vector3(x, 0, z)):
-		return  # chunk ainda sem colisão: a criatura cairia pelo mundo (ADR-026)
+		ultimo_motivo_sem_spawn = "chunk sem colisão"  # cairia pelo mundo (ADR-026)
+		return
 	var y: int = _altura_da_superficie(x, z)
 	if y < 0:
+		ultimo_motivo_sem_spawn = "sem superfície em %d,%d" % [x, z]
 		return
 
 	var periodo: String = "noite" if GameState.eh_noite() else "dia"
 	var bioma_id := WorldGenerator.bioma_em(x, z)
 	var candidatas: Array[CreatureDef] = _especies_do_periodo_e_bioma(periodo, bioma_id)
 	if candidatas.is_empty():
+		ultimo_motivo_sem_spawn = "nenhuma espécie pra %s/%s" % [periodo, bioma_id]
 		return
+	ultimo_motivo_sem_spawn = ""
 
 	var def: CreatureDef = candidatas[randi() % candidatas.size()]
 	var criatura := CreatureScene.instantiate() as Creature

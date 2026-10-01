@@ -12,7 +12,9 @@ extends CharacterBody3D
 
 const VELOCIDADE: float = 5.0
 const VELOCIDADE_CORRIDA: float = 8.0
-const FORCA_PULO: float = 4.5
+## ~1,3 bloco de altura. Com 4.5 (1,03 bloco) subir um degrau de 1 bloco ficava
+## no limite e quem caía num buraco raso não saía (achado jogando, ADR-027).
+const FORCA_PULO: float = 5.0
 const GRAVIDADE: float = 9.8
 const ALCANCE: float = 5.5
 const AMPLITUDE_MAX_BALANCO: float = 0.6

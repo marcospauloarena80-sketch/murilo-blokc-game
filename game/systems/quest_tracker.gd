@@ -4,7 +4,10 @@ extends Node
 ## padrão de LootSpawner/TorchLightManager (Node que só reage a sinais, sem
 ## lógica de mundo própria). Ver docs/01-GDD.md §12 e docs/07-DECISOES.md ADR-022.
 
-const NIVEL_CUBELIN_PRESENTE: int = 5
+## Nível 5 derrubava o Brotinho (alvo da missão seguinte, de captura) com um
+## golpe só em ~3 de 4 batalhas, porque brasa vence mato; no nível 4 o golpe
+## máximo deixa 1 de vida e a captura fica possível (ADR-027).
+const NIVEL_CUBELIN_PRESENTE: int = 4
 
 
 func _ready() -> void:

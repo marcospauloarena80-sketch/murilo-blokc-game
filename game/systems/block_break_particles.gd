@@ -13,7 +13,7 @@ func _ready() -> void:
 
 func _ao_quebrar_bloco(pos: Vector3i, block_id: int) -> void:
 	var bloco := BlockRegistry.get_block(block_id)
-	if bloco == null:
+	if bloco == null or not is_inside_tree():
 		return
 	var particulas := _criar_burst(bloco.cor)
 	particulas.position = Vector3(pos) + Vector3(0.5, 0.5, 0.5)

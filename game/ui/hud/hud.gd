@@ -19,6 +19,7 @@ var _aviso_importante: bool = false
 @onready var _hotbar: HBoxContainer = $Control/HotbarContainer
 @onready var _barra_vida: ProgressBar = $Control/BarraVida
 @onready var _label_carregando: Label = $Control/LabelCarregando
+@onready var _mira: Label = $Control/Mira
 
 
 func _ready() -> void:
@@ -96,6 +97,8 @@ func _process(delta: float) -> void:
 	if not visible:
 		return
 	_atualizar_label_carregando()
+	## A mira só faz sentido jogando; pausado ela ficava por cima dos menus.
+	_mira.visible = GameState.current_state == GameState.State.PLAYING
 	_label_objetivo.text = texto_objetivo()
 	if _tempo_aviso > 0.0:
 		_tempo_aviso -= delta
