@@ -13,6 +13,10 @@ const MAX_CRIATURAS: int = 8
 const RAIO_SPAWN_MIN: float = 10.0
 const RAIO_SPAWN_MAX: float = 24.0
 const RAIO_DESPAWN: float = 48.0
+## Caixa da criatura (0.7) é centrada na origem: nascer com o centro no topo do
+## bloco deixava metade dela dentro do chão. Com a malha do avesso a física a
+## empurrava pra fora por acaso; com a malha certa ela atravessava (ADR-027).
+const ALTURA_ACIMA_DO_CHAO: float = 0.4
 const ELEMENTOS_CAVERNA := ["pedra", "faisca"]  ## camada onipresente à noite (F6/F7), não é anel
 
 var _chunk_manager: ChunkManager
@@ -66,7 +70,7 @@ func _tentar_spawnar() -> void:
 	var criatura := CreatureScene.instantiate() as Creature
 	criatura.configurar(def)
 	add_child(criatura)
-	criatura.global_position = Vector3(x + 0.5, y + 1.0, z + 0.5)
+	criatura.global_position = Vector3(x + 0.5, y + 1.0 + ALTURA_ACIMA_DO_CHAO, z + 0.5)
 
 
 func _especies_do_periodo_e_bioma(periodo: String, bioma_id: String) -> Array[CreatureDef]:
@@ -97,10 +101,7 @@ func _tempestade_ativa() -> bool:
 
 
 func _altura_da_superficie(x: int, z: int) -> int:
-	for y in range(ChunkData.SIZE_V - 1, -1, -1):
-		if BlockRegistry.e_solido(_chunk_manager.get_block(Vector3i(x, y, z))):
-			return y
-	return -1
+	return _chunk_manager.altura_da_superficie(x, z)
 
 
 func _despawnar_distantes() -> void:

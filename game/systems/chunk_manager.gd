@@ -223,6 +223,15 @@ func fila_pendente_tamanho() -> int:
 	return _fila_sujos.size()
 
 
+func altura_da_superficie(x: int, z: int) -> int:
+	## y do bloco sólido mais alto na coluna, ou -1 se não houver (fora do mundo
+	## ou chunk não gerado). Único lugar desse cálculo (antes duplicado em 3).
+	for y in range(ChunkData.SIZE_V - 1, -1, -1):
+		if BlockRegistry.e_solido(get_block(Vector3i(x, y, z))):
+			return y
+	return -1
+
+
 func chunk_pronto_em(pos: Vector3) -> bool:
 	## true quando o chunk dessa posição já tem malha e colisão. Fora do mundo
 	## nunca vai existir chunk, então não bloqueia (senão o jogador congelaria na borda).

@@ -20,6 +20,9 @@ const RAIO_CAMPOS_DOURADOS: float = 25.0
 const RAIO_FLORESTA_CUBICA: float = 40.0
 const RAIO_COLINAS_DE_PEDRA: float = 52.0
 const RAIO_DESERTO_DE_AMBAR: float = 65.0
+## Clareira sem árvores em volta do spawn e do vilarejo: o jogador nasce no
+## chão (não em cima de uma copa) e vê os NPCs logo de cara (ADR-027).
+const RAIO_CLAREIRA_SPAWN: float = 7.0
 const CHANCE_AMBAR: float = 0.05  ## nódulo raro na areia do Deserto de Âmbar (F11)
 
 ## Cavernas decoradas (F11, ADR-024): bolsão pequeno e determinístico, não
@@ -146,6 +149,8 @@ func gerar_chunk(cx: int, cz: int) -> ChunkData:
 			for lz in range(MARGEM_ARVORE, ChunkData.SIZE_H - MARGEM_ARVORE):
 				var world_x := cx * ChunkData.SIZE_H + lx
 				var world_z := cz * ChunkData.SIZE_H + lz
+				if Vector2(world_x, world_z).distance_to(CENTRO_MUNDO) < RAIO_CLAREIRA_SPAWN:
+					continue
 				if _hash01(_seed, world_x, world_z) < CHANCE_ARVORE:
 					_plantar_arvore(
 						chunk, lx, alturas[Vector2i(lx, lz)], lz, bioma_id == "floresta_cubica"

@@ -44,16 +44,9 @@ func _posicionar_npcs_no_chunk(coord: Vector2i) -> void:
 		)
 		if coord_npc != coord:
 			continue
-		var y := _altura_da_superficie_em(x, z)
+		var y := _chunk_manager.altura_da_superficie(x, z)
 		if y >= 0:
 			npc.global_position.y = float(y) + 1.0
-
-
-func _altura_da_superficie_em(x: int, z: int) -> int:
-	for y in range(ChunkData.SIZE_V - 1, -1, -1):
-		if BlockRegistry.e_solido(_chunk_manager.get_block(Vector3i(x, y, z))):
-			return y
-	return -1
 
 
 func _process(delta: float) -> void:

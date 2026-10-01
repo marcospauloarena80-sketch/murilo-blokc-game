@@ -14,7 +14,7 @@ const VELOCIDADE: float = 5.0
 const VELOCIDADE_CORRIDA: float = 8.0
 const FORCA_PULO: float = 4.5
 const GRAVIDADE: float = 9.8
-const ALCANCE: float = 5.0
+const ALCANCE: float = 5.5
 const AMPLITUDE_MAX_BALANCO: float = 0.6
 const SEGUNDOS_POR_PONTO_ENERGIA: float = 2.0
 const ALTURA_QUEDA_SEGURA: float = 3.0
@@ -22,6 +22,10 @@ const INTERVALO_ATAQUE_SEG: float = 0.5
 const DANO_MAO_NUA: int = 1
 const SENSIBILIDADE_MOUSE: float = 0.003
 const ALTURA_LIMITE_QUEDA: float = -20.0
+## Centro da cápsula (altura 1.9) fica 0.95 acima dos pés; o topo do bloco de
+## superfície está em y+1. Margem pequena pra não nascer dentro do chão.
+const ALTURA_ACIMA_DO_BLOCO: float = 2.0
+const PITCH_INICIAL_CAMERA: float = -0.35
 
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
@@ -39,6 +43,7 @@ var _mat_camisa: StandardMaterial3D
 var _mat_calca: StandardMaterial3D
 
 @onready var camera_pivot: Node3D = $CameraPivot
+@onready var _braco_camera: SpringArm3D = $CameraPivot/SpringArm3D
 @onready var _camera: Camera3D = $CameraPivot/SpringArm3D/Camera3D
 @onready var _ombro_esquerdo: Node3D = $Corpo/OmbroEsquerdo
 @onready var _ombro_direito: Node3D = $Corpo/OmbroDireito
@@ -54,6 +59,12 @@ func _ready() -> void:
 	_outline = _criar_outline()
 	add_child(_outline)
 	_outline.visible = false
+
+	## Sem isso, ao olhar pra cima o braço da câmera colide com a própria
+	## cápsula e a câmera entra na cabeça do personagem.
+	_braco_camera.add_excluded_object(get_rid())
+	## Começa olhando um pouco pra baixo: o chão à frente fica ao alcance da mira.
+	camera_pivot.rotation.x = PITCH_INICIAL_CAMERA
 
 	## No Continuar, a posição salva vale desde já: o mundo carrega a partir
 	## dela e um save feito durante o carregamento não volta pro spawn padrão.
@@ -93,6 +104,14 @@ func aplicar_aparencia(aparencia: CharacterAppearance) -> void:
 
 
 func _ao_area_pronta() -> void:
+	## Novo jogo: nasce em pé na superfície, em vez de cair de y=45 (1 a 2 s
+	## de queda olhando pro céu no primeiro contato com o jogo).
+	if not GameState.veio_de_continuar and _chunk_manager != null:
+		var y := _chunk_manager.altura_da_superficie(
+			floori(global_position.x), floori(global_position.z)
+		)
+		if y >= 0:
+			global_position.y = float(y) + ALTURA_ACIMA_DO_BLOCO
 	velocity = Vector3.ZERO
 	set_physics_process(true)
 
@@ -277,12 +296,24 @@ func _multiplicador_ferramenta_atual() -> float:
 func _raycast_mira() -> Dictionary:
 	if _chunk_manager == null:
 		return {}
-	var origem := _camera.global_transform.origin
+	## O raio sai da câmera, passa pelo centro da tela (a mira "+") e pela base
+	## do braço no ombro, e segue ALCANCE além dela. Antes ele parava 5 unidades
+	## depois da câmera, que fica atrás do jogador: terminava antes do
+	## personagem e nunca acertava nada (bug desde a F2, achado jogando o build
+	## real, ADR-027). O braço de mola garante que entre a câmera e o ombro não
+	## há bloco; o único obstáculo possível é o próprio jogador, excluído.
+	var origem := _camera.global_position
 	var direcao := -_camera.global_transform.basis.z
-	var destino := origem + direcao * ALCANCE
-	var espaco := get_world_3d().direct_space_state
-	var query := PhysicsRayQueryParameters3D.create(origem, destino)
-	return espaco.intersect_ray(query)
+	var comprimento := _braco_camera.get_hit_length() + ALCANCE
+	var query := PhysicsRayQueryParameters3D.create(origem, origem + direcao * comprimento)
+	query.exclude = [get_rid()]
+	var resultado := get_world_3d().direct_space_state.intersect_ray(query)
+	## Garantia: o resto do código (bloco mirado, onde colocar) depende da
+	## normal virada pro jogador. Com a malha do avesso (bug corrigido no
+	## ChunkMesher, ADR-027) ela vinha invertida e trocava os dois blocos.
+	if not resultado.is_empty() and (resultado["normal"] as Vector3).dot(direcao) > 0.0:
+		resultado["normal"] = -(resultado["normal"] as Vector3)
+	return resultado
 
 
 func _dano_de_ataque_atual() -> int:

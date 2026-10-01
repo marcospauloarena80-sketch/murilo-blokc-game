@@ -3,14 +3,15 @@ extends RefCounted
 ## Constrói 1 ArrayMesh por chunk, só faces expostas (face culling). Puro e testável:
 ## não conhece ChunkManager nem coordenadas de mundo. Vizinhos dentro do chunk são
 ## lidos direto dos dados do ChunkData; o Callable só é consultado para posições
-## fora do chunk em x/z (borda com o chunk vizinho). y fora de [0, SIZE_V) é ar.
+## fora do chunk em x/z (borda com o chunk vizinho). Acima do topo é ar; abaixo de
+## y=0 conta como sólido (ninguém vê o fundo do mundo).
 ## Achado real (ADR-026): a versão anterior chamava o Callable e o SurfaceTool para
 ## cada face/vértice e custava ~250 ms por chunk mesmo nativo, o que travava a
 ## entrada no mundo na Web. Agora monta arrays compactos e um único add_surface.
 ## Ver docs/02-ARQUITETURA.md §4.2.
 
-## Por face: deslocamento do vizinho, normal e os 4 cantos (mesma ordem e winding
-## da versão anterior, para manter as faces viradas pra fora).
+## Por face: deslocamento do vizinho, normal e os 4 cantos (anti-horário visto
+## de fora; a ordem dos índices abaixo corrige pra convenção do Godot).
 const _VIZINHOS := [
 	Vector3i(0, 1, 0),
 	Vector3i(0, -1, 0),
@@ -62,7 +63,7 @@ func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 				## cima, baixo, norte z-1, sul z+1, leste x+1, oeste x-1). Só a borda
 				## em x/z consulta o Callable; y fora do chunk é ar.
 				ocultas[0] = y + 1 < v and solidos[dados[i + camada]] == 1
-				ocultas[1] = y > 0 and solidos[dados[i - camada]] == 1
+				ocultas[1] = y == 0 or solidos[dados[i - camada]] == 1  # fundo do mundo nunca aparece
 				ocultas[2] = (
 					solidos[dados[i - h]] == 1 if z > 0 else vizinho_solido.call(x, y, -1)
 				)
@@ -95,12 +96,17 @@ func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 						verts.append(origem + canto)
 						normais.append(normal)
 						cores_v.append(cor)
+					## Ordem invertida (0-2-1, 0-3-2): os cantos de _CANTOS estão em
+					## sentido anti-horário visto de fora, e o Godot trata horário
+					## como frente. Com 0-1-2 o mundo inteiro era desenhado do avesso
+					## desde a F2 (via-se o fundo do mundo e o teto das cavernas por
+					## dentro) e a física via as faces viradas pra dentro (ADR-027).
 					indices.append(base)
+					indices.append(base + 2)
 					indices.append(base + 1)
-					indices.append(base + 2)
 					indices.append(base)
-					indices.append(base + 2)
 					indices.append(base + 3)
+					indices.append(base + 2)
 
 	if indices.is_empty():
 		return null
