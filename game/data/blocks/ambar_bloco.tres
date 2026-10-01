@@ -10,3 +10,5 @@ dureza = 1.5
 drop_id = "ambar"
 cor = Color(0.85, 0.55, 0.1, 1)
 solido = true
+textura_lado = "ambar"
+brilho = 0.15

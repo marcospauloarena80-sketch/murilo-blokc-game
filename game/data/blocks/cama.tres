@@ -11,3 +11,6 @@ drop_id = "cama"
 cor = Color(0.75, 0.2, 0.2, 1)
 solido = true
 tipo_especial = "cama"
+textura_lado = "cama_lado"
+textura_topo = "cama_topo"
+textura_base = "tronco_topo"

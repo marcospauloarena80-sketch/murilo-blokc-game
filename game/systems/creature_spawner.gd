@@ -66,6 +66,9 @@ func _tentar_spawnar() -> void:
 	if y < 0:
 		ultimo_motivo_sem_spawn = "sem superfície em %d,%d" % [x, z]
 		return
+	if _chunk_manager.get_block(Vector3i(x, y + 1, z)) == BlockRegistry.AGUA_ID:
+		ultimo_motivo_sem_spawn = "lago em %d,%d" % [x, z]
+		return
 
 	var periodo: String = "noite" if GameState.eh_noite() else "dia"
 	var bioma_id := WorldGenerator.bioma_em(x, z)

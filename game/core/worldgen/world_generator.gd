@@ -24,6 +24,10 @@ const RAIO_DESERTO_DE_AMBAR: float = 65.0
 ## chão (não em cima de uma copa) e vê os NPCs logo de cara (ADR-027).
 const RAIO_CLAREIRA_SPAWN: float = 7.0
 const CHANCE_AMBAR: float = 0.05  ## nódulo raro na areia do Deserto de Âmbar (F11)
+## Lagos (Ciclo 4, ADR-027): todo vale abaixo do nível da água enche, com
+## fundo e margem de areia. Nos Picos Gelados a superfície congela; no Deserto
+## de Âmbar os vales ficam secos.
+const NIVEL_AGUA: int = 27
 
 ## Cavernas decoradas (F11, ADR-024): bolsão pequeno e determinístico, não
 ## geração 3D completa — resolve o hedge do ADR-020 sem risco de perf novo.
@@ -140,6 +144,7 @@ func gerar_chunk(cx: int, cz: int) -> ChunkData:
 			for y in range(0, altura - 2):
 				chunk.set_block(lx, y, lz, _bloco_de_subsolo(world_x, y, world_z))
 			_aplicar_superficie(chunk, lx, lz, altura, bioma_id, world_x, world_z)
+			_encher_lago(chunk, lx, lz, altura, bioma_id)
 
 	_talvez_cavar_caverna(chunk, cx, cz)
 
@@ -151,6 +156,8 @@ func gerar_chunk(cx: int, cz: int) -> ChunkData:
 				var world_z := cz * ChunkData.SIZE_H + lz
 				if Vector2(world_x, world_z).distance_to(CENTRO_MUNDO) < RAIO_CLAREIRA_SPAWN:
 					continue
+				if alturas[Vector2i(lx, lz)] <= NIVEL_AGUA + 1:
+					continue  # nada de árvore no lago nem na praia
 				if _hash01(_seed, world_x, world_z) < CHANCE_ARVORE:
 					_plantar_arvore(
 						chunk, lx, alturas[Vector2i(lx, lz)], lz, bioma_id == "floresta_cubica"
@@ -183,6 +190,19 @@ func _aplicar_superficie(
 			for y in range(max(altura - 2, 0), altura):
 				chunk.set_block(lx, y, lz, 2)  # terra
 			chunk.set_block(lx, altura, lz, 1)  # grama
+
+
+func _encher_lago(chunk: ChunkData, lx: int, lz: int, altura: int, bioma_id: String) -> void:
+	if bioma_id == "deserto_de_ambar" or altura > NIVEL_AGUA + 1:
+		return
+	if bioma_id != "picos_gelados" and bioma_id != "colinas_de_pedra":
+		chunk.set_block(lx, altura, lz, 6)  # fundo e praia de areia
+		if altura > 0:
+			chunk.set_block(lx, altura - 1, lz, 6)
+	for y in range(altura + 1, NIVEL_AGUA + 1):
+		chunk.set_block(lx, y, lz, BlockRegistry.AGUA_ID)
+	if bioma_id == "picos_gelados" and altura < NIVEL_AGUA:
+		chunk.set_block(lx, NIVEL_AGUA, lz, 14)  # lago congelado
 
 
 func _plantar_arvore(

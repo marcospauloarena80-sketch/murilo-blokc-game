@@ -110,6 +110,8 @@ func test_minerio_so_substitui_pedra_nao_terra_nem_grama() -> void:
 			for y in range(64):
 				if BlockRegistry.e_solido(chunk.get_block(x, y, z)):
 					topo_solido = y
+			if topo_solido <= WorldGenerator.NIVEL_AGUA:
+				continue  # lago congelado: gelo sobre água, não é a camada de terra
 			assert_eq(
 				chunk.get_block(x, topo_solido - 1, z),
 				2,

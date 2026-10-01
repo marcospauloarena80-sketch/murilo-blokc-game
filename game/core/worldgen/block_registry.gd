@@ -4,6 +4,7 @@ extends RefCounted
 ## Ver docs/02-ARQUITETURA.md §4.2. Não é autoload (ADR: máximo 5) — acesso via métodos estáticos.
 
 const AR_ID: int = 0
+const AGUA_ID: int = 16  ## não sólida: sem colisão, desenhada à parte (Ciclo 4)
 
 static var _blocos: Dictionary = {
 	1: preload("res://data/blocks/grama.tres"),
@@ -21,10 +22,13 @@ static var _blocos: Dictionary = {
 	13: preload("res://data/blocks/tronco_raro.tres"),
 	14: preload("res://data/blocks/gelo.tres"),
 	15: preload("res://data/blocks/ambar_bloco.tres"),
+	16: preload("res://data/blocks/agua.tres"),
 }
 
 static var _tabela_solidos: PackedByteArray = PackedByteArray()
 static var _tabela_cores: PackedColorArray = PackedColorArray()
+static var _tabela_texturas: PackedInt32Array = PackedInt32Array()
+static var _tabela_brilhos: PackedFloat32Array = PackedFloat32Array()
 
 
 static func get_block(id: int) -> BlockDef:
@@ -47,6 +51,34 @@ static func tabela_cores() -> PackedColorArray:
 		for id: int in _blocos:
 			_tabela_cores[id] = (_blocos[id] as BlockDef).cor
 	return _tabela_cores
+
+
+static func tabela_texturas() -> PackedInt32Array:
+	## 256 x 6 entradas: camada do AtlasBlocos por face, na ordem do ChunkMesher
+	## (cima, baixo, norte, sul, leste, oeste).
+	if _tabela_texturas.is_empty():
+		_tabela_texturas.resize(256 * 6)
+		for id: int in _blocos:
+			var bloco: BlockDef = _blocos[id]
+			var lado: int = maxi(0, AtlasBlocos.indice(bloco.textura_lado))
+			var topo: int = lado
+			if bloco.textura_topo != "":
+				topo = maxi(0, AtlasBlocos.indice(bloco.textura_topo))
+			var base: int = topo
+			if bloco.textura_base != "":
+				base = maxi(0, AtlasBlocos.indice(bloco.textura_base))
+			var faces: Array[int] = [topo, base, lado, lado, lado, lado]
+			for f: int in range(6):
+				_tabela_texturas[id * 6 + f] = faces[f]
+	return _tabela_texturas
+
+
+static func tabela_brilhos() -> PackedFloat32Array:
+	if _tabela_brilhos.is_empty():
+		_tabela_brilhos.resize(256)
+		for id: int in _blocos:
+			_tabela_brilhos[id] = (_blocos[id] as BlockDef).brilho
+	return _tabela_brilhos
 
 
 static func e_solido(id: int) -> bool:

@@ -10,3 +10,5 @@ dureza = 1.2
 drop_id = "madeira_rara"
 cor = Color(0.55, 0.25, 0.15, 1)
 solido = true
+textura_lado = "tronco_raro_lado"
+textura_topo = "tronco_raro_topo"

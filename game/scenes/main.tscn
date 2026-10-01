@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://b0main0001"]
+[gd_scene load_steps=13 format=3 uid="uid://b0main0001"]
 
 [ext_resource type="PackedScene" path="res://entities/player/player.tscn" id="1"]
 [ext_resource type="Script" path="res://systems/chunk_manager.gd" id="2"]
@@ -21,13 +21,41 @@
 [ext_resource type="Script" path="res://systems/block_break_particles.gd" id="19"]
 [ext_resource type="PackedScene" path="res://ui/touch_controls/touch_controls.tscn" id="20"]
 [ext_resource type="Script" path="res://systems/sonda_teste_web.gd" id="sonda_teste_web"]
+[ext_resource type="Shader" path="res://assets/shaders/ceu.gdshader" id="ceu"]
+
+[sub_resource type="ShaderMaterial" id="MaterialCeu"]
+shader = ExtResource("ceu")
+
+[sub_resource type="Sky" id="Ceu"]
+sky_material = SubResource("MaterialCeu")
+radiance_size = 0
 
 [sub_resource type="Environment" id="Environment_1"]
-background_mode = 1
-background_color = Color(0.5, 0.75, 0.95, 1)
+background_mode = 2
+sky = SubResource("Ceu")
 ambient_light_source = 2
 ambient_light_color = Color(1, 1, 1, 1)
 ambient_light_energy = 0.6
+reflected_light_source = 1
+tonemap_mode = 2
+tonemap_exposure = 0.95
+tonemap_white = 6.0
+glow_enabled = true
+glow_intensity = 0.4
+glow_bloom = 0.04
+glow_blend_mode = 1
+glow_hdr_threshold = 0.95
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.75, 0.89, 1, 1)
+fog_density = 1.0
+fog_sky_affect = 0.0
+fog_depth_curve = 1.6
+fog_depth_begin = 24.0
+fog_depth_end = 72.0
+adjustment_enabled = true
+adjustment_contrast = 1.04
+adjustment_saturation = 1.06
 
 [node name="Main" type="Node3D"]
 script = ExtResource("7")
@@ -38,6 +66,8 @@ environment = SubResource("Environment_1")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 5, 0)
 shadow_enabled = true
+shadow_blur = 1.5
+directional_shadow_max_distance = 70.0
 
 [node name="ChunkManager" type="Node3D" parent="."]
 script = ExtResource("2")

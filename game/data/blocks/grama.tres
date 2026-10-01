@@ -10,3 +10,6 @@ dureza = 0.6
 drop_id = "terra"
 cor = Color(0.31, 0.75, 0.31, 1)
 solido = true
+textura_lado = "grama_lado"
+textura_topo = "grama_topo"
+textura_base = "terra"

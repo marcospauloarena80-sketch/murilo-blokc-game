@@ -16,6 +16,11 @@ const VELOCIDADE_CORRIDA: float = 8.0
 ## no limite e quem caía num buraco raso não saía (achado jogando, ADR-027).
 const FORCA_PULO: float = 5.0
 const GRAVIDADE: float = 9.8
+## Nadar (Ciclo 4, lagos): afunda devagar, Espaço sobe, anda mais lento e
+## cair na água não machuca.
+const FATOR_GRAVIDADE_AGUA: float = 0.25
+const VELOCIDADE_SUBIDA_AGUA: float = 2.6
+const FATOR_VELOCIDADE_AGUA: float = 0.55
 const ALCANCE: float = 5.5
 const AMPLITUDE_MAX_BALANCO: float = 0.6
 const SEGUNDOS_POR_PONTO_ENERGIA: float = 2.0
@@ -172,6 +177,13 @@ func _liberar_mouse_se_necessario(jogando: bool) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
+func _esta_na_agua() -> bool:
+	if _chunk_manager == null:
+		return false
+	var corpo := Vector3i(global_position.floor())
+	return _chunk_manager.get_block(corpo) == BlockRegistry.AGUA_ID
+
+
 func _physics_process(delta: float) -> void:
 	if _chunk_manager != null and not _chunk_manager.chunk_pronto_em(global_position):
 		## Chunk sem colisão ainda (mundo carregando em segundo plano): espera
@@ -183,7 +195,13 @@ func _physics_process(delta: float) -> void:
 		global_position = GameState.ponto_respawn
 		velocity = Vector3.ZERO
 		return
-	if not is_on_floor():
+	var na_agua := _esta_na_agua()
+	if na_agua:
+		velocity.y = maxf(velocity.y - GRAVIDADE * FATOR_GRAVIDADE_AGUA * delta, -2.5)
+		_y_inicio_queda = global_position.y
+		if GameState.current_state == GameState.State.PLAYING and Input.is_action_pressed("pular"):
+			velocity.y = move_toward(velocity.y, VELOCIDADE_SUBIDA_AGUA, 12.0 * delta)
+	elif not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
 		if not _estava_no_ar:
 			_estava_no_ar = true
@@ -210,6 +228,8 @@ func _physics_process(delta: float) -> void:
 			and GameState.energia_atual > 0
 		)
 		var velocidade_atual := VELOCIDADE_CORRIDA if esta_correndo else VELOCIDADE
+		if na_agua:
+			velocidade_atual *= FATOR_VELOCIDADE_AGUA
 		_atualizar_energia(delta, esta_correndo)
 
 		if direcao:

@@ -10,3 +10,4 @@ dureza = 0.8
 drop_id = "gelo"
 cor = Color(0.75, 0.9, 1, 1)
 solido = true
+textura_lado = "gelo"

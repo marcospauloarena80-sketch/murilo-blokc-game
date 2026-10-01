@@ -11,3 +11,5 @@ drop_id = "tocha"
 cor = Color(1.0, 0.85, 0.3, 1)
 solido = true
 emite_luz = true
+textura_lado = "tocha"
+brilho = 1.0

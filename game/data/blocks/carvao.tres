@@ -10,3 +10,4 @@ dureza = 1.8
 drop_id = "carvao"
 cor = Color(0.15, 0.15, 0.15, 1)
 solido = true
+textura_lado = "carvao"

@@ -10,3 +10,4 @@ dureza = 2.5
 drop_id = "ferrite"
 cor = Color(0.72, 0.53, 0.4, 1)
 solido = true
+textura_lado = "ferrite"

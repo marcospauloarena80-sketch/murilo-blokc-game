@@ -10,3 +10,5 @@ dureza = 1.0
 drop_id = "tronco"
 cor = Color(0.4, 0.27, 0.13, 1)
 solido = true
+textura_lado = "tronco_lado"
+textura_topo = "tronco_topo"

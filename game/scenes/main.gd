@@ -109,13 +109,26 @@ func _processar_morte() -> void:
 func _atualizar_iluminacao() -> void:
 	var fase: float = GameState.ciclo_dia_noite_seg / GameState.DURACAO_CICLO_SEG
 	var r: Dictionary = DayNightCalculator.calcular(fase, GameState.FRACAO_DIA)
-	_luz_sol.rotation_degrees.x = r["angulo_x_graus"]
-	_luz_sol.light_energy = r["energia_sol"]
-	_ambiente.environment.ambient_light_energy = r["energia_ambiente"]
-	_atualizar_cor_ambiente()
+	_luz_sol.rotation_degrees = Vector3(r["angulo_x_graus"], r["angulo_y_graus"], 0.0)
+	_luz_sol.light_energy = maxf(float(r["energia_sol"]) * 0.9, 0.1 + 0.15 * float(r["noite"]))
+	_luz_sol.light_color = r["cor_luz"]
+	var ambiente := _ambiente.environment
+	ambiente.ambient_light_energy = r["energia_ambiente"]
+	## Céu, neblina e luz ambiente com a mesma paleta (Ciclo 4, ADR-027): a
+	## neblina na cor do horizonte esconde a borda do mundo.
+	var topo: Color = r["cor_ceu_topo"]
+	var horizonte: Color = r["cor_ceu_horizonte"]
+	var ceu := ambiente.sky.sky_material as ShaderMaterial
+	ceu.set_shader_parameter("cor_topo", topo)
+	ceu.set_shader_parameter("cor_horizonte", horizonte)
+	ceu.set_shader_parameter("cor_luz", r["cor_luz"])
+	ceu.set_shader_parameter("noite", r["noite"])
+	ambiente.fog_light_color = horizonte
+	_chunk_manager.definir_cor_do_ceu(horizonte.lerp(topo, 0.3))
+	_atualizar_cor_ambiente(horizonte.lerp(topo, 0.35).lerp(Color.WHITE, 0.35))
 
 
-func _atualizar_cor_ambiente() -> void:
+func _atualizar_cor_ambiente(cor_do_ceu: Color = Color.WHITE) -> void:
 	## Cada bioma tinge a luz ambiente (BiomeDef.cor_ambiente); clima escurece
 	## um pouco por cima disso — polimento visual da F11 (ADR-024).
 	var bioma_id := WorldGenerator.bioma_em(
@@ -126,7 +139,7 @@ func _atualizar_cor_ambiente() -> void:
 	var clima := get_tree().get_first_node_in_group("weather_system") as WeatherSystem
 	if clima != null and clima.estado_atual != WeatherService.Estado.NENHUM:
 		cor = cor.darkened(0.25 if clima.eh_tempestade() else 0.12)
-	_ambiente.environment.ambient_light_color = cor
+	_ambiente.environment.ambient_light_color = cor * cor_do_ceu
 
 
 func _verificar_transicao_dia_noite() -> void:

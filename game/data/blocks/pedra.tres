@@ -10,3 +10,4 @@ dureza = 1.5
 drop_id = "pedra"
 cor = Color(0.55, 0.55, 0.55, 1)
 solido = true
+textura_lado = "pedra"

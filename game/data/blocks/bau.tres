@@ -11,3 +11,5 @@ drop_id = "bau"
 cor = Color(0.55, 0.35, 0.15, 1)
 solido = true
 tipo_especial = "bau"
+textura_lado = "bau_lado"
+textura_topo = "bau_topo"

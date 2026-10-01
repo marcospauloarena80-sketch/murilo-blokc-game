@@ -17,6 +17,7 @@ var _cb_bloco: JavaScriptObject
 var _cb_hora: JavaScriptObject
 var _cb_spawnar: JavaScriptObject
 var _cb_especies: JavaScriptObject
+var _cb_medir: JavaScriptObject
 var _janela: JavaScriptObject
 
 
@@ -41,6 +42,8 @@ func _ready() -> void:
 	_janela.muriloSpawnar = _cb_spawnar
 	_cb_especies = JavaScriptBridge.create_callback(_especies)
 	_janela.muriloEspecies = _cb_especies
+	_cb_medir = JavaScriptBridge.create_callback(_medir)
+	_janela.muriloMedir = _cb_medir
 
 
 func _jogador() -> Player:
@@ -235,3 +238,30 @@ func _especies(args: Array) -> void:
 	if brotinho != null:
 		dados["brotinho"] = [brotinho.elemento, brotinho.periodo_spawn, brotinho.pode_ser_selvagem]
 	_janela.muriloUltimasEspecies = JSON.stringify(dados)
+
+
+func _medir(_args: Array) -> void:
+	## Custo real de CPU (não depende de o painel do navegador estar visível):
+	## tempo de _process e de física do último quadro e quanto custa remontar a
+	## malha do chunk do jogador (window.muriloUltimaMedida).
+	var dados: Dictionary = {
+		"process_ms": snappedf(Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, 0.01),
+		"fisica_ms":
+		snappedf(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0, 0.01),
+		"fps": Engine.get_frames_per_second(),
+		"objetos_desenhados": Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME),
+		"primitivas": Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
+		"chamadas_desenho": Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+	}
+	var cm := get_tree().get_first_node_in_group("chunk_manager") as ChunkManager
+	var jogador := _jogador()
+	if cm != null and jogador != null:
+		var coord := Vector2i(
+			floori(jogador.global_position.x) >> 4, floori(jogador.global_position.z) >> 4
+		)
+		if cm._chunks.has(coord):
+			var t0 := Time.get_ticks_usec()
+			for i: int in range(3):
+				cm._remesh_chunk(coord)
+			dados["remesh_chunk_ms"] = snappedf((Time.get_ticks_usec() - t0) / 3000.0, 0.1)
+	_janela.muriloUltimaMedida = JSON.stringify(dados)

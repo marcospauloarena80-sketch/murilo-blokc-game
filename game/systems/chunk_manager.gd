@@ -14,6 +14,9 @@ signal area_inicial_pronta
 signal chunk_pronto(coord: Vector2i)
 signal mundo_gerado
 
+const TerrenoShader := preload("res://assets/shaders/terreno.gdshader")
+const DecoracaoShader := preload("res://assets/shaders/decoracao.gdshader")
+const AguaShader := preload("res://assets/shaders/agua.gdshader")
 const WORLD_CHUNKS_X: int = 8
 const WORLD_CHUNKS_Z: int = 8
 const RAIO_AREA_INICIAL: int = 1
@@ -31,7 +34,9 @@ var area_pronta: bool = false
 
 var _worldgen: WorldGenerator
 var _mesher: ChunkMesher
-var _material: StandardMaterial3D
+var _material: ShaderMaterial
+var _material_decoracao: ShaderMaterial
+var _material_agua: ShaderMaterial
 var _chunks: Dictionary = {}
 var _chunk_nodes: Dictionary = {}
 var _chunks_com_malha: Dictionary = {}
@@ -51,8 +56,15 @@ func _ready() -> void:
 		world_seed = GameState.seed_atual
 	_worldgen = WorldGenerator.new(world_seed)
 	_mesher = ChunkMesher.new()
-	_material = StandardMaterial3D.new()
-	_material.vertex_color_use_as_albedo = true
+	_material = ShaderMaterial.new()
+	_material.shader = TerrenoShader
+	_material.set_shader_parameter("texturas", AtlasBlocos.textura_array())
+	_material.set_shader_parameter("camada_folhas", float(AtlasBlocos.indice("folhas")))
+	_material_decoracao = ShaderMaterial.new()
+	_material_decoracao.shader = DecoracaoShader
+	_material_decoracao.set_shader_parameter("texturas", AtlasBlocos.textura_array())
+	_material_agua = ShaderMaterial.new()
+	_material_agua.shader = AguaShader
 	for cx in range(WORLD_CHUNKS_X):
 		for cz in range(WORLD_CHUNKS_Z):
 			_fila_geracao.append(Vector2i(cx, cz))
@@ -223,6 +235,11 @@ func fila_pendente_tamanho() -> int:
 	return _fila_sujos.size()
 
 
+func definir_cor_do_ceu(cor: Color) -> void:
+	## A água reflete o céu do momento (scenes/main.gd chama a cada quadro).
+	_material_agua.set_shader_parameter("cor_ceu", cor)
+
+
 func altura_da_superficie(x: int, z: int) -> int:
 	## y do bloco sólido mais alto na coluna, ou -1 se não houver (fora do mundo
 	## ou chunk não gerado). Único lugar desse cálculo (antes duplicado em 3).
@@ -281,13 +298,16 @@ func _remesh_chunk(coord: Vector2i) -> void:
 		var wz: int = coord.y * ChunkData.SIZE_H + lz
 		return BlockRegistry.e_solido(get_block(Vector3i(wx, ly, wz)))
 	var malha := _mesher.construir_malha(chunk, vizinho_solido)
-	_atualizar_no_chunk(coord, malha)
+	var detalhes := _mesher.construir_detalhes(
+		chunk, coord.x * 7919 + coord.y * 104729 + world_seed
+	)
+	_atualizar_no_chunk(coord, malha, detalhes)
 	if not _chunks_com_malha.has(coord):
 		_chunks_com_malha[coord] = true
 		chunk_pronto.emit(coord)
 
 
-func _atualizar_no_chunk(coord: Vector2i, malha: ArrayMesh) -> void:
+func _atualizar_no_chunk(coord: Vector2i, malha: ArrayMesh, detalhes: Dictionary = {}) -> void:
 	if _chunk_nodes.has(coord):
 		var antigo: Node3D = _chunk_nodes[coord]
 		antigo.queue_free()
@@ -303,5 +323,15 @@ func _atualizar_no_chunk(coord: Vector2i, malha: ArrayMesh) -> void:
 	var collision := CollisionShape3D.new()
 	collision.shape = malha.create_trimesh_shape()
 	no.add_child(collision)
+	## Água e decoração ficam fora da colisão: a mira e o jogador atravessam.
+	for chave: String in ["decoracao", "agua"]:
+		var extra: ArrayMesh = detalhes.get(chave, null)
+		if extra == null:
+			continue
+		var instancia := MeshInstance3D.new()
+		instancia.mesh = extra
+		instancia.material_override = _material_agua if chave == "agua" else _material_decoracao
+		instancia.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		no.add_child(instancia)
 	add_child(no)
 	_chunk_nodes[coord] = no
