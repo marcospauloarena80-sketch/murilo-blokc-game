@@ -50,6 +50,8 @@ func _tentar_spawnar() -> void:
 	var raio: float = randf_range(RAIO_SPAWN_MIN, RAIO_SPAWN_MAX)
 	var x: int = int(floor(_jogador.global_position.x + cos(angulo) * raio))
 	var z: int = int(floor(_jogador.global_position.z + sin(angulo) * raio))
+	if not _chunk_manager.chunk_pronto_em(Vector3(x, 0, z)):
+		return  # chunk ainda sem colisão: a criatura cairia pelo mundo (ADR-026)
 	var y: int = _altura_da_superficie(x, z)
 	if y < 0:
 		return

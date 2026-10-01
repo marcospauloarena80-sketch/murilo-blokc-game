@@ -24,28 +24,26 @@ var _era_noite: bool = false
 func _ready() -> void:
 	_era_noite = GameState.eh_noite()
 	_atualizar_iluminacao()
-	## Geração de chunks é time-sliced (ADR-026) — nenhum bloco existe ainda
-	## no _ready(). Delta salvo e altura dos NPCs só podem ser aplicados
-	## depois que o mundo termina de gerar de verdade (mesmo gate do Player).
-	if _chunk_manager.tem_chunks_pendentes():
-		_chunk_manager.mundo_gerado.connect(_ao_mundo_pronto)
-	else:
-		_ao_mundo_pronto()
-
-
-func _ao_mundo_pronto() -> void:
+	## Mundo carrega em fluxo (ADR-026): o delta salvo é entregue já, e o
+	## ChunkManager aplica cada edição direto nos dados quando o chunk dela
+	## for gerado. Cada NPC é aterrado quando o chunk dele fica pronto.
 	if GameState.veio_de_continuar:
 		_chunk_manager.aplicar_delta(GameState.delta_blocos_carregado)
-	_posicionar_npcs_no_chao()
+	_chunk_manager.chunk_pronto.connect(_posicionar_npcs_no_chunk)
 
 
-func _posicionar_npcs_no_chao() -> void:
+func _posicionar_npcs_no_chunk(coord: Vector2i) -> void:
 	## NPCs (F9) são colocados no .tscn com Y aproximado — reajusta pra
 	## superfície real do terreno gerado (sem arquitetura de vilarejo, ADR-022).
 	for no: Node in get_tree().get_nodes_in_group("npc"):
 		var npc := no as Node3D
-		var x: int = int(floor(npc.global_position.x))
-		var z: int = int(floor(npc.global_position.z))
+		var x: int = floori(npc.global_position.x)
+		var z: int = floori(npc.global_position.z)
+		var coord_npc := Vector2i(
+			floori(x / float(ChunkData.SIZE_H)), floori(z / float(ChunkData.SIZE_H))
+		)
+		if coord_npc != coord:
+			continue
 		var y := _altura_da_superficie_em(x, z)
 		if y >= 0:
 			npc.global_position.y = float(y) + 1.0

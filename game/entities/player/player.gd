@@ -3,8 +3,10 @@ extends CharacterBody3D
 ## Movimento e interação com o mundo do Murilo.
 ## Ver docs/02-ARQUITETURA.md §4.1/§4.2 e docs/07-DECISOES.md ADR-014/ADR-015.
 ##
-## Física começa pausada e só liga quando o mundo termina de gerar (sinal
-## mundo_gerado do ChunkManager). Movimento/quebrar/colocar só respondem no
+## Física começa pausada e só liga quando a área em volta do jogador termina de
+## gerar (sinal area_inicial_pronta do ChunkManager, ADR-026); depois disso o
+## jogador fica parado se pisar num chunk que ainda não tem colisão, em vez de
+## cair pelo mundo. Movimento/quebrar/colocar só respondem no
 ## estado GameState.PLAYING — durante CHARACTER_CREATION a gravidade continua
 ## (o personagem se assenta no chão pro preview), mas os controles ficam mudos.
 
@@ -19,6 +21,7 @@ const ALTURA_QUEDA_SEGURA: float = 3.0
 const INTERVALO_ATAQUE_SEG: float = 0.5
 const DANO_MAO_NUA: int = 1
 const SENSIBILIDADE_MOUSE: float = 0.003
+const ALTURA_LIMITE_QUEDA: float = -20.0
 
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
@@ -52,14 +55,19 @@ func _ready() -> void:
 	add_child(_outline)
 	_outline.visible = false
 
+	## No Continuar, a posição salva vale desde já: o mundo carrega a partir
+	## dela e um save feito durante o carregamento não volta pro spawn padrão.
+	if GameState.veio_de_continuar:
+		global_position = GameState.posicao_salva
+
 	set_physics_process(false)
 	_chunk_manager = get_tree().get_first_node_in_group("chunk_manager") as ChunkManager
 	if _chunk_manager == null:
 		return
-	if _chunk_manager.tem_chunks_pendentes():
-		_chunk_manager.mundo_gerado.connect(_ao_mundo_pronto)
+	if _chunk_manager.area_pronta:
+		_ao_area_pronta()
 	else:
-		_ao_mundo_pronto()
+		_chunk_manager.area_inicial_pronta.connect(_ao_area_pronta)
 
 
 func _configurar_materiais() -> void:
@@ -84,10 +92,8 @@ func aplicar_aparencia(aparencia: CharacterAppearance) -> void:
 	_mat_calca.albedo_color = aparencia.cor_calca
 
 
-func _ao_mundo_pronto() -> void:
-	if GameState.veio_de_continuar:
-		global_position = GameState.posicao_salva
-		velocity = Vector3.ZERO
+func _ao_area_pronta() -> void:
+	velocity = Vector3.ZERO
 	set_physics_process(true)
 
 
@@ -146,6 +152,16 @@ func _liberar_mouse_se_necessario(jogando: bool) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _chunk_manager != null and not _chunk_manager.chunk_pronto_em(global_position):
+		## Chunk sem colisão ainda (mundo carregando em segundo plano): espera
+		## parado em vez de atravessar o chão (ADR-026).
+		velocity = Vector3.ZERO
+		return
+	if global_position.y < ALTURA_LIMITE_QUEDA:
+		## Caiu pela borda do mundo finito: volta pro ponto de respawn.
+		global_position = GameState.ponto_respawn
+		velocity = Vector3.ZERO
+		return
 	if not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
 		if not _estava_no_ar:

@@ -1,81 +1,115 @@
 class_name ChunkMesher
 extends RefCounted
 ## Constrói 1 ArrayMesh por chunk, só faces expostas (face culling). Puro e testável:
-## não conhece ChunkManager nem coordenadas de mundo — recebe um Callable que resolve
-## se a posição vizinha (em coordenadas locais, podendo sair dos limites do chunk) é sólida.
-## Cor por bloco é placeholder até a fase de assets/atlas (ADR-009).
+## não conhece ChunkManager nem coordenadas de mundo. Vizinhos dentro do chunk são
+## lidos direto dos dados do ChunkData; o Callable só é consultado para posições
+## fora do chunk em x/z (borda com o chunk vizinho). y fora de [0, SIZE_V) é ar.
+## Achado real (ADR-026): a versão anterior chamava o Callable e o SurfaceTool para
+## cada face/vértice e custava ~250 ms por chunk mesmo nativo, o que travava a
+## entrada no mundo na Web. Agora monta arrays compactos e um único add_surface.
 ## Ver docs/02-ARQUITETURA.md §4.2.
 
-const FACES := {
-	"top":
-	{
-		"verts": [Vector3(0, 1, 0), Vector3(0, 1, 1), Vector3(1, 1, 1), Vector3(1, 1, 0)],
-		"normal": Vector3(0, 1, 0),
-		"vizinho": Vector3i(0, 1, 0)
-	},
-	"bottom":
-	{
-		"verts": [Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(1, 0, 1), Vector3(0, 0, 1)],
-		"normal": Vector3(0, -1, 0),
-		"vizinho": Vector3i(0, -1, 0)
-	},
-	"north":
-	{
-		"verts": [Vector3(0, 0, 0), Vector3(0, 1, 0), Vector3(1, 1, 0), Vector3(1, 0, 0)],
-		"normal": Vector3(0, 0, -1),
-		"vizinho": Vector3i(0, 0, -1)
-	},
-	"south":
-	{
-		"verts": [Vector3(0, 0, 1), Vector3(1, 0, 1), Vector3(1, 1, 1), Vector3(0, 1, 1)],
-		"normal": Vector3(0, 0, 1),
-		"vizinho": Vector3i(0, 0, 1)
-	},
-	"east":
-	{
-		"verts": [Vector3(1, 0, 0), Vector3(1, 1, 0), Vector3(1, 1, 1), Vector3(1, 0, 1)],
-		"normal": Vector3(1, 0, 0),
-		"vizinho": Vector3i(1, 0, 0)
-	},
-	"west":
-	{
-		"verts": [Vector3(0, 0, 0), Vector3(0, 0, 1), Vector3(0, 1, 1), Vector3(0, 1, 0)],
-		"normal": Vector3(-1, 0, 0),
-		"vizinho": Vector3i(-1, 0, 0)
-	},
-}
+## Por face: deslocamento do vizinho, normal e os 4 cantos (mesma ordem e winding
+## da versão anterior, para manter as faces viradas pra fora).
+const _VIZINHOS := [
+	Vector3i(0, 1, 0),
+	Vector3i(0, -1, 0),
+	Vector3i(0, 0, -1),
+	Vector3i(0, 0, 1),
+	Vector3i(1, 0, 0),
+	Vector3i(-1, 0, 0),
+]
+const _NORMAIS := [
+	Vector3(0, 1, 0),
+	Vector3(0, -1, 0),
+	Vector3(0, 0, -1),
+	Vector3(0, 0, 1),
+	Vector3(1, 0, 0),
+	Vector3(-1, 0, 0),
+]
+const _CANTOS := [
+	[Vector3(0, 1, 0), Vector3(0, 1, 1), Vector3(1, 1, 1), Vector3(1, 1, 0)],
+	[Vector3(0, 0, 0), Vector3(1, 0, 0), Vector3(1, 0, 1), Vector3(0, 0, 1)],
+	[Vector3(0, 0, 0), Vector3(0, 1, 0), Vector3(1, 1, 0), Vector3(1, 0, 0)],
+	[Vector3(0, 0, 1), Vector3(1, 0, 1), Vector3(1, 1, 1), Vector3(0, 1, 1)],
+	[Vector3(1, 0, 0), Vector3(1, 1, 0), Vector3(1, 1, 1), Vector3(1, 0, 1)],
+	[Vector3(0, 0, 0), Vector3(0, 0, 1), Vector3(0, 1, 1), Vector3(0, 1, 0)],
+]
 
 
 func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var faces_adicionadas := 0
+	var dados: PackedByteArray = chunk.dados()
+	var solidos: PackedByteArray = BlockRegistry.tabela_solidos()
+	var cores: PackedColorArray = BlockRegistry.tabela_cores()
+	var verts := PackedVector3Array()
+	var normais := PackedVector3Array()
+	var cores_v := PackedColorArray()
+	var indices := PackedInt32Array()
+	var h: int = ChunkData.SIZE_H
+	var v: int = ChunkData.SIZE_V
+	var camada: int = h * h
 
-	for x in range(ChunkData.SIZE_H):
-		for z in range(ChunkData.SIZE_H):
-			for y in range(ChunkData.SIZE_V):
-				var id := chunk.get_block(x, y, z)
+	var ocultas: Array[bool] = [false, false, false, false, false, false]
+	var i: int = -1
+	for y in range(v):
+		for z in range(h):
+			for x in range(h):
+				i += 1
+				var id: int = dados[i]
 				if id == BlockRegistry.AR_ID:
 					continue
-				var bloco := BlockRegistry.get_block(id)
-				for face_nome: String in FACES:
-					var face: Dictionary = FACES[face_nome]
-					var offset: Vector3i = face["vizinho"]
-					if vizinho_solido.call(x + offset.x, y + offset.y, z + offset.z):
+				## Vizinhos por aritmética direta de índice (ordem igual a _VIZINHOS:
+				## cima, baixo, norte z-1, sul z+1, leste x+1, oeste x-1). Só a borda
+				## em x/z consulta o Callable; y fora do chunk é ar.
+				ocultas[0] = y + 1 < v and solidos[dados[i + camada]] == 1
+				ocultas[1] = y > 0 and solidos[dados[i - camada]] == 1
+				ocultas[2] = (
+					solidos[dados[i - h]] == 1 if z > 0 else vizinho_solido.call(x, y, -1)
+				)
+				ocultas[3] = (
+					solidos[dados[i + h]] == 1 if z < h - 1 else vizinho_solido.call(x, y, h)
+				)
+				ocultas[4] = (
+					solidos[dados[i + 1]] == 1 if x < h - 1 else vizinho_solido.call(h, y, z)
+				)
+				ocultas[5] = solidos[dados[i - 1]] == 1 if x > 0 else vizinho_solido.call(-1, y, z)
+				if (
+					ocultas[0]
+					and ocultas[1]
+					and ocultas[2]
+					and ocultas[3]
+					and ocultas[4]
+					and ocultas[5]
+				):
+					continue  # bloco enterrado: o caso mais comum, sai cedo
+				var cor: Color = cores[id]
+				var origem := Vector3(x, y, z)
+				for f in range(6):
+					if ocultas[f]:
 						continue
-					_add_face(st, Vector3(x, y, z), face, bloco.cor)
-					faces_adicionadas += 1
+					var base: int = verts.size()
+					var cantos: Array = _CANTOS[f]
+					var normal: Vector3 = _NORMAIS[f]
+					for c in range(4):
+						var canto: Vector3 = cantos[c]
+						verts.append(origem + canto)
+						normais.append(normal)
+						cores_v.append(cor)
+					indices.append(base)
+					indices.append(base + 1)
+					indices.append(base + 2)
+					indices.append(base)
+					indices.append(base + 2)
+					indices.append(base + 3)
 
-	if faces_adicionadas == 0:
+	if indices.is_empty():
 		return null
-	return st.commit()
-
-
-func _add_face(st: SurfaceTool, origem: Vector3, face: Dictionary, cor: Color) -> void:
-	var verts: Array = face["verts"]
-	var normal: Vector3 = face["normal"]
-	var ordem: Array[int] = [0, 1, 2, 0, 2, 3]
-	for i: int in ordem:
-		st.set_normal(normal)
-		st.set_color(cor)
-		st.add_vertex(origem + verts[i])
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normais
+	arrays[Mesh.ARRAY_COLOR] = cores_v
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var malha := ArrayMesh.new()
+	malha.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return malha

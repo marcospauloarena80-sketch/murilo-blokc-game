@@ -34,12 +34,12 @@ func _process(_delta: float) -> void:
 
 
 func _atualizar_label_carregando() -> void:
-	## Sem isso, o mundo gerando aos poucos (meshing time-sliced, ADR-014)
-	## parece o jogo travado — o personagem fica parado até o sinal
-	## mundo_gerado, sem nenhum aviso na tela (achado real do usuário na v1.0).
+	## Aviso só enquanto a área em volta do jogador carrega (o personagem fica
+	## parado até area_inicial_pronta); o resto do mundo carrega em segundo
+	## plano sem aviso (ADR-026).
 	if _chunk_manager == null:
 		_chunk_manager = get_tree().get_first_node_in_group("chunk_manager") as ChunkManager
-	_label_carregando.visible = _chunk_manager != null and _chunk_manager.tem_chunks_pendentes()
+	_label_carregando.visible = _chunk_manager != null and not _chunk_manager.area_pronta
 
 
 func _atualizar_slot(indice: int) -> void:

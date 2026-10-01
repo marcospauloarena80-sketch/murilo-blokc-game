@@ -16,3 +16,6 @@ game/data_*/
 
 # Build output local (o CI gera o dele próprio; não versionar binários)
 build/
+
+# Scripts locais de medição de performance (não fazem parte do jogo)
+game/.perfil/

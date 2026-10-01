@@ -13,6 +13,7 @@ var _luzes: Dictionary = {}  ## "x,y,z" -> OmniLight3D
 
 func _ready() -> void:
 	EventBus.block_placed.connect(_ao_colocar_bloco)
+	EventBus.light_block_loaded.connect(_ao_colocar_bloco)
 	EventBus.block_broken.connect(_ao_quebrar_bloco)
 
 

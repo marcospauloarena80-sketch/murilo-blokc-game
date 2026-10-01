@@ -2,30 +2,46 @@ class_name ChunkManager
 extends Node3D
 ## Orquestra os chunks do mundo: geração, malha e colisão. Mundo finito 8x8 chunks
 ## (ADR-005). API pública: get_block/set_block em coordenadas de mundo.
-## Geração de dados E re-mesh são time-sliced (docs/09-PERFORMANCE.md) — no
-## máximo alguns chunks processados por frame, nunca o mundo inteiro de uma
-## vez. Achado real (ADR-026): gerar os dados dos 64 chunks de uma vez só
-## dentro de _ready() travava a aba inteira por vários segundos num navegador
-## mais lento (single-threaded, sem como rodar em paralelo) — só o re-mesh
-## era fatiado antes, a geração em si não.
+##
+## Carregamento em fluxo (ADR-026, achado jogando o build real): os chunks são
+## gerados do chunk do jogador pra fora, dentro de um orçamento de tempo por frame,
+## e o jogo libera o jogador assim que a área 3x3 em volta dele está pronta
+## (sinal area_inicial_pronta). O resto do mundo continua carregando em segundo
+## plano. Antes, o chunk do jogador era o 36º de 64 e cada frame de carregamento
+## levava ~0,5 s mesmo nativo, o que travava a entrada no mundo na Web.
 
+signal area_inicial_pronta
+signal chunk_pronto(coord: Vector2i)
 signal mundo_gerado
 
 const WORLD_CHUNKS_X: int = 8
 const WORLD_CHUNKS_Z: int = 8
-const CHUNKS_POR_FRAME: int = 2
-const CHUNKS_GERADOS_POR_FRAME: int = 2
+const RAIO_AREA_INICIAL: int = 1
+## Orçamento de trabalho por frame. Antes da área inicial o jogador não se move,
+## então dá pra gastar mais por frame; depois, o jogo precisa continuar fluido.
+const ORCAMENTO_CARREGANDO_USEC: int = 30000
+const ORCAMENTO_JOGANDO_USEC: int = 6000
+## SIZE_H é 16: coordenada de chunk = x >> 4, local = x & 15 (vale pra negativos).
+const _DESLOCAMENTO_CHUNK: int = 4
+const _MASCARA_LOCAL: int = 15
 
 @export var world_seed: int = 12345
+
+var area_pronta: bool = false
 
 var _worldgen: WorldGenerator
 var _mesher: ChunkMesher
 var _material: StandardMaterial3D
 var _chunks: Dictionary = {}
 var _chunk_nodes: Dictionary = {}
+var _chunks_com_malha: Dictionary = {}
 var _fila_geracao: Array[Vector2i] = []
+var _fila_malha: Array[Vector2i] = []
+var _fila_ordenada: bool = false
+var _centro_area: Vector2i = Vector2i.ZERO
 var _fila_sujos: Array[Vector2i] = []
 var _edicoes: Dictionary = {}
+var _delta_pendente: Dictionary = {}
 var _mundo_gerado_emitido: bool = false
 
 
@@ -42,81 +58,117 @@ func _ready() -> void:
 			_fila_geracao.append(Vector2i(cx, cz))
 
 
-func _gerar_um_chunk(coord: Vector2i) -> void:
-	_chunks[coord] = _worldgen.gerar_chunk(coord.x, coord.y)
-	_fila_sujos.append(coord)
-	## _process só começa a rodar depois que TODOS os _ready() da árvore
-	## inicial (incluindo TorchLightManager) já rodaram, diferente de emitir
-	## isso dentro do _ready() do próprio ChunkManager (mesma classe de bug
-	## do CreatureSpawner na F7, ADR-020) — por isso não precisa call_deferred.
-	for luz_local: Vector3i in _worldgen.luzes_locais_da_ultima_chunk():
-		var pos := Vector3i(
-			coord.x * ChunkData.SIZE_H + luz_local.x,
-			luz_local.y,
-			coord.y * ChunkData.SIZE_H + luz_local.z
-		)
-		EventBus.block_placed.emit(pos, 9)
-
-
 func _process(_delta: float) -> void:
+	if not _fila_ordenada:
+		_ordenar_fila_de_geracao()
+	var inicio := Time.get_ticks_usec()
+	var orcamento := ORCAMENTO_JOGANDO_USEC if area_pronta else ORCAMENTO_CARREGANDO_USEC
 	var houve_trabalho := false
-	var gerados := 0
-	while not _fila_geracao.is_empty() and gerados < CHUNKS_GERADOS_POR_FRAME:
-		_gerar_um_chunk(_fila_geracao.pop_front())
-		gerados += 1
+
+	## Edições do jogador primeiro: minerar não pode esperar o resto do mundo.
+	while not _fila_sujos.is_empty():
+		_remesh_chunk(_fila_sujos.pop_front())
 		houve_trabalho = true
-	var processados := 0
-	while not _fila_sujos.is_empty() and processados < CHUNKS_POR_FRAME:
-		var coord: Vector2i = _fila_sujos.pop_front()
-		_remesh_chunk(coord)
-		processados += 1
+
+	## Gerar e montar a malha são unidades separadas de trabalho: com o
+	## orçamento curto de jogo, um frame paga só uma delas (sem engasgo na Web).
+	while not _fila_malha.is_empty() or not _fila_geracao.is_empty():
+		if not _fila_malha.is_empty():
+			_remesh_chunk(_fila_malha.pop_front())
+			_verificar_area_inicial()
+		else:
+			var coord: Vector2i = _fila_geracao.pop_front()
+			_gerar_um_chunk(coord)
+			_fila_malha.append(coord)
 		houve_trabalho = true
-	if (
-		not _mundo_gerado_emitido
-		and _fila_geracao.is_empty()
-		and _fila_sujos.is_empty()
-		and houve_trabalho
-	):
-		## Achado real (ADR-026): sem essa trava, qualquer edição de bloco
-		## durante o jogo normal (que também esvazia _fila_sujos ao terminar
-		## de remeshar) reemitia mundo_gerado — e quem escuta esse sinal só
-		## uma vez (Player, main.gd) reagia de novo, reaplicando delta/
-		## reposicionando o jogador no ponto salvo a cada bloco quebrado
-		## numa sessão "continuar". mundo_gerado agora é estritamente
-		## "mundo terminou de gerar pela primeira vez", não "fila zerou".
+		if Time.get_ticks_usec() - inicio >= orcamento:
+			break
+
+	_verificar_area_inicial()
+	if not _mundo_gerado_emitido and not tem_chunks_pendentes() and houve_trabalho:
+		## Uma vez só: edições depois do carregamento também esvaziam a fila e
+		## não podem reemitir "mundo pronto" (ADR-026).
 		_mundo_gerado_emitido = true
 		mundo_gerado.emit()
 
 
-func _world_para_chunk_local(world_pos: Vector3i) -> Dictionary:
-	var cx: int = int(floor(float(world_pos.x) / ChunkData.SIZE_H))
-	var cz: int = int(floor(float(world_pos.z) / ChunkData.SIZE_H))
-	var lx: int = world_pos.x - cx * ChunkData.SIZE_H
-	var lz: int = world_pos.z - cz * ChunkData.SIZE_H
-	return {"chunk": Vector2i(cx, cz), "local": Vector3i(lx, world_pos.y, lz)}
+func _ordenar_fila_de_geracao() -> void:
+	## Feito no primeiro _process, não no _ready: o _ready do ChunkManager roda
+	## antes do Player existir (e em testes pode nem haver Player).
+	_fila_ordenada = true
+	_centro_area = _chunk_central()
+	var centro := _centro_area
+	_fila_geracao.sort_custom(
+		func(a: Vector2i, b: Vector2i) -> bool:
+			return (a - centro).length_squared() < (b - centro).length_squared()
+	)
+
+
+func _chunk_central() -> Vector2i:
+	var pos := Vector3(
+		WORLD_CHUNKS_X * ChunkData.SIZE_H / 2.0, 0.0, WORLD_CHUNKS_Z * ChunkData.SIZE_H / 2.0
+	)
+	var jogador := get_tree().get_first_node_in_group("player") as Node3D
+	if jogador != null:
+		pos = jogador.global_position
+	elif GameState.veio_de_continuar:
+		pos = GameState.posicao_salva
+	return Vector2i(
+		clampi(floori(pos.x) >> _DESLOCAMENTO_CHUNK, 0, WORLD_CHUNKS_X - 1),
+		clampi(floori(pos.z) >> _DESLOCAMENTO_CHUNK, 0, WORLD_CHUNKS_Z - 1)
+	)
+
+
+func _verificar_area_inicial() -> void:
+	if area_pronta or not _fila_ordenada:
+		return
+	for dx in range(-RAIO_AREA_INICIAL, RAIO_AREA_INICIAL + 1):
+		for dz in range(-RAIO_AREA_INICIAL, RAIO_AREA_INICIAL + 1):
+			var coord := _centro_area + Vector2i(dx, dz)
+			if _dentro_do_mundo(coord) and not _chunks_com_malha.has(coord):
+				return
+	area_pronta = true
+	area_inicial_pronta.emit()
+
+
+func _gerar_um_chunk(coord: Vector2i) -> void:
+	var chunk := _worldgen.gerar_chunk(coord.x, coord.y)
+	_chunks[coord] = chunk
+	var candidatos_luz: Array[Vector3i] = _worldgen.luzes_locais_da_ultima_chunk().duplicate()
+	if _delta_pendente.has(coord):
+		for edicao: Vector4i in _delta_pendente[coord]:
+			chunk.set_block(edicao.x, edicao.y, edicao.z, edicao.w)
+			candidatos_luz.append(Vector3i(edicao.x, edicao.y, edicao.z))
+		_delta_pendente.erase(coord)
+	## _process só roda depois de todos os _ready() da árvore inicial, então o
+	## TorchLightManager já está escutando (mesma classe de bug do CreatureSpawner
+	## na F7, ADR-020).
+	for local: Vector3i in candidatos_luz:
+		var id := chunk.get_block(local.x, local.y, local.z)
+		var def := BlockRegistry.get_block(id)
+		if def != null and def.emite_luz:
+			EventBus.light_block_loaded.emit(_local_para_mundo(coord, local), id)
 
 
 func get_block(world_pos: Vector3i) -> int:
 	if world_pos.y < 0 or world_pos.y >= ChunkData.SIZE_V:
 		return BlockRegistry.AR_ID
-	var info := _world_para_chunk_local(world_pos)
-	var coord: Vector2i = info["chunk"]
-	if not _chunks.has(coord):
+	var chunk: ChunkData = _chunks.get(_coord_do_chunk(world_pos))
+	if chunk == null:
 		return BlockRegistry.AR_ID
-	var local: Vector3i = info["local"]
-	var chunk: ChunkData = _chunks[coord]
-	return chunk.get_block(local.x, local.y, local.z)
+	return chunk.get_block(world_pos.x & _MASCARA_LOCAL, world_pos.y, world_pos.z & _MASCARA_LOCAL)
 
 
 func set_block(world_pos: Vector3i, id: int) -> void:
+	## Edição feita pelo jogador durante o jogo: emite os eventos de jogo (drop,
+	## som, partícula, missão). Save carregado usa aplicar_delta, que não emite.
 	if world_pos.y < 0 or world_pos.y >= ChunkData.SIZE_V:
 		return
-	var info := _world_para_chunk_local(world_pos)
-	var coord: Vector2i = info["chunk"]
+	var coord := _coord_do_chunk(world_pos)
 	if not _chunks.has(coord):
 		return
-	var local: Vector3i = info["local"]
 	var chunk: ChunkData = _chunks[coord]
+	var local := Vector3i(world_pos.x & _MASCARA_LOCAL, world_pos.y, world_pos.z & _MASCARA_LOCAL)
 	var id_anterior := chunk.get_block(local.x, local.y, local.z)
 	chunk.set_block(local.x, local.y, local.z, id)
 	_edicoes[world_pos] = id
@@ -124,15 +176,7 @@ func set_block(world_pos: Vector3i, id: int) -> void:
 		EventBus.block_broken.emit(world_pos, id_anterior)
 	else:
 		EventBus.block_placed.emit(world_pos, id)
-	_marcar_sujo(coord)
-	if local.x == 0:
-		_marcar_sujo(coord + Vector2i(-1, 0))
-	if local.x == ChunkData.SIZE_H - 1:
-		_marcar_sujo(coord + Vector2i(1, 0))
-	if local.z == 0:
-		_marcar_sujo(coord + Vector2i(0, -1))
-	if local.z == ChunkData.SIZE_H - 1:
-		_marcar_sujo(coord + Vector2i(0, 1))
+	_marcar_sujo_com_vizinhos(coord, local)
 
 
 func exportar_delta() -> Dictionary:
@@ -144,18 +188,76 @@ func exportar_delta() -> Dictionary:
 
 
 func aplicar_delta(delta: Dictionary) -> void:
+	## Save carregado: a edição vai direto pros dados do chunk, sem EventBus.
+	## Reaplicar um bloco minerado não é o jogador minerando de novo; antes isso
+	## dropava o item outra vez e avançava missão de construir a cada Continuar
+	## (achado real, ADR-026). Chunk ainda não gerado guarda a edição até gerar.
+	## _edicoes é preenchido já aqui, então salvar antes do mundo terminar de
+	## carregar não perde nada.
 	for chave: String in delta:
 		var partes: PackedStringArray = chave.split(",")
 		var pos := Vector3i(int(partes[0]), int(partes[1]), int(partes[2]))
-		set_block(pos, int(delta[chave]))
+		if pos.y < 0 or pos.y >= ChunkData.SIZE_V:
+			continue
+		var id: int = int(delta[chave])
+		_edicoes[pos] = id
+		var coord := _coord_do_chunk(pos)
+		var edicao := Vector4i(pos.x & _MASCARA_LOCAL, pos.y, pos.z & _MASCARA_LOCAL, id)
+		if _chunks.has(coord):
+			(_chunks[coord] as ChunkData).set_block(edicao.x, edicao.y, edicao.z, id)
+			_marcar_sujo_com_vizinhos(coord, Vector3i(edicao.x, edicao.y, edicao.z))
+			var def := BlockRegistry.get_block(id)
+			if def != null and def.emite_luz:
+				EventBus.light_block_loaded.emit(pos, id)
+		else:
+			if not _delta_pendente.has(coord):
+				_delta_pendente[coord] = []
+			(_delta_pendente[coord] as Array).append(edicao)
 
 
 func tem_chunks_pendentes() -> bool:
-	return not _fila_geracao.is_empty() or not _fila_sujos.is_empty()
+	return not _fila_geracao.is_empty() or not _fila_malha.is_empty() or not _fila_sujos.is_empty()
 
 
 func fila_pendente_tamanho() -> int:
 	return _fila_sujos.size()
+
+
+func chunk_pronto_em(pos: Vector3) -> bool:
+	## true quando o chunk dessa posição já tem malha e colisão. Fora do mundo
+	## nunca vai existir chunk, então não bloqueia (senão o jogador congelaria na borda).
+	var coord := Vector2i(
+		floori(pos.x) >> _DESLOCAMENTO_CHUNK, floori(pos.z) >> _DESLOCAMENTO_CHUNK
+	)
+	if not _dentro_do_mundo(coord):
+		return true
+	return _chunks_com_malha.has(coord)
+
+
+func _dentro_do_mundo(coord: Vector2i) -> bool:
+	return coord.x >= 0 and coord.y >= 0 and coord.x < WORLD_CHUNKS_X and coord.y < WORLD_CHUNKS_Z
+
+
+func _coord_do_chunk(world_pos: Vector3i) -> Vector2i:
+	return Vector2i(world_pos.x >> _DESLOCAMENTO_CHUNK, world_pos.z >> _DESLOCAMENTO_CHUNK)
+
+
+func _local_para_mundo(coord: Vector2i, local: Vector3i) -> Vector3i:
+	return Vector3i(
+		coord.x * ChunkData.SIZE_H + local.x, local.y, coord.y * ChunkData.SIZE_H + local.z
+	)
+
+
+func _marcar_sujo_com_vizinhos(coord: Vector2i, local: Vector3i) -> void:
+	_marcar_sujo(coord)
+	if local.x == 0:
+		_marcar_sujo(coord + Vector2i(-1, 0))
+	if local.x == ChunkData.SIZE_H - 1:
+		_marcar_sujo(coord + Vector2i(1, 0))
+	if local.z == 0:
+		_marcar_sujo(coord + Vector2i(0, -1))
+	if local.z == ChunkData.SIZE_H - 1:
+		_marcar_sujo(coord + Vector2i(0, 1))
 
 
 func _marcar_sujo(coord: Vector2i) -> void:
@@ -171,6 +273,9 @@ func _remesh_chunk(coord: Vector2i) -> void:
 		return BlockRegistry.e_solido(get_block(Vector3i(wx, ly, wz)))
 	var malha := _mesher.construir_malha(chunk, vizinho_solido)
 	_atualizar_no_chunk(coord, malha)
+	if not _chunks_com_malha.has(coord):
+		_chunks_com_malha[coord] = true
+		chunk_pronto.emit(coord)
 
 
 func _atualizar_no_chunk(coord: Vector2i, malha: ArrayMesh) -> void:

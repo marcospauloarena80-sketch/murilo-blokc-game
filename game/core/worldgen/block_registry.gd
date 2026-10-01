@@ -23,9 +23,30 @@ static var _blocos: Dictionary = {
 	15: preload("res://data/blocks/ambar_bloco.tres"),
 }
 
+static var _tabela_solidos: PackedByteArray = PackedByteArray()
+static var _tabela_cores: PackedColorArray = PackedColorArray()
+
 
 static func get_block(id: int) -> BlockDef:
 	return _blocos.get(id, null)
+
+
+static func tabela_solidos() -> PackedByteArray:
+	## 256 entradas (1 byte por id): 1 = sólido. Consulta O(1) sem Dictionary
+	## no caminho quente do mesher (ADR-026).
+	if _tabela_solidos.is_empty():
+		_tabela_solidos.resize(256)
+		for id: int in _blocos:
+			_tabela_solidos[id] = 1 if e_solido(id) else 0
+	return _tabela_solidos
+
+
+static func tabela_cores() -> PackedColorArray:
+	if _tabela_cores.is_empty():
+		_tabela_cores.resize(256)
+		for id: int in _blocos:
+			_tabela_cores[id] = (_blocos[id] as BlockDef).cor
+	return _tabela_cores
 
 
 static func e_solido(id: int) -> bool:

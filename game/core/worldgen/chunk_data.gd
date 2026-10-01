@@ -22,6 +22,11 @@ static func _indice(x: int, y: int, z: int) -> int:
 	return x + z * SIZE_H + y * SIZE_H * SIZE_H
 
 
+func dados() -> PackedByteArray:
+	## Leitura em lote pro mesher (caminho quente). Índice = x + z*SIZE_H + y*SIZE_H².
+	return _blocos
+
+
 func get_block(x: int, y: int, z: int) -> int:
 	if not _dentro_dos_limites(x, y, z):
 		return BlockRegistry.AR_ID
