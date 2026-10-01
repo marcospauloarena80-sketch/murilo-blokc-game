@@ -6,7 +6,7 @@
 script = ExtResource("1")
 quest_id = "quest_03_primeira_ferramenta"
 nome = "Primeira Ferramenta"
-descricao = "Fabrique uma picareta de madeira."
+descricao = "Fabrique uma bancada e, com ela, uma picareta de madeira."
 tipo = "craftar"
 alvo_id = "picareta_madeira"
 quantidade_alvo = 1

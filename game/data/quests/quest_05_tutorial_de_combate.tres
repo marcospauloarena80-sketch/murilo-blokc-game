@@ -10,5 +10,5 @@ descricao = "Derrote um Pedrolim selvagem."
 tipo = "derrotar"
 alvo_id = "pedrolim"
 quantidade_alvo = 1
-proxima_quest_id = "quest_06_primeira_captura"
+proxima_quest_id = "quest_r1_coleta_diaria"
 npc_id = "lina"

@@ -144,7 +144,14 @@ func _atualizar() -> void:
 	if not fim_das_linhas:
 		_label_texto.text = _npc_def.linhas_dialogo[_indice_linha]
 	elif mostra_oferta:
-		_label_texto.text = "Aceita esta missão?"
+		## O jogador precisa saber o que está aceitando (antes era só
+		## "Aceita esta missão?", achado jogando, ADR-027).
+		var oferta := QuestRegistry.get_quest(_npc_def.oferece_quest_id)
+		_label_texto.text = (
+			"%s: %s\nAceita esta missão?" % [oferta.nome, oferta.descricao]
+			if oferta != null
+			else "Aceita esta missão?"
+		)
 	elif mostra_troca:
 		_label_texto.text = (
 			"Troco %d %s por %d %s."

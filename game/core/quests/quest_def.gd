@@ -11,6 +11,10 @@ extends Resource
 @export var quantidade_alvo: int = 1
 @export var recompensa_receita: String = ""  ## "" = nenhuma; senão id de uma RecipeDef
 @export var recompensa_itens: Dictionary = {}  ## item_id -> quantidade
+## Espécie dada de presente ao concluir. Sem isso não havia como ganhar o
+## primeiro Cubelin: batalha exige ter um, e Cubelin só vinha de captura em
+## batalha (dependência circular achada na auditoria, ADR-027).
+@export var recompensa_cubelin: String = ""
 @export var proxima_quest_id: String = ""  ## "" = fim da cadeia
 @export var repetivel: bool = false
 @export var npc_id: String = ""  ## quem dá essa missão

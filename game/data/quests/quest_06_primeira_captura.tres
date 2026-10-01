@@ -13,5 +13,5 @@ quantidade_alvo = 1
 recompensa_itens = {
 "pocao_cura": 2
 }
-proxima_quest_id = "quest_r1_coleta_diaria"
+proxima_quest_id = "quest_05_tutorial_de_combate"
 npc_id = "lina"

@@ -24,7 +24,10 @@ func configurar(def: CreatureDef) -> void:
 	_comportamento = CreatureBehavior.new(def)
 	var material := StandardMaterial3D.new()
 	material.albedo_color = def.cor
-	_mesh.material_override = material
+	## O spawner chama configurar() antes do add_child, quando o @onready
+	## _mesh ainda é null: a cor nunca era aplicada e toda criatura ficava
+	## cinza (erro de script em todo spawn, achado no ADR-027).
+	($MeshInstance3D as MeshInstance3D).material_override = material
 
 
 func _ready() -> void:

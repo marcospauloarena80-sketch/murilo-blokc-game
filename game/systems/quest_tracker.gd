@@ -4,6 +4,8 @@ extends Node
 ## padrão de LootSpawner/TorchLightManager (Node que só reage a sinais, sem
 ## lógica de mundo própria). Ver docs/01-GDD.md §12 e docs/07-DECISOES.md ADR-022.
 
+const NIVEL_CUBELIN_PRESENTE: int = 5
+
 
 func _ready() -> void:
 	EventBus.item_collected.connect(_ao_coletar_item)
@@ -45,6 +47,10 @@ func _avancar(tipo: String, alvo_id: String, quantidade: int) -> void:
 func _concluir_quest(quest: QuestDef) -> void:
 	for item_id: String in quest.recompensa_itens:
 		GameState.adicionar_item(item_id, int(quest.recompensa_itens[item_id]))
+	if quest.recompensa_cubelin != "":
+		GameState.adicionar_cubelin(
+			CreatureInstance.new(quest.recompensa_cubelin, NIVEL_CUBELIN_PRESENTE)
+		)
 	if not GameState.quests_concluidas.has(quest.quest_id):
 		GameState.quests_concluidas.append(quest.quest_id)
 	EventBus.quest_completed.emit(quest.quest_id)

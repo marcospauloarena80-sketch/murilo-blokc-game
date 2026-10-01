@@ -10,5 +10,9 @@ descricao = "Colete 5 blocos de pedra."
 tipo = "coletar"
 alvo_id = "pedra"
 quantidade_alvo = 5
-proxima_quest_id = "quest_05_tutorial_de_combate"
+recompensa_itens = {
+"cubo_captura": 3
+}
+recompensa_cubelin = "brasita"
+proxima_quest_id = "quest_06_primeira_captura"
 npc_id = "lina"
