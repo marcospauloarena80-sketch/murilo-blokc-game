@@ -51,6 +51,44 @@ func test_colocar_bloco_consome_item_placeavel_da_hotbar() -> void:
 	assert_eq(GameState.inventario_hotbar.contar("pedra"), 4, "deveria ter consumido 1")
 
 
+func test_colocar_bloco_em_celula_ocupada_nao_substitui_nem_consome() -> void:
+	var cm := ChunkManager.new()
+	cm.world_seed = 1
+	add_child_autofree(cm)
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
+	cm.set_block(Vector3i(3, 40, 3), 2)  # terra ocupando o destino
+
+	GameState.inventario_hotbar.adicionar("pedra", 5)
+	var player := PlayerScene.instantiate() as Player
+	add_child_autofree(player)
+
+	player._tentar_colocar_bloco(Vector3i(3, 40, 3))
+
+	assert_eq(cm.get_block(Vector3i(3, 40, 3)), 2, "bloco sólido não deve ser substituído")
+	assert_eq(GameState.inventario_hotbar.contar("pedra"), 5, "não deveria ter consumido")
+
+
+func test_colocar_bloco_sobre_agua_substitui_a_agua_e_consome_item() -> void:
+	## Lago raso, mirando o fundo (Ciclo 4): o destino "adjacente" é a célula
+	## de água, que precisa aceitar o bloco em vez de ignorar o clique.
+	var cm := ChunkManager.new()
+	cm.world_seed = 1
+	add_child_autofree(cm)
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
+	cm.set_block(Vector3i(3, 40, 3), BlockRegistry.AGUA_ID)
+
+	GameState.inventario_hotbar.adicionar("pedra", 5)
+	var player := PlayerScene.instantiate() as Player
+	add_child_autofree(player)
+
+	player._tentar_colocar_bloco(Vector3i(3, 40, 3))
+
+	assert_eq(cm.get_block(Vector3i(3, 40, 3)), 3, "a pedra deveria substituir a água")
+	assert_eq(GameState.inventario_hotbar.contar("pedra"), 4, "deveria ter consumido 1")
+
+
 func test_colocar_sem_item_na_hotbar_nao_faz_nada() -> void:
 	var cm := ChunkManager.new()
 	cm.world_seed = 2

@@ -21,6 +21,9 @@ const GRAVIDADE: float = 9.8
 const FATOR_GRAVIDADE_AGUA: float = 0.25
 const VELOCIDADE_SUBIDA_AGUA: float = 2.6
 const FATOR_VELOCIDADE_AGUA: float = 0.55
+## Sonda dos pés um pouco acima da base da cápsula (0,95): em pé na margem
+## ela lê o bloco onde os pés estão, não o chão.
+const DESLOCAMENTO_SONDA_PES: float = 0.9
 const ALCANCE: float = 5.5
 const AMPLITUDE_MAX_BALANCO: float = 0.6
 const SEGUNDOS_POR_PONTO_ENERGIA: float = 2.0
@@ -177,11 +180,11 @@ func _liberar_mouse_se_necessario(jogando: bool) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
-func _esta_na_agua() -> bool:
+func _esta_na_agua(abaixo_do_centro: float = 0.0) -> bool:
 	if _chunk_manager == null:
 		return false
-	var corpo := Vector3i(global_position.floor())
-	return _chunk_manager.get_block(corpo) == BlockRegistry.AGUA_ID
+	var ponto := global_position - Vector3(0.0, abaixo_do_centro, 0.0)
+	return _chunk_manager.get_block(Vector3i(ponto.floor())) == BlockRegistry.AGUA_ID
 
 
 func _physics_process(delta: float) -> void:
@@ -195,12 +198,18 @@ func _physics_process(delta: float) -> void:
 		global_position = GameState.ponto_respawn
 		velocity = Vector3.ZERO
 		return
-	var na_agua := _esta_na_agua()
+	## Centro OU pés na água: só o centro deixava o jogador sair do modo nado
+	## na superfície com os pés 0,6 abaixo do topo, sem alcançar a margem.
+	var centro_na_agua := _esta_na_agua()
+	var na_agua := centro_na_agua or _esta_na_agua(DESLOCAMENTO_SONDA_PES)
 	if na_agua:
 		velocity.y = maxf(velocity.y - GRAVIDADE * FATOR_GRAVIDADE_AGUA * delta, -2.5)
 		_y_inicio_queda = global_position.y
 		if GameState.current_state == GameState.State.PLAYING and Input.is_action_pressed("pular"):
-			velocity.y = move_toward(velocity.y, VELOCIDADE_SUBIDA_AGUA, 12.0 * delta)
+			if centro_na_agua:
+				velocity.y = move_toward(velocity.y, VELOCIDADE_SUBIDA_AGUA, 12.0 * delta)
+			else:
+				velocity.y = FORCA_PULO  # só os pés na água: na superfície, pula pra fora
 	elif not is_on_floor():
 		velocity.y -= GRAVIDADE * delta
 		if not _estava_no_ar:
@@ -400,9 +409,7 @@ func _processar_mira_e_interacao(delta: float) -> void:
 		_progresso_quebra = 0.0
 
 	if Input.is_action_just_pressed("colocar"):
-		var adjacente := bloco_mirado + Vector3i(normal.round())
-		if _chunk_manager.get_block(adjacente) == BlockRegistry.AR_ID:
-			_tentar_colocar_bloco(adjacente)
+		_tentar_colocar_bloco(bloco_mirado + Vector3i(normal.round()))
 
 	if Input.is_action_just_pressed("interagir"):
 		_processar_interacao(bloco_mirado)
@@ -420,6 +427,11 @@ func _processar_interacao(bloco_mirado: Vector3i) -> void:
 
 
 func _tentar_colocar_bloco(adjacente: Vector3i) -> void:
+	## Só ar e água aceitam bloco. A água é substituída (lago raso, mirando o
+	## fundo) e não entra no save, então Continuar fica consistente.
+	var id_destino := _chunk_manager.get_block(adjacente)
+	if id_destino != BlockRegistry.AR_ID and id_destino != BlockRegistry.AGUA_ID:
+		return
 	var item_id: String = GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
 	if item_id == "":
 		return

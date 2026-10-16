@@ -44,6 +44,31 @@ func test_vizinho_solido_fora_do_chunk_esconde_a_face_da_borda() -> void:
 	assert_eq(malha.get_faces().size(), 30, "5 faces expostas: a face oeste fica escondida")
 
 
+func test_chunk_so_com_agua_nao_gera_colisao_mas_gera_superficie_do_lago() -> void:
+	## Água (Ciclo 4) não é sólida: fica fora da malha de colisão e sai à parte
+	## em construir_detalhes, só a superfície (água com ar em cima).
+	var chunk := ChunkData.new()
+	chunk.set_block(5, 5, 5, BlockRegistry.AGUA_ID)
+	chunk.set_block(6, 5, 5, BlockRegistry.AGUA_ID)
+	chunk.set_block(5, 4, 5, BlockRegistry.AGUA_ID)
+	var mesher := ChunkMesher.new()
+	var vizinho_solido := func(_x: int, _y: int, _z: int) -> bool: return false
+
+	assert_null(mesher.construir_malha(chunk, vizinho_solido), "nada sólido: sem malha")
+	assert_not_null(mesher.construir_detalhes(chunk, 1)["agua"], "superfície do lago")
+
+
+func test_pedra_encostada_na_agua_mantem_a_face_virada_pra_agua() -> void:
+	var chunk := ChunkData.new()
+	chunk.set_block(5, 5, 5, 3)
+	chunk.set_block(6, 5, 5, BlockRegistry.AGUA_ID)
+	var mesher := ChunkMesher.new()
+	var vizinho_solido := func(x: int, y: int, z: int) -> bool:
+		return BlockRegistry.e_solido(chunk.get_block(x, y, z))
+	var malha := mesher.construir_malha(chunk, vizinho_solido)
+	assert_eq(malha.get_faces().size(), 36, "água não esconde face: 6 faces x 2 tri x 3 vert")
+
+
 func test_callable_so_e_consultado_na_borda() -> void:
 	var chunk := ChunkData.new()
 	chunk.set_block(5, 5, 5, 3)

@@ -25,8 +25,8 @@ const RAIO_DESERTO_DE_AMBAR: float = 65.0
 const RAIO_CLAREIRA_SPAWN: float = 7.0
 const CHANCE_AMBAR: float = 0.05  ## nódulo raro na areia do Deserto de Âmbar (F11)
 ## Lagos (Ciclo 4, ADR-027): todo vale abaixo do nível da água enche, com
-## fundo e margem de areia. Nos Picos Gelados a superfície congela; no Deserto
-## de Âmbar os vales ficam secos.
+## fundo e margem de areia. Nos Picos Gelados o lago é gelo sólido até o nível
+## da água; no Deserto de Âmbar os vales ficam secos.
 const NIVEL_AGUA: int = 27
 
 ## Cavernas decoradas (F11, ADR-024): bolsão pequeno e determinístico, não
@@ -195,14 +195,20 @@ func _aplicar_superficie(
 func _encher_lago(chunk: ChunkData, lx: int, lz: int, altura: int, bioma_id: String) -> void:
 	if bioma_id == "deserto_de_ambar" or altura > NIVEL_AGUA + 1:
 		return
-	if bioma_id != "picos_gelados" and bioma_id != "colinas_de_pedra":
+	if bioma_id == "picos_gelados":
+		## Lago congelado é gelo sólido até o nível da água, sem água por baixo:
+		## quebrar o gelo de cima deixa um degrau de 1 bloco. Com água embaixo
+		## o piso ficava 2 blocos abaixo e quem caía não saía mais (o pulo sobe
+		## ~1,3 bloco; nadando sai ainda mais baixo).
+		for y in range(altura + 1, NIVEL_AGUA + 1):
+			chunk.set_block(lx, y, lz, 14)
+		return
+	if bioma_id != "colinas_de_pedra":
 		chunk.set_block(lx, altura, lz, 6)  # fundo e praia de areia
 		if altura > 0:
 			chunk.set_block(lx, altura - 1, lz, 6)
 	for y in range(altura + 1, NIVEL_AGUA + 1):
 		chunk.set_block(lx, y, lz, BlockRegistry.AGUA_ID)
-	if bioma_id == "picos_gelados" and altura < NIVEL_AGUA:
-		chunk.set_block(lx, NIVEL_AGUA, lz, 14)  # lago congelado
 
 
 func _plantar_arvore(
