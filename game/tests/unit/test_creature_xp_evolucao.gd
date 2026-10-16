@@ -75,7 +75,7 @@ func test_brotinho_nunca_evolui_mesmo_em_nivel_alto() -> void:
 
 
 func test_batalha_vencida_da_xp_pro_ativo() -> void:
-	var equipe: Array[CreatureInstance] = [CreatureInstance.new("pedrolim", 20)]
+	var equipe: Array[CreatureInstance] = [CreatureInstance.new("pedrargo", 20)]
 	var selvagem := CreatureInstance.new("brotinho", 5)
 	var batalha := BattleService.new(equipe, selvagem)
 	var xp_antes := equipe[0].xp

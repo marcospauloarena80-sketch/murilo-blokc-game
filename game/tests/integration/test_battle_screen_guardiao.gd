@@ -7,7 +7,7 @@ const BattleScreenScene := preload("res://ui/battle_screen/battle_screen.tscn")
 
 
 func before_each() -> void:
-	GameState.equipe_cubelins = [CreatureInstance.new("pedrolim", 20)]
+	GameState.equipe_cubelins = [CreatureInstance.new("pedrargo", 20)]
 	GameState.deposito_cubelins = []
 	GameState.inventario_hotbar = InventoryModel.new(8)
 	GameState.inventario_mochila = InventoryModel.new(24)
@@ -94,7 +94,7 @@ func test_vencer_o_guardiao_inteiro_concede_a_insignia() -> void:
 
 
 func test_vencer_o_coracao_dourado_emite_game_completed_ao_fechar() -> void:
-	GameState.equipe_cubelins = [CreatureInstance.new("pedrolim", 30)]
+	GameState.equipe_cubelins = [CreatureInstance.new("pedrargo", 30)]
 	var tela := BattleScreenScene.instantiate() as BattleScreen
 	add_child_autofree(tela)
 	tela._abrir_arena("coracao_dourado")

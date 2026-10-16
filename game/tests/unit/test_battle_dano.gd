@@ -33,12 +33,12 @@ func test_mesmo_elemento_e_neutro() -> void:
 
 
 func test_calcular_dano_formula_basica_sem_variacao() -> void:
-	var atacante := CreatureInstance.new("pedrolim", 1)  # forca 8
+	var atacante := CreatureInstance.new("pedrolim", 1)  # forca 3
 	var alvo := CreatureInstance.new("brotinho", 1)  # guarda 6, elemento mato
 	var ataque := AttackRegistry.get_ataque("pedra_investida")  # poder 6, elemento pedra
-	# pedra vs mato = neutro (1.0); dano = 6 * (8/6) * 1.0 * 1.0 = 8
+	# pedra vs mato = neutro (1.0); dano = 6 * (3/6) * 1.0 * 1.0 = 3
 	var dano := BattleService.calcular_dano(atacante, alvo, ataque, 1.0)
-	assert_eq(dano, 8)
+	assert_eq(dano, 3)
 
 
 func test_calcular_dano_aplica_vantagem_elemental() -> void:

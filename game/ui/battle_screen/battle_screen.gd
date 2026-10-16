@@ -5,8 +5,9 @@ extends CanvasLayer
 ##
 ## Ordem de turno (quem_age_primeiro) só se aplica ao Atacar — trocar/item/
 ## fugir são resolvidos antes do contra-ataque selvagem, exceto quando bem
-## sucedidos (troca sempre gasta o turno; captura/fuga bem sucedidas encerram
-## a batalha antes do selvagem agir).
+## sucedidos (captura/fuga bem sucedidas encerram a batalha antes do selvagem
+## agir). Troca voluntária gasta o turno; troca forçada (ativo já desmaiado)
+## não dá golpe grátis ao selvagem — ele já agiu ao derrubar o Cubelin.
 
 const VARIACAO_MIN: float = 0.9
 const VARIACAO_MAX: float = 1.1
@@ -163,8 +164,9 @@ func _ao_trocar() -> void:
 	var proximo := _proximo_indice_disponivel()
 	if proximo == -1:
 		return
+	var troca_forcada := _batalha.jogador_ativo().esta_desmaiado()
 	_batalha.trocar_ativo(proximo)
-	if _batalha.resultado == BattleService.Resultado.EM_ANDAMENTO:
+	if not troca_forcada and _batalha.resultado == BattleService.Resultado.EM_ANDAMENTO:
 		_ataque_selvagem_aleatorio()
 	_atualizar()
 
