@@ -31,6 +31,10 @@ const _MASCARA_LOCAL: int = 15
 @export var world_seed: int = 12345
 
 var area_pronta: bool = false
+## Cópias das constantes lidas em _process: os testes zeram o orçamento pra
+## verificar o fatiamento sem depender do relógio.
+var orcamento_carregando_usec: int = ORCAMENTO_CARREGANDO_USEC
+var orcamento_jogando_usec: int = ORCAMENTO_JOGANDO_USEC
 
 var _worldgen: WorldGenerator
 var _mesher: ChunkMesher
@@ -74,13 +78,18 @@ func _process(_delta: float) -> void:
 	if not _fila_ordenada:
 		_ordenar_fila_de_geracao()
 	var inicio := Time.get_ticks_usec()
-	var orcamento := ORCAMENTO_JOGANDO_USEC if area_pronta else ORCAMENTO_CARREGANDO_USEC
+	var orcamento := orcamento_jogando_usec if area_pronta else orcamento_carregando_usec
 	var houve_trabalho := false
 
 	## Edições do jogador primeiro: minerar não pode esperar o resto do mundo.
+	## Pelo menos um remesh por quadro (o chunk do bloco editado entra antes dos
+	## vizinhos), o resto obedece ao orçamento: um bloco de quina marca 3 chunks
+	## (~33 ms cada na Web) e remontar os 3 no mesmo quadro engasgava ao minerar.
 	while not _fila_sujos.is_empty():
 		_remesh_chunk(_fila_sujos.pop_front())
 		houve_trabalho = true
+		if Time.get_ticks_usec() - inicio >= orcamento:
+			break
 
 	## Gerar e montar a malha são unidades separadas de trabalho: com o
 	## orçamento curto de jogo, um frame paga só uma delas (sem engasgo na Web).

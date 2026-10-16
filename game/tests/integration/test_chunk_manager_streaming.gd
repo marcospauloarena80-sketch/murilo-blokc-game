@@ -83,3 +83,44 @@ func test_fora_do_mundo_nao_bloqueia_movimento() -> void:
 
 	assert_true(cm.chunk_pronto_em(Vector3(-50, 0, -50)))
 	assert_false(cm.chunk_pronto_em(Vector3(72, 0, 72)), "nada carregado antes do 1º frame")
+
+
+func test_quebrar_bloco_de_quina_remonta_um_chunk_por_quadro() -> void:
+	## Achado jogando o build Web: a fila de sujos era esvaziada inteira no
+	## mesmo quadro, fora do orçamento. Um bloco de quina marca 3 chunks
+	## (~33 ms cada no WebAssembly) e o jogo engasgava ao minerar.
+	var cm := ChunkManager.new()
+	cm.world_seed = 1
+	add_child_autofree(cm)
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
+	assert_true(cm.area_pronta, "mundo drenado: o orçamento em vigor é o de jogo")
+	cm.orcamento_jogando_usec = 0
+	var editado := Vector2i(2, 2)
+	var vizinhos: Array[Vector2i] = [Vector2i(1, 2), Vector2i(2, 1)]
+	var no_antes: Dictionary = {}
+	for coord: Vector2i in [editado] + vizinhos:
+		no_antes[coord] = (cm._chunk_nodes[coord] as Node).get_instance_id()
+
+	## x e z múltiplos de 16: local (0, _, 0), quina com 2 vizinhos de borda.
+	cm.set_block(Vector3i(32, 40, 32), 3)
+
+	assert_eq(cm.fila_pendente_tamanho(), 3, "quina: chunk editado + 2 vizinhos de borda")
+	cm._process(0.0)
+	assert_eq(cm.fila_pendente_tamanho(), 2, "com orçamento zerado, um quadro remonta só 1 chunk")
+	assert_ne(
+		(cm._chunk_nodes[editado] as Node).get_instance_id(),
+		no_antes[editado],
+		"o chunk do bloco editado é o primeiro a ser remontado"
+	)
+	for coord: Vector2i in vizinhos:
+		assert_eq(
+			(cm._chunk_nodes[coord] as Node).get_instance_id(),
+			no_antes[coord],
+			"vizinho %s espera o próximo quadro" % coord
+		)
+	var quadros := 0
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
+		quadros += 1
+	assert_eq(quadros, 2, "os vizinhos saem um por quadro até esvaziar a fila")
