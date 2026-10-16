@@ -27,7 +27,7 @@ func _ready() -> void:
 
 func _abrir() -> void:
 	visible = true
-	GameState.mudar_estado(GameState.State.PAUSED)
+	GameState.abrir_tela("creditos")
 	_label_texto.text = TEXTO_VITORIA + "\n\n" + TEXTO_CREDITOS
 
 

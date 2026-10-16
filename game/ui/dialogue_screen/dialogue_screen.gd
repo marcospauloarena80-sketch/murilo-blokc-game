@@ -36,7 +36,7 @@ func _abrir(npc: Npc) -> void:
 	_indice_linha = 0
 	_aberto = true
 	visible = true
-	GameState.mudar_estado(GameState.State.PAUSED)
+	GameState.abrir_tela("dialogo")
 	if _npc_def.cura_ao_interagir:
 		GameState.curar_no_refugio()
 	_atualizar()
@@ -46,7 +46,7 @@ func _fechar() -> void:
 	_aberto = false
 	visible = false
 	_npc_def = null
-	GameState.mudar_estado(GameState.State.PLAYING)
+	GameState.fechar_tela("dialogo")
 
 
 func _ao_avancar() -> void:

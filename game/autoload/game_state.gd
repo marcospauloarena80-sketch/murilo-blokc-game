@@ -37,9 +37,28 @@ var veio_de_continuar: bool = false
 var delta_blocos_carregado: Dictionary = {}
 var posicao_salva: Vector3 = Vector3(64, 45, 64)
 
+## Pilha das telas de UI abertas (pausa, inventário, batalha...). O jogo só
+## volta a PLAYING quando a última fecha — transições encadeadas (diálogo ->
+## batalha, batalha -> créditos) não despausam por baixo da tela nova.
+var telas_abertas: Array[String] = []
+
 
 func mudar_estado(novo_estado: State) -> void:
 	current_state = novo_estado
+	if novo_estado != State.PAUSED:
+		telas_abertas.clear()
+
+
+func abrir_tela(id: String) -> void:
+	if not telas_abertas.has(id):
+		telas_abertas.append(id)
+	mudar_estado(State.PAUSED)
+
+
+func fechar_tela(id: String) -> void:
+	telas_abertas.erase(id)
+	if telas_abertas.is_empty() and current_state == State.PAUSED:
+		mudar_estado(State.PLAYING)
 
 
 func reiniciar_para_novo_jogo() -> void:

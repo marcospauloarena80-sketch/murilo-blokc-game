@@ -38,7 +38,7 @@ func _abrir(chave: String) -> void:
 	_chave_bau = chave
 	_aberto = true
 	visible = true
-	GameState.mudar_estado(GameState.State.PAUSED)
+	GameState.abrir_tela("bau")
 	_atualizar()
 
 
@@ -46,7 +46,7 @@ func _fechar() -> void:
 	_aberto = false
 	visible = false
 	_chave_bau = ""
-	GameState.mudar_estado(GameState.State.PLAYING)
+	GameState.fechar_tela("bau")
 
 
 func _ao_clicar_bau(indice: int) -> void:

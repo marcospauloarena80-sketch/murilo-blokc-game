@@ -57,7 +57,7 @@ func _abrir(criatura: Creature) -> void:
 	_batalha = BattleService.new(GameState.equipe_cubelins, selvagem)
 	_aberto = true
 	visible = true
-	GameState.mudar_estado(GameState.State.PAUSED)
+	GameState.abrir_tela("batalha")
 	_atualizar()
 
 
@@ -68,7 +68,7 @@ func _abrir_arena(arena_id: String) -> void:
 	_batalha = _guardiao.batalha_atual
 	_aberto = true
 	visible = true
-	GameState.mudar_estado(GameState.State.PAUSED)
+	GameState.abrir_tela("batalha")
 	_atualizar()
 
 
@@ -87,7 +87,7 @@ func _fechar() -> void:
 	_criatura_mundo = null
 	_guardiao = null
 	_arena = null
-	GameState.mudar_estado(GameState.State.PLAYING)
+	GameState.fechar_tela("batalha")
 	EventBus.battle_ended.emit()
 
 

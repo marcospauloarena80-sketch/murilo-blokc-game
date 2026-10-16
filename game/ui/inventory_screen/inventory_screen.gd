@@ -39,14 +39,14 @@ func _unhandled_input(event: InputEvent) -> void:
 func _abrir() -> void:
 	_aberto = true
 	visible = true
-	GameState.mudar_estado(GameState.State.PAUSED)
+	GameState.abrir_tela("inventario")
 	_atualizar()
 
 
 func _fechar() -> void:
 	_aberto = false
 	visible = false
-	GameState.mudar_estado(GameState.State.PLAYING)
+	GameState.fechar_tela("inventario")
 
 
 func _ao_clicar_slot_mochila(indice: int) -> void:
