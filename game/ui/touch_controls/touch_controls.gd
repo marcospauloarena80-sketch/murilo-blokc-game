@@ -1,18 +1,26 @@
 class_name TouchControls
 extends CanvasLayer
 ## Controles touch (F12, ADR-025): joystick flutuante (esquerda) pra
-## movimento + arrasto (direita) pra olhar + botões de ação.
+## movimento + arrasto (direita) pra olhar + botões de ação + botão de pausa.
 ## Joystick/arrasto só respondem a toque de verdade (tela sensível ao
 ## toque) — suportam os dois dedos ao mesmo tempo (mover E olhar juntos),
 ## por isso usam InputEventScreenTouch/Drag direto (mouse emulado só dá 1
-## ponteiro). Os botões de ação (pular/quebrar/colocar/interagir/inventário)
-## são Button comuns e ficam visíveis em qualquer plataforma — mouse/trackpad
-## clicam neles igual — porque clicar-e-segurar pelo teclado/mouse pode falhar
-## em navegador dependendo do hardware (achado real: "quebrar" não respondia
-## no Chrome/Mac com trackpad mesmo com o mapa de input correto, ADR-026).
+## ponteiro). Os botões (pular/quebrar/colocar/interagir/inventário/pausa)
+## são Button comuns e só ficam visíveis quando há tela de toque: no desktop
+## eles cobriam o "Jogar" do criador de personagem e poluíam a tela. A ADR-026
+## os deixava visíveis em qualquer plataforma porque clicar-e-segurar falhava
+## no trackpad (Chrome/Mac); desde então o mapa de input ganhou as teclas Q
+## (quebrar) e C (colocar), validadas jogando, que cobrem esse caso.
+## Ações lidas por polling pelo Player (pular/quebrar/colocar/interagir) usam
+## Input.action_press/release; as lidas por evento em _unhandled_input
+## (inventario/pausar) precisam de um InputEventAction via parse_input_event,
+## porque action_press não gera InputEvent.
 
 const RAIO_JOYSTICK: float = 60.0
 const SENSIBILIDADE_ARRASTO: float = 0.006
+
+## Só pra teste: força o caminho "com tela de toque" sem depender do hardware.
+var forcar_toque: bool = false
 
 var _indice_toque_joystick: int = -1
 var _centro_joystick: Vector2 = Vector2.ZERO
@@ -26,20 +34,42 @@ var _jogador: Node3D
 @onready var _botao_colocar: Button = $Acoes/BotaoColocar
 @onready var _botao_interagir: Button = $Acoes/BotaoInteragir
 @onready var _botao_inventario: Button = $Acoes/BotaoInventario
+@onready var _botao_pausa: Button = $Pausa/BotaoPausa
 
 
 func _ready() -> void:
 	$Joystick.visible = false
+	var tem_toque := _tem_tela_de_toque()
+	$Acoes.visible = tem_toque
+	$Pausa.visible = tem_toque
 	_conectar_botao(_botao_pular, "pular")
 	_conectar_botao(_botao_quebrar, "quebrar")
 	_conectar_botao(_botao_colocar, "colocar")
 	_conectar_botao(_botao_interagir, "interagir")
-	_conectar_botao(_botao_inventario, "inventario")
+	_conectar_botao_por_evento(_botao_inventario, "inventario")
+	_conectar_botao_por_evento(_botao_pausa, "pausar")
+
+
+func _tem_tela_de_toque() -> bool:
+	return forcar_toque or DisplayServer.is_touchscreen_available()
 
 
 func _conectar_botao(botao: Button, acao: String) -> void:
 	botao.button_down.connect(Input.action_press.bind(acao, 1.0))
 	botao.button_up.connect(Input.action_release.bind(acao))
+
+
+func _conectar_botao_por_evento(botao: Button, acao: String) -> void:
+	botao.button_down.connect(_despachar_acao.bind(acao, true))
+	botao.button_up.connect(_despachar_acao.bind(acao, false))
+
+
+func _despachar_acao(acao: String, pressionado: bool) -> void:
+	var evento := InputEventAction.new()
+	evento.action = acao
+	evento.pressed = pressionado
+	evento.strength = 1.0
+	Input.parse_input_event(evento)
 
 
 func _garantir_jogador() -> void:
@@ -48,7 +78,7 @@ func _garantir_jogador() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not DisplayServer.is_touchscreen_available():
+	if not _tem_tela_de_toque():
 		return
 	if event is InputEventScreenTouch:
 		_ao_tocar(event)

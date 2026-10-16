@@ -6,12 +6,26 @@ extends GutTest
 
 const TouchControlsScene := preload("res://ui/touch_controls/touch_controls.tscn")
 const PlayerScene := preload("res://entities/player/player.tscn")
+const InventoryScreenScene := preload("res://ui/inventory_screen/inventory_screen.tscn")
+const PauseScreenScene := preload("res://ui/pause_screen/pause_screen.tscn")
 const ACOES_MOVIMENTO := ["mover_frente", "mover_tras", "mover_esquerda", "mover_direita"]
+const ACOES_POR_EVENTO := ["inventario", "pausar"]
+
+
+func before_each() -> void:
+	## Testes anteriores da suíte (test_menu_fluxo_completo) trocam de cena de
+	## verdade e deixam um Main inteiro pendente/na árvore, com InventoryScreen
+	## e PauseScreen próprios que receberiam o InputEventAction antes dos nós
+	## deste teste. Flusha a troca pendente e descarta a sobra.
+	await get_tree().process_frame
+	if get_tree().current_scene != null:
+		get_tree().unload_current_scene()
 
 
 func after_each() -> void:
-	for acao: String in ACOES_MOVIMENTO:
+	for acao: String in ACOES_MOVIMENTO + ACOES_POR_EVENTO:
 		Input.action_release(acao)
+	GameState.mudar_estado(GameState.State.PLAYING)
 
 
 func _metade_da_tela() -> float:
@@ -34,16 +48,63 @@ func _arrasto(index: int, posicao: Vector2, relativo: Vector2) -> InputEventScre
 	return evento
 
 
-func test_botoes_de_acao_ficam_visiveis_mesmo_sem_tela_de_toque() -> void:
-	## Regressão: clicar-e-segurar (mouse/trackpad) pra minerar podia falhar
-	## dependendo do navegador/hardware (achado real: Chrome/Mac, ADR-026) —
-	## os botões de ação são Button comuns, então ficam visíveis em qualquer
-	## plataforma como alternativa clicável, não só quando há tela de toque.
+func _controles_com_toque() -> TouchControls:
+	var controles := TouchControlsScene.instantiate() as TouchControls
+	controles.forcar_toque = true
+	add_child_autofree(controles)
+	return controles
+
+
+func test_botoes_de_acao_ficam_escondidos_sem_tela_de_toque() -> void:
+	## No desktop os botões cobriam o "Jogar" do criador de personagem e
+	## poluíam a tela; o caso do trackpad (ADR-026) hoje é coberto pelas
+	## teclas Q/C. No ambiente de teste headless não há tela de toque.
 	var controles := TouchControlsScene.instantiate() as TouchControls
 	add_child_autofree(controles)
 
-	assert_true(controles.visible, "os botões de ação devem ficar visíveis")
+	assert_false(controles.get_node("Acoes").visible, "botões de ação só com tela de toque")
+	assert_false(controles.get_node("Pausa").visible, "botão de pausa só com tela de toque")
 	assert_false(controles.get_node("Joystick").visible, "joystick continua só sob demanda")
+
+
+func test_botoes_de_acao_ficam_visiveis_com_tela_de_toque() -> void:
+	var controles := _controles_com_toque()
+
+	assert_true(controles.get_node("Acoes").visible, "botões de ação aparecem com tela de toque")
+	assert_true(controles.get_node("Pausa").visible, "botão de pausa aparece com tela de toque")
+	assert_false(controles.get_node("Joystick").visible, "joystick continua só sob demanda")
+
+
+func test_botao_bolsa_abre_o_inventario() -> void:
+	## Regressão: Input.action_press não gera InputEvent, e o InventoryScreen
+	## abre em _unhandled_input — o botão precisa despachar um InputEventAction.
+	var inventario := InventoryScreenScene.instantiate() as InventoryScreen
+	add_child_autofree(inventario)
+	var controles := _controles_com_toque()
+	GameState.mudar_estado(GameState.State.PLAYING)
+
+	controles._botao_inventario.button_down.emit()
+	controles._botao_inventario.button_up.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_true(inventario.visible, "a Bolsa deve abrir o inventário")
+	assert_eq(GameState.current_state, GameState.State.PAUSED)
+
+
+func test_botao_pausa_abre_a_tela_de_pausa() -> void:
+	var pausa := PauseScreenScene.instantiate() as PauseScreen
+	add_child_autofree(pausa)
+	var controles := _controles_com_toque()
+	GameState.mudar_estado(GameState.State.PLAYING)
+
+	controles._botao_pausa.button_down.emit()
+	controles._botao_pausa.button_up.emit()
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_true(pausa.visible, "o botão Pausa deve abrir a tela de pausa")
+	assert_eq(GameState.current_state, GameState.State.PAUSED)
 
 
 func test_tocar_no_lado_esquerdo_mostra_o_joystick() -> void:
