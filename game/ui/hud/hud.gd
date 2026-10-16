@@ -6,10 +6,18 @@ extends CanvasLayer
 ## o build real, o jogador não tinha como saber o que fazer nem o que aconteceu.
 
 const TAMANHO_SLOT := Vector2(44, 44)
+const COR_SLOT_VAZIO := Color(0.15, 0.15, 0.15, 0.6)
 const DURACAO_AVISO_SEG: float = 3.0
 const DURACAO_AVISO_IMPORTANTE_SEG: float = 5.0
 
 var _botoes: Array[Button] = []
+## Um par (normal, selecionado) por slot, criado uma vez: antes, _process criava
+## um StyleBoxFlat novo para os 8 slots em todo quadro. A cor de fundo depende
+## do item do slot, por isso o par é por slot e não compartilhado.
+var _estilos_normal: Array[StyleBoxFlat] = []
+var _estilos_selecionado: Array[StyleBoxFlat] = []
+var _ultimo_item_id: PackedStringArray = PackedStringArray()
+var _ultimo_selecionado: Array[bool] = []
 var _chunk_manager: ChunkManager
 var _label_objetivo: Label
 var _label_aviso: Label
@@ -30,13 +38,31 @@ func _ready() -> void:
 		_hotbar.add_child(botao)
 		_botoes.append(botao)
 
+		var normal := StyleBoxFlat.new()
+		normal.bg_color = COR_SLOT_VAZIO
+		var selecionado := StyleBoxFlat.new()
+		selecionado.bg_color = COR_SLOT_VAZIO
+		selecionado.set_border_width_all(3)
+		selecionado.border_color = Color.WHITE
+		botao.add_theme_stylebox_override("normal", normal)
+		_estilos_normal.append(normal)
+		_estilos_selecionado.append(selecionado)
+		_ultimo_item_id.append("")
+		_ultimo_selecionado.append(false)
+
 	_label_objetivo = _criar_label(18)
 	_label_objetivo.position = Vector2(16, 14)
 	_label_aviso = _criar_label(24)
 	_label_aviso.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	## set_anchors_preset preserva a posição atual (x=0) recalculando os offsets;
+	## zerando-os o label fica centrado e cresce para os dois lados a partir do
+	## meio da tela. Antes, metade do texto ficava fora da borda esquerda.
+	_label_aviso.offset_left = 0
+	_label_aviso.offset_right = 0
+	_label_aviso.offset_top = 110
+	_label_aviso.offset_bottom = 110
 	_label_aviso.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_label_aviso.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_label_aviso.position.y = 110
 	_label_aviso.visible = false
 	EventBus.item_collected.connect(_ao_coletar_item)
 	EventBus.quest_completed.connect(_ao_concluir_missao)
@@ -121,21 +147,23 @@ func _atualizar_label_carregando() -> void:
 func _atualizar_slot(indice: int) -> void:
 	var botao: Button = _botoes[indice]
 	var item_id: String = GameState.inventario_hotbar.get_item_id(indice)
-	var estilo := StyleBoxFlat.new()
+	var selecionado: bool = indice == GameState.hotbar_selecionado
 
-	if item_id == "":
-		estilo.bg_color = Color(0.15, 0.15, 0.15, 0.6)
-	else:
-		var def := ItemRegistry.get_item(item_id)
-		estilo.bg_color = def.cor if def != null else Color.MAGENTA
+	if item_id != _ultimo_item_id[indice]:
+		var cor := COR_SLOT_VAZIO
+		if item_id != "":
+			var def := ItemRegistry.get_item(item_id)
+			cor = def.cor if def != null else Color.MAGENTA
+		_estilos_normal[indice].bg_color = cor
+		_estilos_selecionado[indice].bg_color = cor
+		_ultimo_item_id[indice] = item_id
 
-	if indice == GameState.hotbar_selecionado:
-		estilo.border_width_left = 3
-		estilo.border_width_right = 3
-		estilo.border_width_top = 3
-		estilo.border_width_bottom = 3
-		estilo.border_color = Color.WHITE
+	if selecionado != _ultimo_selecionado[indice]:
+		var estilo: StyleBoxFlat = (
+			_estilos_selecionado[indice] if selecionado else _estilos_normal[indice]
+		)
+		botao.add_theme_stylebox_override("normal", estilo)
+		_ultimo_selecionado[indice] = selecionado
 
-	botao.add_theme_stylebox_override("normal", estilo)
 	var quantidade: int = GameState.inventario_hotbar.get_quantidade(indice)
 	botao.text = str(quantidade) if quantidade > 0 else ""
