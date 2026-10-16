@@ -30,6 +30,13 @@ func after_each() -> void:
 		FileAccess.open(SaveManager.SAVE_PATH, FileAccess.WRITE).store_string(_conteudo_save)
 	if _tinha_backup:
 		FileAccess.open(SaveManager.BACKUP_PATH, FileAccess.WRITE).store_string(_conteudo_backup)
+	## A troca de cena real (change_scene_to_file) acontece no fim do quadro;
+	## sem descartar a cena que sobra, ela fica na árvore até o fim da suíte e
+	## recebe input/muda o GameState no meio dos testes seguintes.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if get_tree().current_scene != null:
+		get_tree().unload_current_scene()
 	GameState.veio_de_continuar = false
 	GameState.delta_blocos_carregado = {}
 
