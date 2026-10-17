@@ -245,3 +245,13 @@ Formato curto: contexto → decisão → consequências. Toda decisão nova entr
 - **Também corrigido no caminho:** era possível colocar bloco dentro do próprio corpo e ficar preso num poço (checagem de sobreposição com a cápsula).
 - **Validação:** 748/748 testes. No navegador (build de depuração): enxada, semente até trigo maduro e colheita; muda até árvore de 4 troncos e copa; lanugos nascem com placa e morrem ao apanhar; casa com porta e vidro à frente do spawn e minimapa no canto. Não validado jogando: abrir a porta com E (a mira automatizada cai na quina; coberto por teste de física), durabilidade, tier mínimo e túneis (cobertos por testes), coleta do drop de carne e agachar na borda.
 - **Pendências:** cogumelos não nascem no mundo (só se colocados); sopa de cogumelo omitida; cerca sem conexão automática; escada sem rotação; porta das casas leste e oeste fica de lado até abrir.
+
+## ADR-030 — Ciclo 9: Cubelins vivos
+- **Decisão (17/out/2026):** cinco frentes fundidas na main.
+  1. **Nível por região** (`NivelPorRegiao`): campos 3 a 5, floresta 5 a 8, colinas 8 a 12, deserto 12 a 16, picos 16 a 20; a criatura no mundo tem nível, vida escalada e placa "Nome Nv.N"; a batalha usa o nível dela. Perto do vilarejo à noite só Pedrolim e Faiscolt nascem (os fortes ficam além de 30 blocos), o que resolve o Rochedo derrubar a Brasita nível 4 num golpe.
+  2. **Batalha com visual:** arena 3D no terço superior com as duas criaturas, barras de vida, log das três últimas ações (super efetivo, pouco efetivo, captura) e animações (investida, piscar, esfera do cubo que balança, flash na evolução), desligadas em headless.
+  3. **Companheiro:** a primeira da equipe anda atrás do jogador (2,5 a 4 blocos, pula degraus, teleporta se longe ou na água funda), sem agressão nem batalha; E mostra nome, nível e vida.
+  4. **Caderno de Cubelins** (J): grade das 18 formas, silhueta para não vista, selo de capturada, descrição e evolução; apelido (até 12 letras) e soltar no Laboratório; campos opcionais no save, sem mudar o schema.
+  5. **Treinadores Tico e Bia** pelo mundo: recompensa em itens uma vez por dia de jogo, sem insígnia.
+- **Validação:** 804/804 testes. No navegador: batalha com arena 3D, barras e log, captura com a esfera no alvo (equipe 1 para 2), Caderno com os dois capturados e 16 silhuetas. Não validado jogando: companheiro seguindo (testes com física, sem captura de tela dele), treinadores, apelido e soltar, música de batalha (não ligada).
+- **Pendência:** unificar a montagem visual duplicada entre `Creature` e `CorpoCubelin`.

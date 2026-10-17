@@ -21,6 +21,7 @@ var _cb_medir: JavaScriptObject
 var _cb_limpar: JavaScriptObject
 var _cb_teleportar: JavaScriptObject
 var _cb_dar: JavaScriptObject
+var _cb_dar_cubelin: JavaScriptObject
 ## Frente 5D (áudio)
 var _cb_audio: JavaScriptObject
 ## Frente 8A (crescimento)
@@ -57,6 +58,8 @@ func _ready() -> void:
 	_janela.muriloTeleportar = _cb_teleportar
 	_cb_dar = JavaScriptBridge.create_callback(_dar)
 	_janela.muriloDar = _cb_dar
+	_cb_dar_cubelin = JavaScriptBridge.create_callback(_dar_cubelin)
+	_janela.muriloDarCubelin = _cb_dar_cubelin
 	## Frente 5D (áudio)
 	_cb_audio = JavaScriptBridge.create_callback(_audio)
 	_janela.muriloAudio = _cb_audio
@@ -342,3 +345,9 @@ func _dar(args: Array) -> void:
 	## sistemas sem repetir a coleta inteira.
 	if args.size() >= 2:
 		GameState.inventario_hotbar.adicionar(str(args[0]), int(args[1]))
+
+
+func _dar_cubelin(args: Array) -> void:
+	## Só pra teste: entrega um Cubelin (muriloDarCubelin("brasita", 4)).
+	if args.size() >= 2:
+		GameState.adicionar_cubelin(CreatureInstance.new(str(args[0]), int(args[1])))
