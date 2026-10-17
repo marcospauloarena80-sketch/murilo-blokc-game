@@ -27,6 +27,7 @@ var _indice_toque_joystick: int = -1
 var _centro_joystick: Vector2 = Vector2.ZERO
 var _indice_toque_olhar: int = -1
 var _jogador: Node3D
+var _poderes_ui: HBoxContainer  ## setas e turbo (poderes temporários)
 
 @onready var _joystick_fundo: Control = $Joystick/Fundo
 @onready var _joystick_alca: Control = $Joystick/Alca
@@ -60,6 +61,7 @@ func _ready() -> void:
 	_conectar_botao(_botao_interagir, "interagir")
 	_conectar_botao_por_evento(_botao_inventario, "inventario")
 	_conectar_botao_por_evento(_botao_pausa, "pausar")
+	_criar_botoes_de_poder()
 
 
 func _tem_tela_de_toque() -> bool:
@@ -72,6 +74,7 @@ func _process(_delta: float) -> void:
 	var criando := GameState.current_state == GameState.State.CHARACTER_CREATION
 	$Acoes.visible = _tem_toque and not criando
 	$Pausa.visible = _tem_toque and not criando
+	_poderes_ui.visible = _tem_toque and not criando
 
 
 func _conectar_botao(botao: Button, acao: String) -> void:
@@ -155,3 +158,76 @@ func _aplicar_forcas(direcao: Vector2) -> void:
 			Input.action_press(acao, forca)
 		else:
 			Input.action_release(acao)
+
+
+func _criar_botoes_de_poder() -> void:
+	## Lado direito, no meio: seta pra cima (1 toque pula, 2 toques voa), seta pra
+	## baixo (agacha; voando, pousa) e, ao lado, o turbo (acelera e volta ao normal).
+	## Os poderes são temporários e gastam uma barra de carga (ver Poderes).
+	_poderes_ui = HBoxContainer.new()
+	_poderes_ui.name = "Poderes"
+	_poderes_ui.add_theme_constant_override("separation", 10)
+	_poderes_ui.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+	_poderes_ui.offset_left = -170.0
+	_poderes_ui.offset_right = -16.0
+	_poderes_ui.offset_top = -80.0
+	_poderes_ui.offset_bottom = 80.0
+	_poderes_ui.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_poderes_ui.visible = _tem_toque
+	add_child(_poderes_ui)
+	var setas := VBoxContainer.new()
+	setas.add_theme_constant_override("separation", 10)
+	_poderes_ui.add_child(setas)
+	var cima := _novo_botao_de_poder("▲", "BotaoCima")
+	var baixo := _novo_botao_de_poder("▼", "BotaoBaixo")
+	var turbo := _novo_botao_de_poder("»", "BotaoTurbo")
+	setas.add_child(cima)
+	setas.add_child(baixo)
+	_poderes_ui.add_child(turbo)
+	cima.button_down.connect(_ao_apertar_cima)
+	cima.button_up.connect(_ao_soltar_cima)
+	baixo.button_down.connect(_ao_apertar_baixo)
+	baixo.button_up.connect(Input.action_release.bind("agachar"))
+	turbo.button_down.connect(_ao_apertar_turbo)
+
+
+func _novo_botao_de_poder(texto: String, nome: String) -> Button:
+	var botao := Button.new()
+	botao.name = nome
+	botao.text = texto
+	botao.custom_minimum_size = Vector2(70, 70)
+	botao.focus_mode = Control.FOCUS_NONE
+	botao.modulate = Color(1, 1, 1, 0.85)
+	return botao
+
+
+func _ao_apertar_cima() -> void:
+	_garantir_jogador()
+	var jogador := _jogador as Player
+	if jogador == null:
+		return
+	var agora: float = Time.get_ticks_msec() / 1000.0
+	if jogador.poderes.tocar_cima(agora) == "pulo":
+		Input.action_press("pular", 1.0)
+
+
+func _ao_soltar_cima() -> void:
+	Input.action_release("pular")
+	_garantir_jogador()
+	var jogador := _jogador as Player
+	if jogador != null:
+		jogador.poderes.soltar_cima()
+
+
+func _ao_apertar_baixo() -> void:
+	_garantir_jogador()
+	var jogador := _jogador as Player
+	if jogador != null and jogador.poderes.tocar_baixo() == "agachar":
+		Input.action_press("agachar", 1.0)
+
+
+func _ao_apertar_turbo() -> void:
+	_garantir_jogador()
+	var jogador := _jogador as Player
+	if jogador != null:
+		jogador.poderes.alternar_turbo()

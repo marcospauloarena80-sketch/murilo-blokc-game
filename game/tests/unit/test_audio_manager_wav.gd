@@ -50,15 +50,12 @@ func test_player_de_sfx_e_liberado_depois_de_tocar() -> void:
 	assert_false(is_instance_valid(player), "player curto deveria ter sido liberado")
 
 
-func test_noite_toca_musica_noite_em_loop_no_bus_musica() -> void:
+func test_noite_registra_a_faixa_mas_nao_toca_musica() -> void:
+	## Decisão do dono (17/out/2026): só som ambiente e efeitos, sem música.
+	assert_false(AudioManager.MUSICA_LIGADA)
 	EventBus.night_started.emit()
 	assert_eq(AudioManager._musica_atual, "noite")
-	var stream := AudioManager._music_player.stream as AudioStreamWAV
-	assert_not_null(stream)
-	assert_eq(stream.loop_mode, AudioStreamWAV.LOOP_FORWARD)
-	assert_true(AudioManager._music_player.playing)
-	assert_eq(AudioManager._music_player.bus, "Música")
-	assert_almost_eq(AudioManager._music_player.volume_db, AudioManager.DB_MUSICA, 0.01)
+	assert_null(AudioManager._music_player, "nenhum player de música é criado")
 
 
 func test_dia_toca_musica_dia() -> void:

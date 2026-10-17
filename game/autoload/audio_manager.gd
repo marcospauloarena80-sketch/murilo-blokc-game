@@ -8,6 +8,7 @@ extends Node
 ## assets/audio/music/<nome>.ogg se existir; senão usa o loop gerado das
 ## Partituras. Volume por bus continua pelos buses "Música" e "SFX".
 
+const MUSICA_LIGADA: bool = false  ## só ambiente e efeitos; true religa as músicas
 const DB_MUSICA: float = -12.0
 const DB_VENTO: float = -18.0
 const DB_PASSAROS_GRILOS: float = -14.0
@@ -89,6 +90,11 @@ func tocar_musica(nome: String) -> void:
 	var stream: AudioStream = _carregar_musica(nome)
 	if stream == null:
 		return  ## nem arquivo do dono nem partitura com esse nome: silêncio, sem erro
+	if not MUSICA_LIGADA:
+		## Decisão do dono (17/out/2026): só som ambiente e efeitos, sem música.
+		## Guarda a faixa lógica (o ambiente e a retomada pós-batalha dependem dela).
+		_musica_atual = nome
+		return
 	if _music_player == null:
 		_music_player = AudioStreamPlayer.new()
 		_music_player.bus = "Música"

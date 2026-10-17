@@ -58,6 +58,7 @@ var alvo_mirado: String = ""
 var alvo_tipo: String = ""
 ## Agachado neste quadro (Shift): atualizado no _physics_process.
 var agachado: bool = false
+var poderes := Poderes.new()  ## voar e acelerar no toque (ver Poderes)
 
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
@@ -247,6 +248,17 @@ func _physics_process(delta: float) -> void:
 	var jogando := GameState.current_state == GameState.State.PLAYING
 	_liberar_mouse_se_necessario(jogando)
 	var esta_correndo := false
+	if jogando:
+		poderes.atualizar(delta)
+	else:
+		poderes.voando = false
+		poderes.turbo = false
+		poderes.subindo = false
+	if poderes.voando:
+		## Voo: sem gravidade nem dano de queda; a seta pra cima sobe, solta paira.
+		velocity.y = Poderes.VELOCIDADE_SUBIDA if poderes.subindo else 0.0
+		_estava_no_ar = false
+		_y_inicio_queda = global_position.y
 
 	if jogando:
 		if Input.is_action_just_pressed("pular") and is_on_floor():
@@ -265,6 +277,8 @@ func _physics_process(delta: float) -> void:
 		if agachado:
 			esta_correndo = false
 		var velocidade_atual := VELOCIDADE_CORRIDA if esta_correndo else VELOCIDADE
+		if poderes.turbo:
+			velocidade_atual *= Poderes.MULTIPLICADOR_TURBO
 		if agachado:
 			velocidade_atual *= FATOR_VELOCIDADE_AGACHADO
 		if na_agua:

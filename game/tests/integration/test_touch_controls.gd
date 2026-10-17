@@ -218,3 +218,47 @@ func test_botoes_somem_na_criacao_de_personagem_e_voltam_jogando() -> void:
 
 	assert_true(controles.get_node("Acoes").visible)
 	assert_true(controles.get_node("Pausa").visible)
+
+
+func _controles_com_jogador() -> Array:
+	var jogador: Player = autofree(PlayerScene.instantiate())
+	add_child(jogador)
+	var controles: Node = autofree(TouchControlsScene.instantiate())
+	controles.forcar_toque = true
+	add_child(controles)
+	return [controles, jogador]
+
+
+func test_botoes_de_poder_so_aparecem_com_tela_de_toque() -> void:
+	var controles: Node = autofree(TouchControlsScene.instantiate())
+	add_child(controles)
+	assert_false(controles.get_node("Poderes").visible, "sem toque, sem botões de poder")
+	var com_toque: Node = autofree(TouchControlsScene.instantiate())
+	com_toque.forcar_toque = true
+	add_child(com_toque)
+	assert_true(com_toque.get_node("Poderes").visible)
+
+
+func test_seta_cima_duas_vezes_voa_e_seta_baixo_pousa() -> void:
+	var par := _controles_com_jogador()
+	var controles: Node = par[0]
+	var jogador: Player = par[1]
+	controles._ao_apertar_cima()
+	controles._ao_soltar_cima()
+	controles._ao_apertar_cima()
+	controles._ao_soltar_cima()
+	assert_true(jogador.poderes.voando, "dois toques ativam o voo")
+	controles._ao_apertar_baixo()
+	assert_false(jogador.poderes.voando, "seta para baixo para de voar")
+	Input.action_release("agachar")
+	Input.action_release("pular")
+
+
+func test_botao_turbo_alterna_a_velocidade() -> void:
+	var par := _controles_com_jogador()
+	var controles: Node = par[0]
+	var jogador: Player = par[1]
+	controles._ao_apertar_turbo()
+	assert_true(jogador.poderes.turbo)
+	controles._ao_apertar_turbo()
+	assert_false(jogador.poderes.turbo)

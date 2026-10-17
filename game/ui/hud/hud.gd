@@ -105,6 +105,7 @@ var _tex_maca_vazia: ImageTexture
 var _coracoes: Array[TextureRect] = []
 var _macas: Array[TextureRect] = []
 var _barra_energia: ProgressBar
+var _barra_poder: ProgressBar  ## carga dos poderes de voar e acelerar (toque)
 ## Cartão de objetivo (6C): substitui o label solto do ADR-027.
 var _cartao_objetivo: PanelContainer
 var _label_titulo_cartao: Label
@@ -283,6 +284,7 @@ func _criar_vida_fome_energia() -> void:
 	_barra_energia.add_theme_stylebox_override("background", fundo)
 	_barra_energia.add_theme_stylebox_override("fill", preenchimento)
 	$Control.add_child(_barra_energia)
+	_criar_barra_de_poder()
 	_barra_energia.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_barra_energia.offset_left = -100
 	_barra_energia.offset_right = 100
@@ -463,6 +465,7 @@ func _process(delta: float) -> void:
 	## A mira só faz sentido jogando; pausado ela ficava por cima dos menus.
 	_mira.visible = GameState.current_state == GameState.State.PLAYING
 	_atualizar_label_alvo()
+	_atualizar_barra_de_poder()
 	_atualizar_cartao_objetivo()
 	_atualizar_dicas()
 	## O aviso só conta tempo jogando: concluído dentro da batalha ou do
@@ -516,3 +519,39 @@ func _atualizar_slot(indice: int) -> void:
 		)
 		botao.add_theme_stylebox_override("normal", estilo)
 		_ultimo_selecionado[indice] = selecionado
+
+
+func _criar_barra_de_poder() -> void:
+	## Barra discreta acima da energia: só aparece quando os poderes gastaram ou
+	## gastam carga (vazia, o poder desliga e só volta depois de recarregar).
+	_barra_poder = ProgressBar.new()
+	_barra_poder.name = "Poder"
+	_barra_poder.show_percentage = false
+	_barra_poder.min_value = 0.0
+	_barra_poder.max_value = 1.0
+	_barra_poder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fundo := StyleBoxFlat.new()
+	fundo.bg_color = Color(0, 0, 0, 0.35)
+	var preenchimento := StyleBoxFlat.new()
+	preenchimento.bg_color = Color(0.45, 0.85, 1.0, 0.9)
+	_barra_poder.add_theme_stylebox_override("background", fundo)
+	_barra_poder.add_theme_stylebox_override("fill", preenchimento)
+	$Control.add_child(_barra_poder)
+	_barra_poder.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_barra_poder.offset_left = -60
+	_barra_poder.offset_right = 60
+	_barra_poder.offset_top = -111
+	_barra_poder.offset_bottom = -107
+	_barra_poder.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_barra_poder.visible = false
+
+
+func _atualizar_barra_de_poder() -> void:
+	if not is_instance_valid(_jogador):
+		_jogador = get_tree().get_first_node_in_group("player") as Player
+	if _jogador == null:
+		_barra_poder.visible = false
+		return
+	var poderes: Poderes = _jogador.poderes
+	_barra_poder.value = poderes.carga
+	_barra_poder.visible = poderes.ativo() or poderes.carga < Poderes.CARGA_MAXIMA
