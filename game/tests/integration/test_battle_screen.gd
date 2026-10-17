@@ -224,3 +224,25 @@ func test_troca_voluntaria_com_ativo_vivo_da_o_turno_ao_selvagem() -> void:
 
 	assert_eq(tela._batalha.indice_ativo, 1)
 	assert_lt(reserva.vida_atual, reserva.vida_maxima_efetiva(), "troca voluntária gasta o turno")
+
+
+func test_abrir_usa_o_nivel_da_criatura() -> void:
+	GameState.equipe_cubelins = [CreatureInstance.new("brotinho", 5)]
+	var tela := BattleScreenScene.instantiate() as BattleScreen
+	add_child_autofree(tela)
+	var criatura := _criatura_selvagem("brotinho")
+	criatura.definir_nivel(9)
+
+	tela._abrir(criatura)
+
+	assert_eq(tela._batalha.selvagem.nivel, 9)
+
+
+func test_abrir_sem_nivel_usa_o_padrao() -> void:
+	GameState.equipe_cubelins = [CreatureInstance.new("brotinho", 5)]
+	var tela := BattleScreenScene.instantiate() as BattleScreen
+	add_child_autofree(tela)
+
+	tela._abrir(_criatura_selvagem("brotinho"))
+
+	assert_eq(tela._batalha.selvagem.nivel, BattleScreen.NIVEL_SELVAGEM_PADRAO)

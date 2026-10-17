@@ -53,7 +53,8 @@ func _abrir(criatura: Creature) -> void:
 	_criatura_mundo = criatura
 	_guardiao = null
 	_arena = null
-	var selvagem := CreatureInstance.new(criatura.especie.especie_id, NIVEL_SELVAGEM_PADRAO)
+	var nivel_selvagem: int = criatura.nivel if criatura.nivel > 0 else NIVEL_SELVAGEM_PADRAO
+	var selvagem := CreatureInstance.new(criatura.especie.especie_id, nivel_selvagem)
 	_batalha = BattleService.new(GameState.equipe_cubelins, selvagem)
 	_aberto = true
 	visible = true

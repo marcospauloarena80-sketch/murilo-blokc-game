@@ -14,6 +14,9 @@ const COR_PUPILA_AGRESSIVA: Color = Color(0.9, 0.1, 0.1)
 
 var especie: CreatureDef
 var vida_atual: int = 0
+## Nível do selvagem, definido pelo spawner (Ciclo 9, 9A). 0 = sem nível
+## (animais e criaturas de teste): a batalha usa o padrão.
+var nivel: int = 0
 
 var _comportamento: CreatureBehavior
 var _jogador: Node3D
@@ -32,6 +35,18 @@ func configurar(def: CreatureDef) -> void:
 	## O spawner chama configurar() antes do add_child, quando os @onready
 	## ainda são null: por isso o visual usa $MeshInstance3D direto (ADR-027).
 	_montar_visual(def)
+
+
+## Define o nível e escala a vida do mundo como CreatureInstance (9A).
+func definir_nivel(novo_nivel: int) -> void:
+	nivel = novo_nivel
+	if especie == null or novo_nivel <= 0:
+		return
+	var base: int = especie.vida_maxima
+	vida_atual = base + int(floor(base * CreatureInstance.FATOR_CRESCIMENTO * (novo_nivel - 1)))
+	var placa := get_node_or_null("Placa") as Label3D
+	if placa != null:
+		placa.text = "%s Nv.%d" % [especie.nome, novo_nivel]
 
 
 func _ready() -> void:

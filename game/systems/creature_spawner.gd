@@ -21,6 +21,9 @@ const RAIO_DESPAWN: float = 48.0
 ## empurrava pra fora por acaso; com a malha certa ela atravessava (ADR-027).
 const ALTURA_ACIMA_DO_CHAO: float = 0.4
 const GRAMA_ID: int = 1
+## Perto do vilarejo (Ciclo 9, 9A) os agressivos fortes não nascem à noite.
+const RAIO_VILAREJO_SEGURO: float = 30.0
+const AGRESSIVOS_PERTO_DO_VILAREJO := ["pedrolim", "faiscolt"]
 const ELEMENTOS_CAVERNA := ["pedra", "faisca"]  ## camada onipresente à noite (F6/F7), não é anel
 
 ## Por que a última tentativa não gerou criatura (diagnóstico; "" = gerou).
@@ -29,6 +32,7 @@ var ultimo_motivo_sem_spawn: String = ""
 var _chunk_manager: ChunkManager
 var _jogador: Node3D
 var _tempo_desde_spawn: float = 0.0
+var _rng := RandomNumberGenerator.new()
 
 
 func _process(delta: float) -> void:
@@ -91,7 +95,8 @@ func _spawnar_cubelin(
 	if cheio_de_cubelins:
 		ultimo_motivo_sem_spawn = "limite de criaturas"
 		return
-	var candidatas: Array[CreatureDef] = _especies_do_periodo_e_bioma(periodo, bioma_id)
+	var perto: bool = Vector2(x, z).distance_to(WorldGenerator.CENTRO_MUNDO) <= RAIO_VILAREJO_SEGURO
+	var candidatas: Array[CreatureDef] = _especies_do_periodo_e_bioma(periodo, bioma_id, perto)
 	if candidatas.is_empty():
 		ultimo_motivo_sem_spawn = "nenhuma espécie pra %s/%s" % [periodo, bioma_id]
 		return
@@ -100,6 +105,7 @@ func _spawnar_cubelin(
 	var def: CreatureDef = candidatas[randi() % candidatas.size()]
 	var criatura := CreatureScene.instantiate() as Creature
 	criatura.configurar(def)
+	criatura.definir_nivel(NivelPorRegiao.sortear(bioma_id, _rng))
 	add_child(criatura)
 	criatura.global_position = Vector3(x + 0.5, y + 1.0 + ALTURA_ACIMA_DO_CHAO, z + 0.5)
 
@@ -123,7 +129,9 @@ func _spawnar_animal(x: int, y: int, z: int, bioma_id: String) -> bool:
 	return true
 
 
-func _especies_do_periodo_e_bioma(periodo: String, bioma_id: String) -> Array[CreatureDef]:
+func _especies_do_periodo_e_bioma(
+	periodo: String, bioma_id: String, perto_do_vilarejo: bool = false
+) -> Array[CreatureDef]:
 	var elementos_permitidos: Array = ELEMENTOS_CAVERNA.duplicate() if periodo == "noite" else []
 	var bioma := BiomeRegistry.get_bioma(bioma_id)
 	if bioma != null:
@@ -138,6 +146,12 @@ func _especies_do_periodo_e_bioma(periodo: String, bioma_id: String) -> Array[Cr
 		if not def.pode_ser_selvagem or def.periodo_spawn != periodo:
 			continue
 		if not elementos_permitidos.has(def.elemento):
+			continue
+		if (
+			perto_do_vilarejo
+			and def.eh_agressivo
+			and not AGRESSIVOS_PERTO_DO_VILAREJO.has(def.especie_id)
+		):
 			continue
 		resultado.append(def)
 		if tempestade and def.elemento == "faisca":
