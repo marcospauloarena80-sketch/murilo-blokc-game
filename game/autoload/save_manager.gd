@@ -13,15 +13,25 @@ func existe_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
 
-func salvar(dados: Dictionary) -> void:
+## Devolve true só se o arquivo foi gravado por inteiro; quem precisa garantir
+## persistência (ex.: conclusão do jogo) confere o retorno. O save anterior vai
+## pro backup antes de sobrescrever, então uma gravação interrompida ainda deixa
+## `carregar()` voltar ao estado anterior.
+func salvar(dados: Dictionary) -> bool:
 	dados["schema_version"] = SCHEMA_VERSION
 	var dir := DirAccess.open("user://")
+	if dir == null:
+		return false
 	if not dir.dir_exists("saves"):
 		dir.make_dir("saves")
 	if FileAccess.file_exists(SAVE_PATH):
 		dir.copy(SAVE_PATH, BACKUP_PATH)
 	var arquivo := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	arquivo.store_string(JSON.stringify(dados))
+	if arquivo == null:
+		return false
+	var gravou: bool = arquivo.store_string(JSON.stringify(dados))
+	arquivo.close()
+	return gravou
 
 
 func carregar() -> Dictionary:

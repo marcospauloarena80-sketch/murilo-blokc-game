@@ -98,6 +98,17 @@ func _arena_disponivel() -> bool:
 	return true
 
 
+func _texto_bloqueio() -> String:
+	if not GameState.tem_cubelin_disponivel():
+		return "Seus Cubelins precisam descansar antes de um desafio."
+	var arena := ArenaRegistry.get_arena(_npc_def.abre_arena)
+	if arena != null and arena.requer_todas_insignias:
+		return "Volte quando tiver conquistado todas as insígnias."
+	if arena != null and not arena.da_insignia:
+		return "Volte amanhã."
+	return "Volte quando tiver conquistado todas as insígnias."
+
+
 func _ao_desafiar() -> void:
 	EventBus.arena_challenge_started.emit(_npc_def.abre_arena)
 	_fechar()
@@ -145,9 +156,9 @@ func _atualizar() -> void:
 	var mostra_laboratorio := fim_das_linhas and not mostra_oferta and _npc_def.abre_laboratorio
 	var mostra_troca := fim_das_linhas and not mostra_oferta and _npc_def.troca_pede_item != ""
 	var eh_guardiao := _npc_def.abre_arena != ""
-	var mostra_desafio := (
-		fim_das_linhas and not mostra_oferta and eh_guardiao and _arena_disponivel()
-	)
+	## A oferta de missão é opcional: não esconde o Desafiar (aceitar, recusar ou
+	## ignorar a missão não muda se o jogador pode lutar).
+	var mostra_desafio := fim_das_linhas and eh_guardiao and _arena_disponivel()
 	var mostra_bloqueado := (
 		fim_das_linhas and not mostra_oferta and eh_guardiao and not _arena_disponivel()
 	)
@@ -163,6 +174,8 @@ func _atualizar() -> void:
 			if oferta != null
 			else "Aceita esta missão?"
 		)
+		if eh_guardiao and not _arena_disponivel():
+			_label_texto.text += "\n(" + _texto_bloqueio() + ")"
 	elif mostra_troca:
 		_label_texto.text = (
 			"Troco %d %s por %d %s."
@@ -174,13 +187,7 @@ func _atualizar() -> void:
 			]
 		)
 	elif mostra_bloqueado:
-		var treinador := ArenaRegistry.get_arena(_npc_def.abre_arena)
-		if not GameState.tem_cubelin_disponivel():
-			_label_texto.text = "Seus Cubelins precisam descansar antes de um desafio."
-		elif treinador != null and not treinador.da_insignia:
-			_label_texto.text = "Volte amanhã."
-		else:
-			_label_texto.text = "Volte quando tiver conquistado todas as insígnias."
+		_label_texto.text = _texto_bloqueio()
 	else:
 		_label_texto.text = ""
 

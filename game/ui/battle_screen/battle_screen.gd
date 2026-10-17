@@ -14,6 +14,10 @@ const VARIACAO_MAX: float = 1.1
 const NIVEL_SELVAGEM_PADRAO: int = 5
 const LINHAS_LOG: int = 3
 
+## Persiste o jogo (devolve true se gravou). Vazio = usa `salvar_jogo` da cena
+## principal; os testes injetam o próprio.
+var salvador: Callable = Callable()
+
 var _batalha: BattleService
 var _criatura_mundo: Creature
 var _guardiao: GuardianBattle
@@ -97,7 +101,7 @@ func _fechar() -> void:
 		and _batalha.resultado == BattleService.Resultado.VITORIA
 		and _vitoria_inedita
 	):
-		EventBus.game_completed.emit()  ## créditos só na primeira vitória (E0-3)
+		_concluir_o_jogo()
 	_aberto = false
 	visible = false
 	_inst_jogador_exibida = null
@@ -108,6 +112,29 @@ func _fechar() -> void:
 	_arena = null
 	GameState.fechar_tela("batalha")
 	EventBus.battle_ended.emit()
+
+
+func _concluir_o_jogo() -> void:
+	## Créditos só na 1ª vitória E só depois de a conclusão estar gravada no save
+	## (senão, voltar ao menu e continuar reabria os créditos). Se a gravação
+	## falhar, desfaz o registro em memória: a vitória vale de novo numa revanche.
+	_vitoria_inedita = false
+	if _salvar_progresso():
+		EventBus.game_completed.emit()
+		return
+	GameState.treinadores_vencidos.erase(_arena.arena_id)
+	EventBus.aviso.emit(
+		"Não foi possível salvar o jogo. Vença o Guardião de novo para ver os créditos."
+	)
+
+
+func _salvar_progresso() -> bool:
+	if salvador.is_valid():
+		return bool(salvador.call())
+	var cena: Node = get_tree().current_scene
+	if cena != null and cena.has_method("salvar_jogo"):
+		return bool(cena.call("salvar_jogo"))
+	return false
 
 
 func _enviar_pro_refugio() -> void:

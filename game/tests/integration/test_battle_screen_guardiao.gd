@@ -97,6 +97,7 @@ func test_vencer_o_coracao_dourado_emite_game_completed_ao_fechar() -> void:
 	GameState.equipe_cubelins = [CreatureInstance.new("pedrargo", 30)]
 	var tela := BattleScreenScene.instantiate() as BattleScreen
 	add_child_autofree(tela)
+	tela.salvador = func() -> bool: return true
 	tela._abrir_arena("coracao_dourado")
 
 	# Um golpe sempre causa >=1 de dano (BattleService.calcular_dano) — deixar
@@ -152,6 +153,7 @@ func test_revanche_no_coracao_dourado_nao_repete_game_completed() -> void:
 	GameState.treinadores_vencidos = {}
 	var tela := BattleScreenScene.instantiate() as BattleScreen
 	add_child_autofree(tela)
+	tela.salvador = func() -> bool: return true
 	var vezes: Array = [0]
 	var callback := func() -> void: vezes[0] += 1
 	EventBus.game_completed.connect(callback)

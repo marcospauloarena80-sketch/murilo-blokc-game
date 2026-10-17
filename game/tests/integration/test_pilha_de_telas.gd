@@ -163,6 +163,7 @@ func test_vencer_o_coracao_dourado_abre_os_creditos_com_o_jogo_pausado() -> void
 	GameState.equipe_cubelins = [CreatureInstance.new("pedrargo", 30)]
 	var batalha := BattleScreenScene.instantiate() as BattleScreen
 	add_child_autofree(batalha)
+	batalha.salvador = func() -> bool: return true
 	var creditos := CreditsScreenScene.instantiate() as CreditsScreen
 	add_child_autofree(creditos)
 	GameState.treinadores_vencidos.erase("coracao_dourado")  ## 1ª vitória nesta partida (E0-3)

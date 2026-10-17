@@ -239,7 +239,8 @@ func _verificar_transicao_dia_noite() -> void:
 		EventBus.day_started.emit()
 
 
-func salvar_jogo() -> void:
+## Devolve false se a gravação falhou (e então não anuncia `game_saved`).
+func salvar_jogo() -> bool:
 	var dados: Dictionary = {
 		"seed": GameState.seed_atual,
 		"tempo_de_jogo_seg": GameState.tempo_de_jogo_seg,
@@ -265,8 +266,10 @@ func salvar_jogo() -> void:
 		"especies_capturadas": GameState.especies_capturadas,
 		"treinadores_vencidos": GameState.treinadores_vencidos,
 	}
-	SaveManager.salvar(dados)
-	EventBus.game_saved.emit()
+	var gravou: bool = SaveManager.salvar(dados)
+	if gravou:
+		EventBus.game_saved.emit()
+	return gravou
 
 
 func _serializar_baus() -> Dictionary:
