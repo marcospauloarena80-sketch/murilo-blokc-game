@@ -353,3 +353,15 @@ O save atual só é trocado depois de o novo já estar conferido, então uma fal
 **Garantias e limites.** Se a cópia, a troca ou a conferência falharem, sobra sempre uma cópia válida recuperável (o principal intacto ou o backup). Não há promessa de atomicidade absoluta: sem `rename` atômico garantido em todo sistema de arquivos, uma queda exatamente no instante da troca pode deixar o principal ausente ou inválido; o backup válido preservado antes dela é a rede de segurança. ERRO_DE_LEITURA só foi testado na decisão (`_pode_gravar_sobre`), não com um arquivo ilegível de verdade (depende de permissões do sistema e quebraria em CI com root). Versão futura é lida sem validar a estrutura dela.
 
 **Testes.** 34 novos: `test_validador_save` (14), `test_save_manager_integridade` (+`_falhas`) (20) com pasta própria em `user://` e pontos de injeção `renomear_para_teste` e `copiar_para_teste` (vazios em produção, com teste para isso). "Reabrir o jogo" = nova instância de `SaveManager`. Três mutações no código de produção (copiar sem conferir, permitir sobrescrever versão futura, copiar principal inválido) fazem testes falharem.
+
+## ADR-039: `seed` e demais campos `int` exigem valor inteiro (17/out/2026)
+
+**Origem.** Auditoria da rev4: `_e_numero` aceitava int e float, então `"seed": 123.45` passava como válido.
+
+**Contrato real (inspecionado).** `GameState.seed_atual: int`; `WorldGenerator._init(mundo_seed: int)` (usa `_seed + constantes`, `_hash01(seed: int, ...)` e `FastNoiseLite.seed`); `menu.gd` lê com `int(dados.get("seed", 0))`; novo jogo usa `randi()` (0 a 4294967295), gravado como número. Logo a semente é inteira. Atenção: o JSON do Godot devolve **todo** número como float (a seed real 3356247210 volta como 3356247210.0), então "inteiro" não pode ser o tipo do Variant: é **valor inteiro, finito e dentro do int64** (`1.0` vale, `1.5` não; booleano, texto, null, lista, objeto, infinito, NaN e 1e300 não).
+
+**Campos com a mesma exigência** (declarados `int` no `GameState` e lidos com `int(...)` no menu): `seed`, `hotbar_selecionado`, `vida_atual`, `fome_atual`, `energia_atual`, `progresso_quest_atual`; também `schema_version`. **Seguem aceitando fração** `tempo_de_jogo_seg` e `ciclo_dia_noite_seg` (`float` no `GameState`).
+
+**Compatibilidade.** Saves reais gravados pelo jogo têm esses campos inteiros (confirmado no navegador: save com seed 3356247210 continuou carregando). `treinadores_vencidos` não foi endurecido (o menu converte cada valor com `int()` e tolera o resto). Nenhum campo novo é obrigatório.
+
+**Testes.** 14 novos em `test_validador_save_inteiros.gd`: seed válida (inclusive 4294967295 e a que volta como float do JSON), decimal, texto, booleano, null, lista, objeto, ausente, infinita e fora do int64; demais campos `int`; tempos com fração; `schema_version`; arquivo com seed decimal classificado como estrutura inválida; `_gravar` recusa seed decimal/texto/booleano sem tocar em nada; principal com seed decimal recupera pelo backup, salvar depois preserva o backup byte a byte, e falha na troca (injetada) preserva backup e principal. Mutação (aceitar qualquer número como inteiro): 9 dos 14 testes novos falham.

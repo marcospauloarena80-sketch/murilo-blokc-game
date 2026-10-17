@@ -15,16 +15,21 @@ extends RefCounted
 enum Resultado { VALIDO, VAZIO, ESTRUTURA_INVALIDA, VERSAO_FUTURA }
 
 const CAMPO_OBRIGATORIO: String = "seed"
-const NUMEROS: Array[String] = [
+## Declarados `int` no GameState e lidos com `int(...)` no menu: semente do mundo,
+## índice da hotbar, vida/fome/energia e contador de missão. O JSON devolve todo
+## número como float, então "inteiro" aqui é "valor inteiro e finito dentro do
+## intervalo de int64", não o tipo do Variant.
+const INTEIROS: Array[String] = [
 	"seed",
-	"tempo_de_jogo_seg",
-	"ciclo_dia_noite_seg",
 	"vida_atual",
 	"fome_atual",
 	"energia_atual",
 	"hotbar_selecionado",
 	"progresso_quest_atual",
 ]
+## Tempos em segundos, `float` no GameState: aceitam fração.
+const NUMEROS: Array[String] = ["tempo_de_jogo_seg", "ciclo_dia_noite_seg"]
+const LIMITE_INT64: float = 9.2e18
 const TEXTOS: Array[String] = ["quest_atual_id"]
 const OBJETOS: Array[String] = ["aparencia", "delta_blocos", "baus", "treinadores_vencidos"]
 const LISTAS_DE_OBJETOS: Array[String] = [
@@ -43,7 +48,7 @@ static func avaliar(dados: Variant, versao_suportada: int) -> Resultado:
 	if save.is_empty():
 		return Resultado.VAZIO
 	if save.has("schema_version"):
-		if not _e_numero(save["schema_version"]) or not _e_inteiro(save["schema_version"]):
+		if not _e_inteiro(save["schema_version"]):
 			return Resultado.ESTRUTURA_INVALIDA
 		var versao: int = int(save["schema_version"])
 		if versao < 1:
@@ -56,6 +61,9 @@ static func avaliar(dados: Variant, versao_suportada: int) -> Resultado:
 
 
 static func _tipos_conferem(save: Dictionary) -> bool:
+	for chave: String in INTEIROS:
+		if save.has(chave) and not _e_inteiro(save[chave]):
+			return false
 	for chave: String in NUMEROS:
 		if save.has(chave) and not _e_numero(save[chave]):
 			return false
@@ -108,8 +116,17 @@ static func _lista_de_numeros(valor: Variant) -> bool:
 
 
 static func _e_numero(valor: Variant) -> bool:
-	return typeof(valor) == TYPE_INT or typeof(valor) == TYPE_FLOAT
+	if typeof(valor) == TYPE_INT:
+		return true
+	return typeof(valor) == TYPE_FLOAT and is_finite(valor)
 
 
+## Número de valor inteiro (1.0 conta, 1.5 não), finito e que cabe num int64.
+## Booleano, texto, null, lista e objeto nunca contam.
 static func _e_inteiro(valor: Variant) -> bool:
-	return typeof(valor) == TYPE_INT or is_equal_approx(floorf(float(valor)), float(valor))
+	if typeof(valor) == TYPE_INT:
+		return true
+	if typeof(valor) != TYPE_FLOAT or not is_finite(valor):
+		return false
+	var numero: float = valor
+	return absf(numero) < LIMITE_INT64 and numero == floorf(numero)
