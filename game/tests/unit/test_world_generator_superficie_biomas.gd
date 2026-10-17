@@ -14,8 +14,9 @@ func _topo_solido(chunk: ChunkData, x: int, z: int) -> int:
 func test_campos_dourados_tem_grama_no_topo() -> void:
 	var gerador := WorldGenerator.new(7)
 	var chunk := gerador.gerar_chunk(4, 4)  # campos_dourados (d~11.3)
-	var topo := _topo_solido(chunk, 8, 8)
-	assert_eq(chunk.get_block(8, topo, 8), 1)
+	## (1,1) fica entre as casas do vilarejo (8D), que ocupam o resto do centro.
+	var topo := _topo_solido(chunk, 1, 1)
+	assert_eq(chunk.get_block(1, topo, 1), 1)
 
 
 func test_colinas_de_pedra_e_pedra_exposta_sem_arvore() -> void:

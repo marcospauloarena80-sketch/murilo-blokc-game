@@ -66,7 +66,11 @@ func test_tunel_nao_fura_a_superficie() -> void:
 			var chunk := gerador.gerar_chunk(cx, cz)
 			for x in range(16):
 				for z in range(16):
-					var altura := gerador._altura_em(cx * 16 + x, cz * 16 + z)
+					var wx := cx * 16 + x
+					var wz := cz * 16 + z
+					if wx >= 50 and wx <= 85 and wz >= 50 and wz <= 85:
+						continue  # vilarejo (8D) aplaina o terreno
+					var altura := gerador._altura_em(wx, wz)
 					assert_ne(
 						chunk.get_block(x, altura, z),
 						BlockRegistry.AR_ID,

@@ -241,7 +241,54 @@ func gerar_chunk(cx: int, cz: int) -> ChunkData:
 						chunk, lx, alturas[Vector2i(lx, lz)], lz, bioma_id == "floresta_cubica"
 					)
 
+	_aplicar_vilarejo(chunk, cx, cz)
+
 	return chunk
+
+
+func nivel_do_vilarejo() -> int:
+	## Nível do chão do vilarejo: a altura do terreno no centro do mundo.
+	return _altura_em(int(CENTRO_MUNDO.x), int(CENTRO_MUNDO.y))
+
+
+func _aplicar_vilarejo(chunk: ChunkData, cx: int, cz: int) -> void:
+	## Casas e arenas (Ciclo 8, 8D) entram depois de árvores e cavernas, recortadas
+	## pelo chunk: o terreno do footprint é aplainado no nível do chão central (some
+	## árvore, morro e água) e só então entram os blocos da estrutura.
+	var nivel := nivel_do_vilarejo()
+	var origem := Vector2i(cx * ChunkData.SIZE_H, cz * ChunkData.SIZE_H)
+	for npc_id: String in Vilarejo.POSICOES_NPCS:
+		for coluna: Vector2i in Vilarejo.colunas_do_footprint(npc_id):
+			var local := coluna - origem
+			if local.x < 0 or local.x >= ChunkData.SIZE_H:
+				continue
+			if local.y < 0 or local.y >= ChunkData.SIZE_H:
+				continue
+			_aplainar_coluna(chunk, local.x, local.y, _altura_em(coluna.x, coluna.y), nivel)
+		var blocos: Array[Dictionary] = []
+		var ancora := Vector2i.ZERO
+		if Vilarejo.tem_casa(npc_id):
+			blocos = Vilarejo.casa_para(npc_id)
+			ancora = Vilarejo.canto_da_casa(npc_id)
+		else:
+			blocos = Vilarejo.arena_para(npc_id)
+			ancora = Vilarejo.centro_da_arena(npc_id)
+		for bloco: Dictionary in blocos:
+			var rel: Vector3i = bloco["pos"]
+			var lx := ancora.x + rel.x - origem.x
+			var lz := ancora.y + rel.z - origem.y
+			if lx < 0 or lx >= ChunkData.SIZE_H or lz < 0 or lz >= ChunkData.SIZE_H:
+				continue
+			chunk.set_block(lx, nivel + rel.y, lz, bloco["id"])
+			if bloco["id"] == Vilarejo.TOCHA_ID:
+				_luzes_locais_ultima_chunk.append(Vector3i(lx, nivel + rel.y, lz))
+
+
+func _aplainar_coluna(chunk: ChunkData, lx: int, lz: int, altura: int, nivel: int) -> void:
+	for y in range(maxi(0, mini(altura, nivel - 3)), nivel):
+		chunk.set_block(lx, y, lz, 2)  # terra sob o piso
+	for y in range(nivel, ChunkData.SIZE_V):
+		chunk.set_block(lx, y, lz, BlockRegistry.AR_ID)
 
 
 func _aplicar_superficie(

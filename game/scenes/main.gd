@@ -45,20 +45,43 @@ func _ready() -> void:
 
 
 func _posicionar_npcs_no_chunk(coord: Vector2i) -> void:
-	## NPCs (F9) são colocados no .tscn com Y aproximado — reajusta pra
-	## superfície real do terreno gerado (sem arquitetura de vilarejo, ADR-022).
+	## NPCs (F9) ficam no .tscn com Y aproximado; aqui são reajustados pelo plano do
+	## Vilarejo (Ciclo 8, 8D): dentro da casa, sobre o piso, ou no centro da arena.
 	for no: Node in get_tree().get_nodes_in_group("npc"):
 		var npc := no as Node3D
+		var npc_id: String = str(npc.get("npc_id_inicial"))
 		var x: int = floori(npc.global_position.x)
 		var z: int = floori(npc.global_position.z)
+		if Vilarejo.POSICOES_NPCS.has(npc_id):
+			var base: Vector2i = Vilarejo.POSICOES_NPCS[npc_id]
+			if Vilarejo.tem_casa(npc_id):
+				base = Vilarejo.centro_da_casa(npc_id)
+			x = base.x
+			z = base.y
 		var coord_npc := Vector2i(
 			floori(x / float(ChunkData.SIZE_H)), floori(z / float(ChunkData.SIZE_H))
 		)
 		if coord_npc != coord:
 			continue
-		var y := _chunk_manager.altura_da_superficie(x, z)
-		if y >= 0:
+		var y := _nivel_do_piso(npc_id, x, z)
+		if y < 0:
+			continue
+		if Vilarejo.POSICOES_NPCS.has(npc_id):
+			npc.global_position = Vilarejo.posicao_do_npc(npc_id, y)
+		else:
 			npc.global_position.y = float(y) + 1.0
+
+
+func _nivel_do_piso(npc_id: String, x: int, z: int) -> int:
+	## y do bloco onde o NPC pisa. Numa casa a coluna tem o telhado por cima: o piso é o
+	## primeiro sólido abaixo do vão de ar sob o telhado.
+	if not Vilarejo.tem_casa(npc_id):
+		return _chunk_manager.altura_da_superficie(x, z)
+	var telhado: int = _chunk_manager.altura_da_superficie(x, z)
+	for y in range(telhado - 1, -1, -1):
+		if BlockRegistry.e_solido(_chunk_manager.get_block(Vector3i(x, y, z))):
+			return y
+	return -1
 
 
 func _process(delta: float) -> void:
