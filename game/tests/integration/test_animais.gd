@@ -109,3 +109,21 @@ func test_spawner_limita_animais_separado_dos_cubelins() -> void:
 		add_child_autofree(falso)
 	spawner._tentar_spawnar()
 	assert_ne(spawner.ultimo_motivo_sem_spawn, "limite de criaturas", "cubelins ainda cabem")
+
+
+func test_carne_do_animal_entra_na_mochila_ao_tocar_o_jogador() -> void:
+	GameState.reiniciar_para_novo_jogo()
+	var loot := LootSpawner.new()
+	add_child_autofree(loot)
+	var animal := _animal("lanugo")
+	animal.receber_dano(999)
+	var drop := loot.get_child(0) as ItemDrop
+	var corpo := Node3D.new()
+	corpo.add_to_group("player")
+	add_child_autofree(corpo)
+	drop._ao_tocar_corpo(corpo)
+	var total: int = (
+		GameState.inventario_hotbar.contar("carne_crua")
+		+ GameState.inventario_mochila.contar("carne_crua")
+	)
+	assert_between(total, 1, 2, "a carne tem que aparecer no inventário")

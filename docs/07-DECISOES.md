@@ -255,3 +255,11 @@ Formato curto: contexto → decisão → consequências. Toda decisão nova entr
   5. **Treinadores Tico e Bia** pelo mundo: recompensa em itens uma vez por dia de jogo, sem insígnia.
 - **Validação:** 804/804 testes. No navegador: batalha com arena 3D, barras e log, captura com a esfera no alvo (equipe 1 para 2), Caderno com os dois capturados e 16 silhuetas. Não validado jogando: companheiro seguindo (testes com física, sem captura de tela dele), treinadores, apelido e soltar, música de batalha (não ligada).
 - **Pendência:** unificar a montagem visual duplicada entre `Creature` e `CorpoCubelin`.
+
+## ADR-031: Poderes temporários por toque e música desligada (17/out/2026)
+
+**Decisão do dono:** só som ambiente e efeitos, sem música (`AudioManager.MUSICA_LIGADA = false`; a faixa lógica continua registrada, nenhum player de música é criado). Em celular e tablet entram três botões à direita: seta para cima (um toque pula, dois toques ativam o voo, segurar sobe), seta para baixo (agacha, ou pousa se estiver voando) e um botão de turbo que alterna a velocidade. Voo e turbo gastam uma barra de carga discreta no HUD, recarregam em repouso e travam em zero até 25%. A lógica fica em `core/player/poderes.gd` (7 testes) e a interface em `touch_controls.gd` (3 testes).
+
+**Validado:** suíte local verde, build de depuração no navegador com ambiente tocando (2 players) e sem música. **Não validado:** toque em aparelho real, sensação de voo e turbo, aparência da barra no celular.
+
+**Item "sumido":** no navegador, a carne do Lanugo chegou à mochila (2 unidades, com ícone), não à hotbar. A coleta vai para a mochila por desenho. O ponto fraco é de percepção: a mochila só abre com I ou o botão Bolsa e o slot não mostra o nome. Pendência: aviso de coleta mais visível.

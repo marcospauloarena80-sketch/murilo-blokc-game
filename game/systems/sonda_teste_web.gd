@@ -22,6 +22,7 @@ var _cb_limpar: JavaScriptObject
 var _cb_teleportar: JavaScriptObject
 var _cb_dar: JavaScriptObject
 var _cb_dar_cubelin: JavaScriptObject
+var _cb_matar: JavaScriptObject
 ## Frente 5D (áudio)
 var _cb_audio: JavaScriptObject
 ## Frente 8A (crescimento)
@@ -58,6 +59,8 @@ func _ready() -> void:
 	_janela.muriloTeleportar = _cb_teleportar
 	_cb_dar = JavaScriptBridge.create_callback(_dar)
 	_janela.muriloDar = _cb_dar
+	_cb_matar = JavaScriptBridge.create_callback(_matar)
+	_janela.muriloMatar = _cb_matar
 	_cb_dar_cubelin = JavaScriptBridge.create_callback(_dar_cubelin)
 	_janela.muriloDarCubelin = _cb_dar_cubelin
 	## Frente 5D (áudio)
@@ -338,6 +341,30 @@ func _acelerar_crescimento(args: Array) -> void:
 	if crescimento != null and args.size() >= 1:
 		crescimento.avancar(float(args[0]))
 	_janela.muriloUltimoCrescimento = crescimento != null
+
+
+func _matar(args: Array) -> void:
+	## Só pra teste: mata a criatura mais próxima da espécie dada (muriloMatar("lanugo")),
+	## pra validar o drop de comida sem depender da mira.
+	var alvo_id := str(args[0]) if args.size() >= 1 else ""
+	var jogador := _jogador()
+	if jogador == null:
+		return
+	var melhor: Creature = null
+	for no: Node in get_tree().get_nodes_in_group("creature"):
+		var criatura := no as Creature
+		if criatura == null or criatura.especie == null or criatura.especie.especie_id != alvo_id:
+			continue
+		if (
+			melhor == null
+			or (
+				criatura.global_position.distance_to(jogador.global_position)
+				< melhor.global_position.distance_to(jogador.global_position)
+			)
+		):
+			melhor = criatura
+	if melhor != null:
+		melhor.receber_dano(9999)
 
 
 func _dar(args: Array) -> void:
