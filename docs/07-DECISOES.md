@@ -312,3 +312,17 @@ Substitui o tratamento da falha descrito no ADR-033 (aviso e nova vitória) e fe
 Nenhuma insígnia do Coração Dourado é concedida em nenhum caminho. Revanche depois de uma conclusão gravada não reabre os créditos (o registro vem do save). Não há recuperação automática: se o jogador sair sem créditos, a conclusão não é dada como salva.
 
 **Limites.** Os dois botões são criados em código; nenhuma cena foi alterada. O autosave continua sem aviso de falha (fora do escopo). A falha de gravação não é reproduzível pela interface do navegador: só tem teste automatizado, com o salvamento simulado.
+
+## ADR-036: Gravação do save com cada falha tratada e conferida por releitura (17/out/2026)
+
+**Origem.** A auditoria independente apontou `save_manager.gd`: o código guardava o retorno de `FileAccess.store_string()` num `bool`, e a auditoria entendia que a API devolve `void`. **No Godot 4.7.1 (o da projeto) ela devolve `bool`**: medido rodando `godot --headless --script` (retorno `true`, tipo bool), e o código compilava e passava na suíte (GDScript tipado, avisos como erro, recusaria atribuir um `void`). O ponto da auditoria vale, porém, para o que o código **não** verificava: pasta de saves, cópia do backup, fechamento e releitura.
+
+**Decisão.** `SaveManager.salvar` passa a delegar a `_gravar`, com cada etapa devolvendo `false` explícito e preservando o save anterior:
+1. a pasta de saves existe ou é criada (`make_dir_recursive_absolute`);
+2. o JSON é escrito num arquivo temporário (`.tmp`), com `store_string`, `get_error`, `flush` e `close` conferidos e releitura idêntica;
+3. o save atual é copiado para o backup (retorno de `copy_absolute` conferido);
+4. o temporário substitui o save atual (`rename_absolute`, que sobrescreve o destino);
+5. o resultado é relido e conferido.
+O save atual só é trocado depois de o novo já estar conferido, então uma falha no meio nunca o corrompe, e `carregar` continua caindo no backup se o principal estiver ilegível. `_conferir` exige texto idêntico e JSON de objeto válido (pega arquivo truncado ou vazio). Temporário esquecido por uma queda não atrapalha o carregamento nem a gravação seguinte.
+
+**Validação.** 11 testes novos com injeção de falha em pasta própria de `user://`: pasta impossível de criar, temporário que não abre, backup que não copia, arquivo truncado/vazio/diferente/ausente, principal corrompido ou ausente com recuperação pelo backup, temporário órfão. No navegador (build v43): dois saves reais, backup com o save anterior, nenhum `.tmp` sobrando, principal truncado no IndexedDB e Continuar carregando o estado do backup. **Não reproduzidos:** falha de `rename_absolute` e disco cheio de verdade (sem como provocar em ambiente seguro).
