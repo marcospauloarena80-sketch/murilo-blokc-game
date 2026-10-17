@@ -14,6 +14,7 @@ func _npc_com_def(def: NpcDef) -> Npc:
 
 
 func before_each() -> void:
+	GameState.equipe_cubelins = [CreatureInstance.new("pedrargo", 20)]
 	GameState.quest_atual_id = ""
 	GameState.progresso_quest_atual = 0
 	GameState.quests_concluidas = []
@@ -22,6 +23,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	GameState.equipe_cubelins = []
 	GameState.quest_atual_id = ""
 	GameState.progresso_quest_atual = 0
 	GameState.quests_concluidas = []

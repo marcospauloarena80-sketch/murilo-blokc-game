@@ -79,6 +79,8 @@ func jogador_ataca(ataque_id: String, variacao: float) -> int:
 	if resultado != Resultado.EM_ANDAMENTO:
 		return 0
 	var atacante := jogador_ativo()
+	if atacante == null or atacante.esta_desmaiado():
+		return 0  ## derrubado no golpe anterior: não ataca nem leva o XP (E0-2)
 	if not atacante.ataques_conhecidos.has(ataque_id):
 		return 0
 	var ataque := AttackRegistry.get_ataque(ataque_id)

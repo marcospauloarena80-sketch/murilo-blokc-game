@@ -18,6 +18,7 @@ var _batalha: BattleService
 var _criatura_mundo: Creature
 var _guardiao: GuardianBattle
 var _arena: ArenaDef
+var _vitoria_inedita: bool = false  ## 1ª vitória contra o desafio final nesta partida (E0-3)
 var _aberto: bool = false
 var _botoes_ataque: Array[Button] = []
 var _linhas_log: Array[String] = []
@@ -77,6 +78,9 @@ func _abrir_arena(arena_id: String) -> void:
 	_arena = ArenaRegistry.get_arena(arena_id)
 	_guardiao = GuardianBattle.new(GameState.equipe_cubelins, _arena.construir_equipe())
 	_batalha = _guardiao.batalha_atual
+	_vitoria_inedita = false
+	for membro: CreatureInstance in _guardiao.equipe_guardiao:
+		CadernoRegistro.registrar_vista(membro.especie_id)  ## E0-5
 	_limpar_log()
 	_aberto = true
 	visible = true
@@ -91,8 +95,9 @@ func _fechar() -> void:
 		_arena != null
 		and _arena.arena_id == "coracao_dourado"
 		and _batalha.resultado == BattleService.Resultado.VITORIA
+		and _vitoria_inedita
 	):
-		EventBus.game_completed.emit()
+		EventBus.game_completed.emit()  ## créditos só na primeira vitória (E0-3)
 	_aberto = false
 	visible = false
 	_inst_jogador_exibida = null
@@ -143,6 +148,7 @@ func _avancar_guardiao_se_necessario() -> void:
 		_guardiao.avancar_para_proximo()
 		_batalha = _guardiao.batalha_atual
 	elif not _arena.da_insignia:
+		_vitoria_inedita = not GameState.treinadores_vencidos.has(_arena.arena_id)
 		_premiar_treinador()
 	elif not GameState.tem_insignia(_arena.arena_id):
 		GameState.conquistar_insignia(_arena.arena_id)
@@ -172,6 +178,8 @@ func _resolver_turno_com_ataque(ataque_id: String) -> void:
 
 func _jogador_ataca_com_efeitos(ataque_id: String) -> void:
 	var atacante := _batalha.jogador_ativo()
+	if atacante == null or atacante.esta_desmaiado():
+		return  ## caiu no golpe do oponente neste turno (E0-2)
 	var alvo := _batalha.selvagem
 	var dano := _batalha.jogador_ataca(ataque_id, randf_range(VARIACAO_MIN, VARIACAO_MAX))
 	_registrar_ataque(atacante, alvo, ataque_id, dano, Arena3D.Lado.JOGADOR)

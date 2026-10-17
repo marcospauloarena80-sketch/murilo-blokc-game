@@ -24,8 +24,13 @@ func tem_proximo_adversario() -> bool:
 
 
 func avancar_para_proximo() -> void:
+	## O Cubelin que o jogador escolheu continua em campo (E0-1); só cai pro
+	## primeiro capaz se ele tiver desmaiado na luta anterior.
+	var ativo := batalha_atual.indice_ativo
 	indice_guardiao += 1
 	batalha_atual = BattleService.new(equipe_jogador, equipe_guardiao[indice_guardiao])
+	if ativo >= 0 and ativo < equipe_jogador.size() and not equipe_jogador[ativo].esta_desmaiado():
+		batalha_atual.indice_ativo = ativo
 
 
 func guardiao_totalmente_derrotado() -> bool:

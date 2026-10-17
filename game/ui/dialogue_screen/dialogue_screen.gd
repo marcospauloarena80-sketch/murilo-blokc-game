@@ -88,6 +88,8 @@ func _ao_abrir_caderno() -> void:
 func _arena_disponivel() -> bool:
 	if _npc_def == null or _npc_def.abre_arena == "":
 		return false
+	if not GameState.tem_cubelin_disponivel():
+		return false  ## E0-4: ninguém em condições de lutar
 	var arena := ArenaRegistry.get_arena(_npc_def.abre_arena)
 	if arena.requer_todas_insignias:
 		return GameState.insignias_conquistadas.size() >= ArenaRegistry.ids_com_insignia().size()
@@ -173,7 +175,9 @@ func _atualizar() -> void:
 		)
 	elif mostra_bloqueado:
 		var treinador := ArenaRegistry.get_arena(_npc_def.abre_arena)
-		if treinador != null and not treinador.da_insignia:
+		if not GameState.tem_cubelin_disponivel():
+			_label_texto.text = "Seus Cubelins precisam descansar antes de um desafio."
+		elif treinador != null and not treinador.da_insignia:
 			_label_texto.text = "Volte amanhã."
 		else:
 			_label_texto.text = "Volte quando tiver conquistado todas as insígnias."
