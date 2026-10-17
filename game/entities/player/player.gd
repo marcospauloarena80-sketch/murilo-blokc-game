@@ -47,12 +47,14 @@ var _estava_no_ar: bool = false
 var _y_inicio_queda: float = 0.0
 var _tempo_desde_ataque: float = INTERVALO_ATAQUE_SEG
 
+## Atalhos pros materiais do CorpoBlocos (o criador de personagem lê a camisa).
 var _mat_pele: StandardMaterial3D
 var _mat_cabelo: StandardMaterial3D
 var _mat_camisa: StandardMaterial3D
 var _mat_calca: StandardMaterial3D
 
 @onready var camera_pivot: Node3D = $CameraPivot
+@onready var _corpo: CorpoBlocos = $Corpo
 @onready var _braco_camera: SpringArm3D = $CameraPivot/SpringArm3D
 @onready var _camera: Camera3D = $CameraPivot/SpringArm3D/Camera3D
 @onready var _ombro_esquerdo: Node3D = $Corpo/OmbroEsquerdo
@@ -92,25 +94,16 @@ func _ready() -> void:
 
 
 func _configurar_materiais() -> void:
-	_mat_pele = StandardMaterial3D.new()
-	_mat_cabelo = StandardMaterial3D.new()
-	_mat_camisa = StandardMaterial3D.new()
-	_mat_calca = StandardMaterial3D.new()
-
-	$Corpo/Cabeca.material_override = _mat_pele
-	$Corpo/OmbroEsquerdo/BracoEsquerdo.material_override = _mat_pele
-	$Corpo/OmbroDireito/BracoDireito.material_override = _mat_pele
-	$Corpo/Cabelo.material_override = _mat_cabelo
-	$Corpo/Tronco.material_override = _mat_camisa
-	$Corpo/QuadrilEsquerdo/PernaEsquerda.material_override = _mat_calca
-	$Corpo/QuadrilDireito/PernaDireita.material_override = _mat_calca
+	## O corpo (malhas, materiais e rosto) é o CorpoBlocos compartilhado com os
+	## NPCs (Frente 5A); aqui ficam só os atalhos.
+	_mat_pele = _corpo.mat_pele
+	_mat_cabelo = _corpo.mat_cabelo
+	_mat_camisa = _corpo.mat_camisa
+	_mat_calca = _corpo.mat_calca
 
 
 func aplicar_aparencia(aparencia: CharacterAppearance) -> void:
-	_mat_pele.albedo_color = aparencia.cor_pele
-	_mat_cabelo.albedo_color = aparencia.cor_cabelo
-	_mat_camisa.albedo_color = aparencia.cor_camisa
-	_mat_calca.albedo_color = aparencia.cor_calca
+	_corpo.aplicar_aparencia(aparencia)
 
 
 func _ao_area_pronta() -> void:
