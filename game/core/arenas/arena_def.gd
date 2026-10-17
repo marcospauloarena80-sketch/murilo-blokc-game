@@ -15,6 +15,12 @@ extends Resource
 ## recompensa_itens uma vez por dia de jogo (GameState.treinadores_vencidos).
 @export var da_insignia: bool = true
 @export var recompensa_itens: Dictionary = {}  ## item_id -> quantidade
+## Campos genéricos de progressão (E1, ADR-032), lidos por `Progressao`. Os
+## valores padrão reproduzem o comportamento atual (nenhuma arena tem ordem
+## nem requisito); a sequência real dos ginásios é decisão pendente do dono.
+@export var ordem: int = 0  ## 0 = fora da sequência
+@export var requer_insignias: Array[String] = []
+@export var requer_quest: String = ""
 
 
 func construir_equipe() -> Array[CreatureInstance]:
