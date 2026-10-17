@@ -28,3 +28,8 @@ extends Resource
 @export var aprendizado_ataques: Dictionary = {}  ## nivel(int) -> ataque_id(String)
 @export var nivel_evolucao: int = 0  ## 0 = não evolui
 @export var especie_evolucao: String = ""
+
+## --- Animais (Ciclo 8, Frente 8B): bichos passivos que dão comida ---
+@export var eh_animal: bool = false  ## animal não luta nem é capturado: bater dá dano e dropa
+@export var drops: Dictionary = {}  ## item_id -> quantidade máxima (sorteia de 1 até ela)
+@export var bioma_animal: String = ""  ## bioma onde nasce de dia ("" = qualquer)

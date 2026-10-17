@@ -21,6 +21,9 @@ const POCAO_CURA: Array[String] = ["a01020", "e23b4e", "ff8a94"]
 const AZUL: Array[String] = ["1f4fa8", "3a86ff", "8ab8ff"]
 const CARVAO: Array[String] = ["1d1a24", "3a3545", "5a526b"]
 const AMBAR: Array[String] = ["c86e0a", "f0a020", "ffd070"]
+const CARNE_CRUA: Array[String] = ["a8323c", "d9545e", "f08a92"]
+const CARNE_ASSADA: Array[String] = ["5a2a10", "8e4a22", "c07a42"]
+const LA: Array[String] = ["b8b8c4", "ececf2", "ffffff"]
 
 
 func _init() -> void:
@@ -83,6 +86,12 @@ func _desenhar(item_id: String, atlas: Image) -> Image:
 			_cubo(img, AZUL)
 		"cubo_captura_avancado":
 			_cubo(img, CRISTAL)
+		"carne_crua":
+			_carne(img, CARNE_CRUA)
+		"carne_assada":
+			_carne(img, CARNE_ASSADA)
+		"la":
+			_la(img)
 		"carvao":
 			_pedras(img, CARVAO)
 		"ferrite":
@@ -334,6 +343,28 @@ func _maca(img: Image, tons: Array[String], assada: bool) -> void:
 	else:
 		_disco(img, Vector2(19.5, 8.5), 2.0, Color.html("5fae3c"))
 		_ponto(img, 21, 8, Color.html("8ade63"))
+
+
+func _carne(img: Image, tons: Array[String]) -> void:
+	## Bife com osso: massa oval sombreada e uma ponta de osso clara.
+	var cores := _cores(tons)
+	var osso := _cores(["b8b090", "ece6cc", "fffbea"] as Array[String])
+	_linha(img, Vector2(20.0, 20.0), Vector2(27.0, 27.0), 3.0, osso[1])
+	_disco(img, Vector2(27.5, 25.5), 2.0, osso[2])
+	_disco(img, Vector2(25.5, 27.5), 2.0, osso[2])
+	_esfera(img, Vector2(14.0, 14.0), 9.0, cores)
+	_disco(img, Vector2(11.0, 11.0), 1.5, cores[2])
+	_linha(img, Vector2(13.0, 17.0), Vector2(18.0, 12.0), 1.0, cores[0])
+
+
+func _la(img: Image) -> void:
+	## Novelo: tufos de bolinhas brancas e um fio solto.
+	var cores := _cores(LA)
+	_esfera(img, Vector2(11.5, 19.0), 6.0, cores)
+	_esfera(img, Vector2(20.5, 19.0), 6.0, cores)
+	_esfera(img, Vector2(16.0, 12.5), 6.5, cores)
+	_linha(img, Vector2(10.0, 23.0), Vector2(22.0, 15.0), 0.9, cores[0])
+	_linha(img, Vector2(12.0, 14.0), Vector2(21.0, 22.0), 0.9, cores[0])
 
 
 func _pocao(img: Image, liquido: Array[String]) -> void:

@@ -408,6 +408,14 @@ func _dano_de_ataque_atual() -> int:
 	return def.dano_ataque
 
 
+## E numa criatura: animal só mostra o nome (Ciclo 8, 8B); Cubelin abre batalha.
+func interagir_com_criatura(criatura: Creature) -> void:
+	if criatura.especie != null and criatura.especie.eh_animal:
+		EventBus.aviso.emit(criatura.especie.nome)
+	elif GameState.tem_cubelin_disponivel():
+		EventBus.battle_started.emit(criatura)
+
+
 func _processar_mira_e_interacao(delta: float) -> void:
 	_tempo_desde_ataque += delta
 
@@ -429,8 +437,8 @@ func _processar_mira_e_interacao(delta: float) -> void:
 		if Input.is_action_just_pressed("quebrar") and _tempo_desde_ataque >= INTERVALO_ATAQUE_SEG:
 			_tempo_desde_ataque = 0.0
 			(colisor as Creature).receber_dano(_dano_de_ataque_atual())
-		elif Input.is_action_just_pressed("interagir") and GameState.tem_cubelin_disponivel():
-			EventBus.battle_started.emit(colisor)
+		elif Input.is_action_just_pressed("interagir"):
+			interagir_com_criatura(colisor as Creature)
 		return
 
 	if colisor != null and colisor.is_in_group("npc"):

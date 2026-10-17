@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CreatureDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/creatures/creature_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+especie_id = "saltitao"
+nome = "Saltitão"
+elemento = ""
+cor = Color(0.55, 0.4, 0.25, 1)
+formato = "alto"
+vida_maxima = 5
+velocidade = 1.8
+raio_deteccao = 6.0
+eh_agressivo = false
+dano_contato = 0
+periodo_spawn = "dia"
+pode_ser_selvagem = false
+eh_animal = true
+drops = {
+"carne_crua": 1,
+"la": 1
+}
+bioma_animal = "floresta_cubica"

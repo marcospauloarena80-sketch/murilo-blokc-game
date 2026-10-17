@@ -10,7 +10,18 @@ var rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	add_to_group("loot_spawner")
 	EventBus.block_broken.connect(_ao_quebrar_bloco)
+
+
+## Espalha itens no mundo (animal morto, Ciclo 8): itens é item_id -> quantidade.
+func dropar_itens(pos: Vector3, itens: Dictionary) -> void:
+	for item_id: String in itens:
+		var drop: ItemDrop = ItemDropScene.instantiate()
+		drop.item_id = item_id
+		drop.quantidade = int(itens[item_id])
+		drop.position = pos
+		add_child(drop)
 
 
 func _ao_quebrar_bloco(pos: Vector3i, block_id: int) -> void:

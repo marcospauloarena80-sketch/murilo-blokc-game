@@ -24,9 +24,22 @@ static var _criaturas: Dictionary = {
 	"marejao": preload("res://data/creatures/marejao.tres"),
 }
 
+## Animais (Ciclo 8, 8B) ficam à parte: não são Cubelins (sem batalha nem
+## captura), então não entram em todos_os_ids().
+static var _animais: Dictionary = {
+	"lanugo": preload("res://data/creatures/lanugo.tres"),
+	"saltitao": preload("res://data/creatures/saltitao.tres"),
+}
+
 
 static func get_creature(especie_id: String) -> CreatureDef:
-	return _criaturas.get(especie_id, null)
+	if _criaturas.has(especie_id):
+		return _criaturas[especie_id]
+	return _animais.get(especie_id, null)
+
+
+static func ids_animais() -> Array:
+	return _animais.keys()
 
 
 static func todos_os_ids() -> Array:

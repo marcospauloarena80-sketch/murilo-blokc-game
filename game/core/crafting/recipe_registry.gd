@@ -26,6 +26,7 @@ static var _receitas: Array[RecipeDef] = [
 	preload("res://data/recipes/cubo_captura_avancado.tres"),
 	preload("res://data/recipes/pao.tres"),
 	preload("res://data/recipes/enxada_madeira.tres"),
+	preload("res://data/recipes/carne_assada.tres"),
 ]
 
 

@@ -10,6 +10,9 @@ const CreatureScene := preload("res://entities/creatures/creature.tscn")
 
 const INTERVALO_SPAWN_SEG: float = 15.0
 const MAX_CRIATURAS: int = 8
+## Animais (Ciclo 8, 8B) têm limite próprio, além do de Cubelins.
+const MAX_ANIMAIS: int = 6
+const CHANCE_ANIMAL: float = 0.5
 const RAIO_SPAWN_MIN: float = 10.0
 const RAIO_SPAWN_MAX: float = 24.0
 const RAIO_DESPAWN: float = 48.0
@@ -17,6 +20,7 @@ const RAIO_DESPAWN: float = 48.0
 ## bloco deixava metade dela dentro do chão. Com a malha do avesso a física a
 ## empurrava pra fora por acaso; com a malha certa ela atravessava (ADR-027).
 const ALTURA_ACIMA_DO_CHAO: float = 0.4
+const GRAMA_ID: int = 1
 const ELEMENTOS_CAVERNA := ["pedra", "faisca"]  ## camada onipresente à noite (F6/F7), não é anel
 
 ## Por que a última tentativa não gerou criatura (diagnóstico; "" = gerou).
@@ -51,7 +55,10 @@ func _tentar_spawnar() -> void:
 	if _jogador == null or _chunk_manager == null:
 		ultimo_motivo_sem_spawn = "sem jogador ou chunk_manager"
 		return
-	if get_tree().get_nodes_in_group("creature").size() >= MAX_CRIATURAS:
+	var animais: int = get_tree().get_nodes_in_group("animal").size()
+	var cubelins: int = get_tree().get_nodes_in_group("creature").size() - animais
+	var cheio_de_cubelins: bool = cubelins >= MAX_CRIATURAS
+	if cheio_de_cubelins and animais >= MAX_ANIMAIS:
 		ultimo_motivo_sem_spawn = "limite de criaturas"
 		return
 
@@ -72,6 +79,18 @@ func _tentar_spawnar() -> void:
 
 	var periodo: String = "noite" if GameState.eh_noite() else "dia"
 	var bioma_id := WorldGenerator.bioma_em(x, z)
+	if periodo == "dia" and animais < MAX_ANIMAIS and randf() < CHANCE_ANIMAL:
+		if _spawnar_animal(x, y, z, bioma_id):
+			return
+	_spawnar_cubelin(x, y, z, periodo, bioma_id, cheio_de_cubelins)
+
+
+func _spawnar_cubelin(
+	x: int, y: int, z: int, periodo: String, bioma_id: String, cheio_de_cubelins: bool
+) -> void:
+	if cheio_de_cubelins:
+		ultimo_motivo_sem_spawn = "limite de criaturas"
+		return
 	var candidatas: Array[CreatureDef] = _especies_do_periodo_e_bioma(periodo, bioma_id)
 	if candidatas.is_empty():
 		ultimo_motivo_sem_spawn = "nenhuma espécie pra %s/%s" % [periodo, bioma_id]
@@ -83,6 +102,25 @@ func _tentar_spawnar() -> void:
 	criatura.configurar(def)
 	add_child(criatura)
 	criatura.global_position = Vector3(x + 0.5, y + 1.0 + ALTURA_ACIMA_DO_CHAO, z + 0.5)
+
+
+## Animais nascem de dia, só em grama, no bioma da espécie. true = nasceu.
+func _spawnar_animal(x: int, y: int, z: int, bioma_id: String) -> bool:
+	if _chunk_manager.get_block(Vector3i(x, y, z)) != GRAMA_ID:
+		return false
+	var candidatas: Array[CreatureDef] = []
+	for id: String in CreatureRegistry.ids_animais():
+		var def: CreatureDef = CreatureRegistry.get_creature(id)
+		if def.bioma_animal == "" or def.bioma_animal == bioma_id:
+			candidatas.append(def)
+	if candidatas.is_empty():
+		return false
+	ultimo_motivo_sem_spawn = ""
+	var animal := CreatureScene.instantiate() as Creature
+	animal.configurar(candidatas[randi() % candidatas.size()])
+	add_child(animal)
+	animal.global_position = Vector3(x + 0.5, y + 1.0 + ALTURA_ACIMA_DO_CHAO, z + 0.5)
+	return true
 
 
 func _especies_do_periodo_e_bioma(periodo: String, bioma_id: String) -> Array[CreatureDef]:

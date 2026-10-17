@@ -36,6 +36,8 @@ func configurar(def: CreatureDef) -> void:
 
 func _ready() -> void:
 	add_to_group("creature")
+	if especie != null and especie.eh_animal:
+		add_to_group("animal")
 	_jogador = get_tree().get_first_node_in_group("player")
 	_hurtbox.body_entered.connect(_ao_tocar_jogador)
 	EventBus.day_started.connect(_atualizar_pupilas)
@@ -67,8 +69,21 @@ func _physics_process(delta: float) -> void:
 func receber_dano(quantidade: int) -> void:
 	vida_atual = max(0, vida_atual - quantidade)
 	if vida_atual <= 0:
-		EventBus.creature_defeated.emit(especie.especie_id)
+		if especie.eh_animal:
+			_dropar_comida()
+		else:
+			EventBus.creature_defeated.emit(especie.especie_id)
 		queue_free()
+
+
+## Animal morto solta os itens de especie.drops pelo LootSpawner (Ciclo 8, 8B).
+func _dropar_comida() -> void:
+	var itens: Dictionary = {}
+	for item_id: String in especie.drops:
+		itens[item_id] = randi_range(1, maxi(1, int(especie.drops[item_id])))
+	var spawner := get_tree().get_first_node_in_group("loot_spawner") as LootSpawner
+	if spawner != null:
+		spawner.dropar_itens(global_position, itens)
 
 
 func _ao_tocar_jogador(corpo: Node3D) -> void:
@@ -107,14 +122,16 @@ func _montar_visual(def: CreatureDef) -> void:
 	_atualizar_pupilas()
 
 	## Faixa do elemento: anel fino em volta da base, na cor secundária.
-	var faixa := MeshInstance3D.new()
-	faixa.name = "Faixa"
-	var anel := BoxMesh.new()
-	anel.size = Vector3(tamanho.x + 0.02, 0.06, tamanho.z + 0.02)
-	faixa.mesh = anel
-	faixa.material_override = _criar_material(def.cor_secundaria, true)
-	faixa.position = Vector3(0.0, -tamanho.y / 2.0 + 0.06, 0.0)
-	corpo.add_child(faixa)
+	## Animal não tem elemento, então fica sem faixa.
+	if not def.eh_animal:
+		var faixa := MeshInstance3D.new()
+		faixa.name = "Faixa"
+		var anel := BoxMesh.new()
+		anel.size = Vector3(tamanho.x + 0.02, 0.06, tamanho.z + 0.02)
+		faixa.mesh = anel
+		faixa.material_override = _criar_material(def.cor_secundaria, true)
+		faixa.position = Vector3(0.0, -tamanho.y / 2.0 + 0.06, 0.0)
+		corpo.add_child(faixa)
 
 	## Placa com o nome: é o que diferencia Pedrolim de Rochedo de longe. A
 	## sonda e o HUD do Ciclo 6 usam especie.nome pro nome sob a mira.

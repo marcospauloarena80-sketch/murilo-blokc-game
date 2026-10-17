@@ -47,6 +47,9 @@ const NOMES: Array[String] = [
 	"enxada_madeira",
 	"muda",
 	"cogumelo",
+	"carne_crua",
+	"carne_assada",
+	"la",
 ]
 
 static var _folha: Texture2D
