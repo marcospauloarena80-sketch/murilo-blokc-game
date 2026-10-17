@@ -263,3 +263,18 @@ Formato curto: contexto → decisão → consequências. Toda decisão nova entr
 **Validado:** suíte local verde, build de depuração no navegador com ambiente tocando (2 players) e sem música. **Não validado:** toque em aparelho real, sensação de voo e turbo, aparência da barra no celular.
 
 **Item "sumido":** no navegador, a carne do Lanugo chegou à mochila (2 unidades, com ícone), não à hotbar. A coleta vai para a mochila por desenho. O ponto fraco é de percepção: a mochila só abre com I ou o botão Bolsa e o slot não mostra o nome. Pendência: aviso de coleta mais visível.
+
+## ADR-032: E0 (correções de combate nas arenas) e E1 preparatória (17/out/2026)
+
+**Contexto:** planejamento dos ginásios, líderes e modos aprovado como base (`~/.claude/plans/murilo-blocks-game-golden-valley.md`). O dono autorizou só a E0 e a preparação da E1, em branch `ginasios/e0-e1`, sem merge em `main` e sem publicação (o `deploy-pages` do CI só roda em `main`).
+
+**E0, decisões:**
+1. `GuardianBattle.avancar_para_proximo` preserva o Cubelin ativo escolhido pelo jogador; só volta ao primeiro capaz se ele desmaiou.
+2. `BattleService.jogador_ataca` não age com o ativo desmaiado; a tela também pula o ataque. Antes, o desmaiado atacava, levava o XP e revivia com a cura do level-up.
+3. O Coração Dourado deixa de ser insígnia (`da_insignia = false`, as 4 insígnias seguem iguais) e os créditos (`game_completed`) saem só na primeira vitória da partida, usando o registro já salvo em `treinadores_vencidos`.
+4. Desafiar fica escondido sem Cubelin em condições, com o aviso "Seus Cubelins precisam descansar antes de um desafio.".
+5. Abrir uma batalha de arena marca a equipe adversária como vista no Caderno.
+
+**E1 preparatória:** `core/progressao/progressao.gd` (classe pura, estática, recebe o estado por parâmetro) e três campos genéricos em `ArenaDef` (`ordem = 0`, `requer_insignias = []`, `requer_quest = ""`). Nenhum `.tres` mudou de valor; `Progressao` não está ligada a nenhuma tela. A ordem real dos ginásios, nomes, elementos e equipes continuam pendentes do dono.
+
+**Validação:** 830/830 testes (16 novos). Build Web de depuração local: desafio ao Renato com dois Cubelins, troca para a Brisura, vitória sobre o Pedrolim e a Brisura continua em campo contra o Rochedo; vitória; Caderno com Pedrolim e Rochedo vistos. **Não validado jogando:** desmaiado não atacar (item 2), créditos únicos (item 3) e o aviso de descanso (item 4), cobertos só por testes automatizados.
