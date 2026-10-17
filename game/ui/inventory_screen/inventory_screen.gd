@@ -3,7 +3,10 @@ extends CanvasLayer
 ## Tela de mochila + craft. Toggle pela ação "inventario". Pausa o jogo
 ## (reaproveita GameState.PAUSED) enquanto aberta. Ver docs/02-ARQUITETURA.md §4.5.
 
+const LADO_ICONE_RECEITA: int = 20
+
 var _botoes_mochila: Array[Button] = []
+var _slots_mochila: Array[SlotItem] = []
 var _craft_service := CraftService.new()
 var _aberto: bool = false
 
@@ -21,6 +24,7 @@ func _ready() -> void:
 		botao.pressed.connect(_ao_clicar_slot_mochila.bind(i))
 		_grid_mochila.add_child(botao)
 		_botoes_mochila.append(botao)
+		_slots_mochila.append(SlotItem.decorar(botao))
 
 	for receita: RecipeDef in RecipeRegistry.todas():
 		_criar_linha_receita(receita)
@@ -55,14 +59,24 @@ func _ao_clicar_slot_mochila(indice: int) -> void:
 
 
 func _criar_linha_receita(receita: RecipeDef) -> void:
+	## "[ícone] Nome   3x [ícone] 2x [ícone]   Craftar" — o botão é sempre o
+	## último filho (ver _atualizar).
 	var linha := HBoxContainer.new()
+	linha.add_theme_constant_override("separation", 6)
+	linha.add_child(SlotItem.icone_solto(receita.resultado_id, LADO_ICONE_RECEITA))
 	var rotulo := Label.new()
-	rotulo.custom_minimum_size = Vector2(180, 0)
+	rotulo.custom_minimum_size = Vector2(150, 0)
+	rotulo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rotulo.text = receita.nome
+	linha.add_child(rotulo)
+	for ingrediente_id: String in receita.ingredientes:
+		var quantidade := Label.new()
+		quantidade.text = "%dx" % int(receita.ingredientes[ingrediente_id])
+		linha.add_child(quantidade)
+		linha.add_child(SlotItem.icone_solto(ingrediente_id, LADO_ICONE_RECEITA))
 	var botao := Button.new()
 	botao.text = "Craftar"
 	botao.pressed.connect(_ao_craftar.bind(receita))
-	linha.add_child(rotulo)
 	linha.add_child(botao)
 	_lista_receitas.add_child(linha)
 
@@ -97,19 +111,16 @@ func _process(_delta: float) -> void:
 
 func _atualizar() -> void:
 	for i in range(24):
-		var botao: Button = _botoes_mochila[i]
-		var item_id: String = GameState.inventario_mochila.get_item_id(i)
-		if item_id == "":
-			botao.text = ""
-		else:
-			var quantidade: int = GameState.inventario_mochila.get_quantidade(i)
-			botao.text = "%s\n%d" % [item_id, quantidade]
+		_slots_mochila[i].mostrar(
+			GameState.inventario_mochila.get_item_id(i),
+			GameState.inventario_mochila.get_quantidade(i)
+		)
 
 	var receitas: Array[RecipeDef] = RecipeRegistry.todas()
 	for i in range(_lista_receitas.get_child_count()):
 		var linha: HBoxContainer = _lista_receitas.get_child(i)
 		var receita: RecipeDef = receitas[i]
-		var botao_craftar: Button = linha.get_child(1)
+		var botao_craftar: Button = linha.get_child(linha.get_child_count() - 1)
 		botao_craftar.disabled = not _craft_service.pode_craftar(
 			GameState.inventario_mochila,
 			receita,

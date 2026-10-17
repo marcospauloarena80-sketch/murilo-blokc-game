@@ -6,6 +6,8 @@ extends CanvasLayer
 
 var _botoes_bau: Array[Button] = []
 var _botoes_mochila: Array[Button] = []
+var _slots_bau: Array[SlotItem] = []
+var _slots_mochila: Array[SlotItem] = []
 var _aberto: bool = false
 var _chave_bau: String = ""
 
@@ -23,12 +25,14 @@ func _ready() -> void:
 		botao_bau.pressed.connect(_ao_clicar_bau.bind(i))
 		_grid_bau.add_child(botao_bau)
 		_botoes_bau.append(botao_bau)
+		_slots_bau.append(SlotItem.decorar(botao_bau))
 
 		var botao_mochila := Button.new()
 		botao_mochila.custom_minimum_size = Vector2(56, 44)
 		botao_mochila.pressed.connect(_ao_clicar_mochila.bind(i))
 		_grid_mochila.add_child(botao_mochila)
 		_botoes_mochila.append(botao_mochila)
+		_slots_mochila.append(SlotItem.decorar(botao_mochila))
 
 	_botao_fechar.pressed.connect(_fechar)
 	EventBus.chest_requested.connect(_abrir)
@@ -78,15 +82,10 @@ func _process(_delta: float) -> void:
 func _atualizar() -> void:
 	if _chave_bau == "":
 		return
-	_preencher_grid(_botoes_bau, GameState.obter_bau(_chave_bau))
-	_preencher_grid(_botoes_mochila, GameState.inventario_mochila)
+	_preencher_grid(_slots_bau, GameState.obter_bau(_chave_bau))
+	_preencher_grid(_slots_mochila, GameState.inventario_mochila)
 
 
-func _preencher_grid(botoes: Array[Button], inventario: InventoryModel) -> void:
+func _preencher_grid(slots: Array[SlotItem], inventario: InventoryModel) -> void:
 	for i in range(24):
-		var botao: Button = botoes[i]
-		var item_id: String = inventario.get_item_id(i)
-		if item_id == "":
-			botao.text = ""
-		else:
-			botao.text = "%s\n%d" % [item_id, inventario.get_quantidade(i)]
+		slots[i].mostrar(inventario.get_item_id(i), inventario.get_quantidade(i))

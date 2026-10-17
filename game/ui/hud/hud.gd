@@ -13,12 +13,13 @@ const DURACAO_AVISO_IMPORTANTE_SEG: float = 5.0
 const DICA_POR_TIPO: Dictionary = {"npc": "E falar", "criatura": "E desafiar", "bloco": "Q quebrar"}
 
 var _botoes: Array[Button] = []
+## Ícone + quantidade de cada slot (Ciclo 6, 6B); antes o slot era um botão
+## pintado com a cor do item e o número como texto.
+var _slots: Array[SlotItem] = []
 ## Um par (normal, selecionado) por slot, criado uma vez: antes, _process criava
-## um StyleBoxFlat novo para os 8 slots em todo quadro. A cor de fundo depende
-## do item do slot, por isso o par é por slot e não compartilhado.
+## um StyleBoxFlat novo para os 8 slots em todo quadro.
 var _estilos_normal: Array[StyleBoxFlat] = []
 var _estilos_selecionado: Array[StyleBoxFlat] = []
-var _ultimo_item_id: PackedStringArray = PackedStringArray()
 var _ultimo_selecionado: Array[bool] = []
 var _chunk_manager: ChunkManager
 var _label_objetivo: Label
@@ -41,6 +42,7 @@ func _ready() -> void:
 		botao.focus_mode = Control.FOCUS_NONE
 		_hotbar.add_child(botao)
 		_botoes.append(botao)
+		_slots.append(SlotItem.decorar(botao))
 
 		var normal := StyleBoxFlat.new()
 		normal.bg_color = COR_SLOT_VAZIO
@@ -51,7 +53,6 @@ func _ready() -> void:
 		botao.add_theme_stylebox_override("normal", normal)
 		_estilos_normal.append(normal)
 		_estilos_selecionado.append(selecionado)
-		_ultimo_item_id.append("")
 		_ultimo_selecionado.append(false)
 
 	_label_objetivo = _criar_label(18)
@@ -177,17 +178,12 @@ func _atualizar_label_carregando() -> void:
 
 func _atualizar_slot(indice: int) -> void:
 	var botao: Button = _botoes[indice]
-	var item_id: String = GameState.inventario_hotbar.get_item_id(indice)
 	var selecionado: bool = indice == GameState.hotbar_selecionado
 
-	if item_id != _ultimo_item_id[indice]:
-		var cor := COR_SLOT_VAZIO
-		if item_id != "":
-			var def := ItemRegistry.get_item(item_id)
-			cor = def.cor if def != null else Color.MAGENTA
-		_estilos_normal[indice].bg_color = cor
-		_estilos_selecionado[indice].bg_color = cor
-		_ultimo_item_id[indice] = item_id
+	_slots[indice].mostrar(
+		GameState.inventario_hotbar.get_item_id(indice),
+		GameState.inventario_hotbar.get_quantidade(indice)
+	)
 
 	if selecionado != _ultimo_selecionado[indice]:
 		var estilo: StyleBoxFlat = (
@@ -195,6 +191,3 @@ func _atualizar_slot(indice: int) -> void:
 		)
 		botao.add_theme_stylebox_override("normal", estilo)
 		_ultimo_selecionado[indice] = selecionado
-
-	var quantidade: int = GameState.inventario_hotbar.get_quantidade(indice)
-	botao.text = str(quantidade) if quantidade > 0 else ""
