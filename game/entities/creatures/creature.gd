@@ -121,7 +121,7 @@ func _montar_visual(def: CreatureDef) -> void:
 	var placa := Label3D.new()
 	placa.name = "Placa"
 	placa.text = def.nome
-	placa.font_size = 40
+	placa.font_size = 26
 	placa.outline_size = 10
 	placa.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	placa.visibility_range_end = 16.0

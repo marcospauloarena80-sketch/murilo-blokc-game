@@ -158,15 +158,20 @@ func test_fechar_o_laboratorio_vindo_do_dialogo_volta_a_jogar() -> void:
 
 
 func test_vencer_o_coracao_dourado_abre_os_creditos_com_o_jogo_pausado() -> void:
-	GameState.equipe_cubelins = [CreatureInstance.new("pedrolim", 30)]
+	## Pedrargo nível 30 (o Pedrolim ficou fraco demais no Ciclo 4b e o teste
+	## oscilava quando o guardião agia primeiro e o derrubava).
+	GameState.equipe_cubelins = [CreatureInstance.new("pedrargo", 30)]
 	var batalha := BattleScreenScene.instantiate() as BattleScreen
 	add_child_autofree(batalha)
 	var creditos := CreditsScreenScene.instantiate() as CreditsScreen
 	add_child_autofree(creditos)
 	batalha._abrir_arena("coracao_dourado")
-	# Mesmo truque de test_battle_screen_guardiao: 1 HP garante hit-kill nos 3.
+	# Mesmo truque de test_battle_screen_guardiao: 1 HP garante hit-kill nos 3,
+	# e a vida do ativo é restaurada a cada turno pra nenhum revide decidir o teste.
 	for i in range(3):
 		batalha._batalha.selvagem.vida_atual = 1
+		var ativo := batalha._batalha.jogador_ativo()
+		ativo.vida_atual = ativo.vida_maxima_efetiva()
 		batalha._ao_atacar(0)
 	assert_true(GameState.tem_insignia("coracao_dourado"), "deveria ter vencido o desafio final")
 

@@ -72,7 +72,7 @@ static func cor_do_elemento_da_arena(arena_id: String) -> Color:
 
 func _criar_placas() -> void:
 	if _placa == null:
-		_placa = _criar_label("Placa", 48, Color.WHITE, ALTURA_PLACA)
+		_placa = _criar_label("Placa", 30, Color.WHITE, ALTURA_PLACA)
 		add_child(_placa)
 	_placa.text = def.nome
 	if _marcador == null:

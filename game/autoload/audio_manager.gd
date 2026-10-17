@@ -92,6 +92,10 @@ func tocar_musica(nome: String) -> void:
 	if _music_player == null:
 		_music_player = AudioStreamPlayer.new()
 		_music_player.bus = "Música"
+		## WAV com loop não entra no modo de amostra da Web (aviso "cannot be
+		## sampled" e silêncio): os loops tocam em modo de fluxo; os SFX curtos
+		## continuam como amostra, que é o modo sem latência.
+		_music_player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 		_music_player.volume_db = DB_MUSICA
 		add_child(_music_player)
 	if _musica_atual == nome and _music_player.playing:
@@ -211,6 +215,7 @@ func _novo_player_ambiente(stream: AudioStreamWAV, volume_db: float) -> AudioStr
 	player.bus = "SFX"
 	player.stream = stream
 	player.volume_db = volume_db
+	player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM  # loop: ver tocar_musica
 	add_child(player)
 	return player
 

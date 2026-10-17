@@ -291,6 +291,18 @@ func _audio(_args: Array) -> void:
 	var dados: Dictionary = {
 		"musica_atual": AudioManager._musica_atual,
 		"sfx_tocados": AudioManager.sfx_tocados,
+		"posicoes": _posicoes_dos_players(),
 		"players_ativos": AudioManager.players_ativos(),
 	}
 	_janela.muriloUltimoAudio = JSON.stringify(dados)
+
+
+func _posicoes_dos_players() -> Array:
+	## Posição de reprodução de cada player tocando: se avança entre duas
+	## leituras, o áudio está sendo mixado (não dá pra ouvir pelo navegador automatizado).
+	var posicoes: Array = []
+	for filho: Node in AudioManager.get_children():
+		var player := filho as AudioStreamPlayer
+		if player != null and player.playing:
+			posicoes.append(snappedf(player.get_playback_position(), 0.01))
+	return posicoes
