@@ -78,6 +78,7 @@ func reiniciar_para_novo_jogo() -> void:
 	baus = {}
 	equipe_cubelins = []
 	deposito_cubelins = []
+	EventBus.team_changed.emit()
 	quest_atual_id = ""
 	progresso_quest_atual = 0
 	quests_concluidas = []
@@ -157,6 +158,7 @@ func adicionar_cubelin(instancia: CreatureInstance) -> void:
 		equipe_cubelins.append(instancia)
 	else:
 		deposito_cubelins.append(instancia)
+	EventBus.team_changed.emit()
 
 
 func tem_cubelin_disponivel() -> bool:

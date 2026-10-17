@@ -79,3 +79,25 @@ func test_distancia_exatamente_no_raio_conta_como_perto() -> void:
 	var comportamento := CreatureBehavior.new(_def_agressivo())
 	comportamento.atualizar(0.1, Vector3.ZERO, Vector3(5, 0, 0))
 	assert_eq(comportamento.estado, CreatureBehavior.Estado.AGGRO)
+
+
+func test_companheiro_segue_alem_de_4_blocos_e_para_em_2_5() -> void:
+	var comportamento := CreatureBehavior.new(_def_passivo())
+	var dir: Vector3 = comportamento.atualizar_companheiro(Vector3(10, 0, 0), Vector3.ZERO)
+	assert_eq(comportamento.estado, CreatureBehavior.Estado.SEGUIR)
+	assert_almost_eq(dir.x, -1.0, 0.001, "anda na direção do jogador")
+	## Dentro da faixa de 2,5 a 4 continua o que estava fazendo (histerese).
+	dir = comportamento.atualizar_companheiro(Vector3(3, 0, 0), Vector3.ZERO)
+	assert_eq(comportamento.estado, CreatureBehavior.Estado.SEGUIR)
+	assert_ne(dir, Vector3.ZERO)
+	dir = comportamento.atualizar_companheiro(Vector3(2, 0, 0), Vector3.ZERO)
+	assert_eq(comportamento.estado, CreatureBehavior.Estado.IDLE)
+	assert_eq(dir, Vector3.ZERO)
+	dir = comportamento.atualizar_companheiro(Vector3(3, 0, 0), Vector3.ZERO)
+	assert_eq(dir, Vector3.ZERO, "parado dentro da faixa continua parado")
+
+
+func test_companheiro_ignora_altura_ao_seguir() -> void:
+	var comportamento := CreatureBehavior.new(_def_passivo())
+	var dir: Vector3 = comportamento.atualizar_companheiro(Vector3(0, 5, 10), Vector3.ZERO)
+	assert_eq(dir.y, 0.0)

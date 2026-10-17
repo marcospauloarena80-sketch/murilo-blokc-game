@@ -25,6 +25,9 @@ signal day_started
 signal night_started
 signal battle_started(criatura: Creature)
 signal battle_ended
+## Equipe de Cubelins mudou (adicionar, trocar, soltar): o Companheiro do mundo
+## se refaz com o primeiro da equipe (Ciclo 9, 9C).
+signal team_changed
 signal creature_captured(species_id: String)
 signal creature_defeated(species_id: String)
 signal quest_completed(quest_id: String)

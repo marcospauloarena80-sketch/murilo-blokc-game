@@ -502,6 +502,17 @@ func _processar_mira_e_interacao(delta: float) -> void:
 		return
 
 	var colisor: Node = resultado.get("collider")
+	if colisor != null and colisor.is_in_group("companheiro"):
+		## Companheiro (Ciclo 9, 9C): nunca é alvo de dano nem de batalha; E mostra a vida.
+		_outline.visible = false
+		_progresso_quebra = 0.0
+		var amigo := colisor as Creature
+		alvo_tipo = "companheiro"
+		alvo_mirado = amigo.especie.nome if amigo.especie != null else ""
+		if Input.is_action_just_pressed("interagir"):
+			EventBus.aviso.emit(amigo.texto_aviso())
+		return
+
 	if colisor != null and colisor.is_in_group("creature"):
 		_outline.visible = false
 		_progresso_quebra = 0.0

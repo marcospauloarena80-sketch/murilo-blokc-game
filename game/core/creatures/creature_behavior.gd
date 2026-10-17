@@ -7,10 +7,14 @@ extends RefCounted
 ## Dia/noite não entra aqui: só afeta QUEM spawna (CreatureSpawner), não o
 ## comportamento de uma criatura já viva no mundo.
 
-enum Estado { IDLE, WANDER, FLEE, AGGRO }
+enum Estado { IDLE, WANDER, FLEE, AGGRO, SEGUIR }
 
 const TEMPO_MAX_IDLE: float = 3.0
 const TEMPO_MAX_WANDER: float = 4.0
+## Companheiro (Ciclo 9, 9C): começa a seguir além de DIST_SEGUIR_MAX e para
+## ao chegar em DIST_SEGUIR_MIN, ficando na faixa de 2,5 a 4 blocos.
+const DIST_SEGUIR_MIN: float = 2.5
+const DIST_SEGUIR_MAX: float = 4.0
 
 var estado: Estado = Estado.IDLE
 
@@ -66,3 +70,18 @@ func _decidir_estado(delta: float, jogador_perto: bool) -> void:
 func _direcao_aleatoria() -> Vector3:
 	var angulo: float = randf() * TAU
 	return Vector3(cos(angulo), 0, sin(angulo))
+
+
+## Estado Seguir do companheiro: sem aggro nem fuga. Anda na horizontal até o
+## jogador quando passa de DIST_SEGUIR_MAX e só para em DIST_SEGUIR_MIN.
+func atualizar_companheiro(pos_criatura: Vector3, pos_jogador: Vector3) -> Vector3:
+	var horizontal: Vector3 = pos_jogador - pos_criatura
+	horizontal.y = 0.0
+	var distancia: float = horizontal.length()
+	if distancia > DIST_SEGUIR_MAX:
+		estado = Estado.SEGUIR
+	elif distancia <= DIST_SEGUIR_MIN:
+		estado = Estado.IDLE
+	if estado == Estado.SEGUIR:
+		return horizontal.normalized()
+	return Vector3.ZERO

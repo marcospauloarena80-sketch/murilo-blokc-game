@@ -36,6 +36,7 @@ func _ao_clicar_equipe(indice: int) -> void:
 	var instancia: CreatureInstance = GameState.equipe_cubelins[indice]
 	GameState.equipe_cubelins.remove_at(indice)
 	GameState.deposito_cubelins.append(instancia)
+	EventBus.team_changed.emit()
 	_atualizar()
 
 
@@ -47,6 +48,7 @@ func _ao_clicar_deposito(indice: int) -> void:
 	var instancia: CreatureInstance = GameState.deposito_cubelins[indice]
 	GameState.deposito_cubelins.remove_at(indice)
 	GameState.equipe_cubelins.append(instancia)
+	EventBus.team_changed.emit()
 	_atualizar()
 
 

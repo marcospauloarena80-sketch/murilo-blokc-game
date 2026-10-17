@@ -11,12 +11,21 @@ const INTERVALO_DANO_CONTATO_SEG: float = 1.0
 const VELOCIDADE_GIRO_RAD_S: float = 6.0
 const COR_PUPILA: Color = Color(0.1, 0.1, 0.12)
 const COR_PUPILA_AGRESSIVA: Color = Color(0.9, 0.1, 0.1)
+## Companheiro (Ciclo 9, 9C): teleporta se ficar além disso do jogador.
+const DIST_TELEPORTE: float = 20.0
+const DESLOCAMENTO_TELEPORTE: float = 2.5
+## Companheiro nunca anda mais devagar que isso, senão perde o jogador de vista.
+const VELOCIDADE_COMPANHEIRO_MIN: float = 3.5
 
 var especie: CreatureDef
 var vida_atual: int = 0
 ## Nível do selvagem, definido pelo spawner (Ciclo 9, 9A). 0 = sem nível
 ## (animais e criaturas de teste): a batalha usa o padrão.
 var nivel: int = 0
+## Modo companheiro (Ciclo 9, 9C): segue o jogador, sem aggro nem dano, fora do
+## grupo "creature" (spawner e batalha não enxergam). instancia é o Cubelin da equipe.
+var companheiro: bool = false
+var instancia: CreatureInstance
 
 var _comportamento: CreatureBehavior
 var _jogador: Node3D
@@ -47,10 +56,34 @@ func definir_nivel(novo_nivel: int) -> void:
 	var placa := get_node_or_null("Placa") as Label3D
 	if placa != null:
 		placa.text = "%s Nv.%d" % [especie.nome, novo_nivel]
+## Liga o modo companheiro; chamar antes do add_child.
+func configurar_companheiro(cubelin: CreatureInstance) -> void:
+	companheiro = true
+	instancia = cubelin
+	configurar(cubelin.especie_def())
+	vida_atual = cubelin.vida_atual
+
+
+## Texto do toast ao apertar E no companheiro: "Brasita Nv.4  9/9".
+func texto_aviso() -> String:
+	if instancia == null:
+		return especie.nome
+	return (
+		"%s Nv.%d  %d/%d"
+		% [
+			especie.nome,
+			instancia.nivel,
+			instancia.vida_atual,
+			instancia.vida_maxima_efetiva(),
+		]
+	)
 
 
 func _ready() -> void:
-	add_to_group("creature")
+	if companheiro:
+		add_to_group("companheiro")
+	else:
+		add_to_group("creature")
 	if especie != null and especie.eh_animal:
 		add_to_group("animal")
 	_jogador = get_tree().get_first_node_in_group("player")
@@ -65,7 +98,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y = 0.0
 
-	if _jogador != null and _comportamento != null:
+	if companheiro:
+		_mover_companheiro()
+	elif _jogador != null and _comportamento != null:
 		var direcao: Vector3 = _comportamento.atualizar(
 			delta, global_position, _jogador.global_position
 		)
@@ -82,6 +117,8 @@ func _physics_process(delta: float) -> void:
 
 
 func receber_dano(quantidade: int) -> void:
+	if companheiro:
+		return  ## o jogador não machuca o próprio companheiro
 	vida_atual = max(0, vida_atual - quantidade)
 	if vida_atual <= 0:
 		if especie.eh_animal:
@@ -104,12 +141,72 @@ func _dropar_comida() -> void:
 func _ao_tocar_jogador(corpo: Node3D) -> void:
 	if not corpo.is_in_group("player"):
 		return
-	if especie == null or not especie.eh_agressivo:
+	if companheiro or especie == null or not especie.eh_agressivo:
 		return
 	if _tempo_desde_dano_contato < INTERVALO_DANO_CONTATO_SEG:
 		return
 	_tempo_desde_dano_contato = 0.0
 	GameState.vida_atual = max(0, GameState.vida_atual - especie.dano_contato)
+
+
+## --- Companheiro (Ciclo 9, 9C) ---
+
+
+func _mover_companheiro() -> void:
+	if _jogador == null:
+		## No main.tscn o Companheiro nasce antes do Player entrar no grupo.
+		_jogador = get_tree().get_first_node_in_group("player")
+		if _jogador is CollisionObject3D:
+			add_collision_exception_with(_jogador)  ## não empurra nem trava o jogador
+	if _jogador == null:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		return
+	var cm := get_tree().get_first_node_in_group("chunk_manager") as ChunkManager
+	if cm != null and not cm.chunk_pronto_em(global_position):
+		velocity = Vector3.ZERO  ## chão ainda sem colisão: espera, não cai (ADR-026)
+		return
+	if _longe_demais() or _na_agua_funda():
+		_teleportar_para_perto()
+		return
+	var direcao: Vector3 = _comportamento.atualizar_companheiro(
+		global_position, _jogador.global_position
+	)
+	var velocidade: float = maxf(especie.velocidade, VELOCIDADE_COMPANHEIRO_MIN)
+	velocity.x = direcao.x * velocidade
+	velocity.z = direcao.z * velocidade
+	## Degrau: encostou numa parede andando no chão, pula como o jogador.
+	if is_on_floor() and is_on_wall() and direcao != Vector3.ZERO:
+		velocity.y = Player.FORCA_PULO
+
+
+func _longe_demais() -> bool:
+	return (
+		global_position.distance_to(_jogador.global_position) > DIST_TELEPORTE
+		or global_position.y < Player.ALTURA_LIMITE_QUEDA
+	)
+
+
+func _na_agua_funda() -> bool:
+	var cm := get_tree().get_first_node_in_group("chunk_manager") as ChunkManager
+	if cm == null:
+		return false
+	var pos := Vector3i(global_position.floor())
+	return (
+		cm.get_block(pos) == BlockRegistry.AGUA_ID
+		and cm.get_block(pos + Vector3i.UP) == BlockRegistry.AGUA_ID
+	)
+
+
+func _teleportar_para_perto() -> void:
+	var alvo: Vector3 = _jogador.global_position + Vector3(DESLOCAMENTO_TELEPORTE, 0.0, 0.0)
+	var cm := get_tree().get_first_node_in_group("chunk_manager") as ChunkManager
+	if cm != null:
+		var topo: int = cm.altura_da_superficie(int(floor(alvo.x)), int(floor(alvo.z)))
+		if topo >= 0:
+			alvo.y = maxf(alvo.y, topo + 1.4)
+	global_position = alvo
+	velocity = Vector3.ZERO
 
 
 ## --- Visual (Frente 5B) ---
