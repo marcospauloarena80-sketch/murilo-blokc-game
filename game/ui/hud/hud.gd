@@ -148,6 +148,7 @@ func _ready() -> void:
 	_criar_cartao_objetivo()
 	_criar_toast()
 	_criar_dicas()
+	_criar_minimapa()
 	## Nome do alvo logo abaixo da mira "+", centrado como o aviso.
 	_label_alvo = _criar_label(16)
 	_label_alvo.set_anchors_preset(Control.PRESET_CENTER)
@@ -378,6 +379,10 @@ func _criar_toast() -> void:
 	_label_aviso = _criar_label(24, _painel_aviso)
 	_label_aviso.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label_aviso.visible = false
+
+
+func _criar_minimapa() -> void:
+	$Control.add_child(Minimapa.new())
 
 
 func _criar_dicas() -> void:
