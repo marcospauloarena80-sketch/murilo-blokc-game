@@ -36,6 +36,11 @@ const ALTURA_LIMITE_QUEDA: float = -20.0
 ## superfície está em y+1. Margem pequena pra não nascer dentro do chão.
 const ALTURA_ACIMA_DO_BLOCO: float = 2.0
 const PITCH_INICIAL_CAMERA: float = -0.35
+## Câmera abre um pouco ao correr (Ciclo 5): sensação de velocidade sem enjoar.
+const FOV_PARADO: float = 72.0
+const FOV_CORRIDA: float = 80.0
+const VELOCIDADE_FOV: float = 6.0  ## fração por segundo do lerp
+const ALTURA_QUEDA_POEIRA: float = 1.5  ## acima disso, aterrissar levanta poeira
 
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
@@ -210,11 +215,17 @@ func _physics_process(delta: float) -> void:
 			_y_inicio_queda = global_position.y
 	elif _estava_no_ar:
 		_estava_no_ar = false
+		var altura_queda := _y_inicio_queda - global_position.y
+		if altura_queda > ALTURA_QUEDA_POEIRA:
+			EventBus.player_landed.emit(
+				global_position - Vector3(0.0, DESLOCAMENTO_SONDA_PES, 0.0), altura_queda
+			)
 		if GameState.current_state == GameState.State.PLAYING:
-			_aplicar_dano_de_queda(_y_inicio_queda - global_position.y)
+			_aplicar_dano_de_queda(altura_queda)
 
 	var jogando := GameState.current_state == GameState.State.PLAYING
 	_liberar_mouse_se_necessario(jogando)
+	var esta_correndo := false
 
 	if jogando:
 		if Input.is_action_just_pressed("pular") and is_on_floor():
@@ -224,7 +235,7 @@ func _physics_process(delta: float) -> void:
 			"mover_esquerda", "mover_direita", "mover_frente", "mover_tras"
 		)
 		var direcao := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-		var esta_correndo := (
+		esta_correndo = (
 			Input.is_action_pressed("correr")
 			and direcao != Vector3.ZERO
 			and GameState.energia_atual > 0
@@ -246,6 +257,7 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_animar_membros(delta)
+	_atualizar_fov(delta, esta_correndo)
 
 	if jogando:
 		_processar_selecao_de_bloco()
@@ -267,6 +279,11 @@ func _animar_membros(delta: float) -> void:
 	_ombro_direito.rotation.x = -angulo
 	_quadril_esquerdo.rotation.x = -angulo
 	_quadril_direito.rotation.x = angulo
+
+
+func _atualizar_fov(delta: float, esta_correndo: bool) -> void:
+	var alvo := FOV_CORRIDA if esta_correndo else FOV_PARADO
+	_camera.fov = lerpf(_camera.fov, alvo, minf(1.0, VELOCIDADE_FOV * delta))
 
 
 func _processar_selecao_de_bloco() -> void:

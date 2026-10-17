@@ -33,3 +33,18 @@ func test_particulas_ficam_na_posicao_do_bloco_quebrado() -> void:
 
 	var particulas: GPUParticles3D = sistema.get_child(0)
 	assert_eq(particulas.position, Vector3(2.5, 3.5, 4.5))
+
+
+func test_aterrissar_cria_poeira_marrom_nos_pes() -> void:
+	var sistema := BlockBreakParticles.new()
+	add_child_autofree(sistema)
+
+	sistema._ao_aterrissar(Vector3(1.5, 2.0, 3.5), 2.0)
+
+	assert_eq(sistema.get_child_count(), 1)
+	var poeira: GPUParticles3D = sistema.get_child(0)
+	assert_true(poeira.emitting)
+	assert_eq(poeira.position, Vector3(1.5, 2.0, 3.5))
+	assert_eq(poeira.amount, BlockBreakParticles.QUANTIDADE_POEIRA)
+	assert_eq(poeira.lifetime, BlockBreakParticles.DURACAO_POEIRA)
+	assert_eq(poeira.process_material.color, BlockBreakParticles.COR_POEIRA)

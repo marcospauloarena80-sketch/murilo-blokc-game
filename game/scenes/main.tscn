@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" path="res://ui/credits_screen/credits_screen.tscn" id="17"]
 [ext_resource type="Script" path="res://systems/weather_system.gd" id="18"]
 [ext_resource type="Script" path="res://systems/block_break_particles.gd" id="19"]
+[ext_resource type="Script" path="res://systems/particulas_ambiente.gd" id="21"]
 [ext_resource type="PackedScene" path="res://ui/touch_controls/touch_controls.tscn" id="20"]
 [ext_resource type="Script" path="res://systems/sonda_teste_web.gd" id="sonda_teste_web"]
 [ext_resource type="Shader" path="res://assets/shaders/ceu.gdshader" id="ceu"]
@@ -87,6 +88,9 @@ script = ExtResource("18")
 
 [node name="BlockBreakParticles" type="Node3D" parent="."]
 script = ExtResource("19")
+
+[node name="ParticulasAmbiente" type="Node3D" parent="."]
+script = ExtResource("21")
 
 [node name="SondaTesteWeb" type="Node" parent="."]
 script = ExtResource("sonda_teste_web")

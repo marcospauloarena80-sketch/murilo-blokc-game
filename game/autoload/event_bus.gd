@@ -12,6 +12,9 @@ signal item_collected(item_id: String, amount: int)
 signal chest_requested(chave: String)
 signal recipe_crafted(recipe_id: String)
 signal player_died
+## Jogador tocou o chão depois de cair mais de 1,5 bloco (Ciclo 5): pos é a
+## posição dos pés; só cosmético (poeira), o dano de queda fica no Player.
+signal player_landed(pos: Vector3, altura_queda: float)
 signal day_started
 signal night_started
 signal battle_started(criatura: Creature)
