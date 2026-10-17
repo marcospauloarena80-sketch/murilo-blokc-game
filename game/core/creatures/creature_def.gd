@@ -8,6 +8,10 @@ extends Resource
 @export var nome: String = ""
 @export var elemento: String = ""  ## pedra | mato | brasa | gota | vento | faisca
 @export var cor: Color = Color.WHITE
+## Visual (Ciclo 5, Frente 5B): só muda a caixa desenhada, a colisão fica 0,7³.
+## cubo = 0,7³ | achatado = 0,9 x 0,45 x 0,9 | alto = 0,5 x 0,9 x 0,5
+@export var formato: String = "cubo"
+@export var cor_secundaria: Color = Color.WHITE  ## faixa na base, na cor do elemento
 @export var vida_maxima: int = 10  ## também é o Vigor da F8 (docs/01-GDD.md §9)
 @export var velocidade: float = 2.0
 @export var raio_deteccao: float = 6.0
