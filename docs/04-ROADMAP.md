@@ -2,6 +2,18 @@
 
 Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabalho focado com IA). Regra de gate: **nenhum item da fase N+1 começa antes de todos os critérios da fase N passarem** — inclusive a validação com o Murilo quando indicada.
 
+## Estado real em 17/out/2026 (leia antes das fases)
+
+As fases F1 a F12 abaixo registram o que foi construído e o que a CI validava. A auditoria de 30/set/2026 (ADR-026/027) mostrou que o loop central nunca tinha sido jogado de verdade: a mira não alcançava o mundo, o mundo era desenhado do avesso, o primeiro Cubelin era inalcançável e o build publicado perdia listas dos recursos. Desde então a definição de pronto passou a ser jogar o Golden Path no build, e o trabalho segue em ciclos registrados nos ADRs e em `docs/superpowers/plans/2026-10-17-ciclos-5-a-9.md`:
+
+- [x] Ciclos 1 a 4b (ADR-027): carregamento em fluxo, mira, progressão até o primeiro Cubelin, mundo com texturas, céu, lagos e vegetação, correções de jogabilidade. Golden Path (menu até Continuar) jogado de ponta a ponta.
+- [x] Ciclo 5 (ADR-028): NPCs humanoides com rosto e placa, Cubelins com olhos e nome, partículas, áudio gerado em código que toca na Web.
+- [x] Ciclo 6 (ADR-028): tema, ícones de itens, HUD com corações e objetivo, menu com o mundo ao fundo, opções, regeneração, dormir, craft com as duas mochilas.
+- [ ] Ciclo 7: replay completo e documentação (em andamento).
+- [ ] Ciclo 8: Mundo vivo (comida, plantio, bichos, blocos de construção, casas, minimapa, agachar, ferramentas com tier e durabilidade, cavernas).
+- [ ] Ciclo 9: Cubelins vivos (nível por região, batalha com visual, companheiro, caderno de espécies, apelido, treinadores).
+- [ ] Teste completo final no build publicado e aprovação do Murilo.
+
 ## F0 — Pré-produção ✅
 - **Objetivo:** toda a documentação de design e arquitetura antes de qualquer código.
 - **Dependências:** —
@@ -197,7 +209,7 @@ Estimativas em **sessões de desenvolvimento** (uma sessão = um bloco de trabal
   - [x] 425/425 testes GUT (73 scripts); gdformat/gdlint limpos no projeto inteiro; smoke headless (menu 60 frames + main 180 frames) sem erros; exports web/macOS/Windows locais ok
   - [x] Confirmado no navegador: menu renderiza, zero erros de console
   - [x] CI verde (commit `f9e76ab`): [run 29690031107](https://github.com/marcospauloarena80-sketch/murilo-blokc-game/actions/runs/29690031107) — lint, test, export-web todos success
-  - [ ] Murilo aprova a 1.0 — pendente do playtest real
+  - [ ] Murilo aprova a 1.0 — pendente; a "1.0" de 19/jul não era jogável (ver Estado real acima)
 
 ---
 

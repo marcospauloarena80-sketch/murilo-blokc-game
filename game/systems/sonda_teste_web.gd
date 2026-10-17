@@ -19,6 +19,7 @@ var _cb_spawnar: JavaScriptObject
 var _cb_especies: JavaScriptObject
 var _cb_medir: JavaScriptObject
 var _cb_limpar: JavaScriptObject
+var _cb_teleportar: JavaScriptObject
 ## Frente 5D (áudio)
 var _cb_audio: JavaScriptObject
 var _janela: JavaScriptObject
@@ -49,6 +50,8 @@ func _ready() -> void:
 	_janela.muriloMedir = _cb_medir
 	_cb_limpar = JavaScriptBridge.create_callback(_limpar_criaturas)
 	_janela.muriloLimparCriaturas = _cb_limpar
+	_cb_teleportar = JavaScriptBridge.create_callback(_teleportar)
+	_janela.muriloTeleportar = _cb_teleportar
 	## Frente 5D (áudio)
 	_cb_audio = JavaScriptBridge.create_callback(_audio)
 	_janela.muriloAudio = _cb_audio
@@ -306,3 +309,11 @@ func _posicoes_dos_players() -> Array:
 		if player != null and player.playing:
 			posicoes.append(snappedf(player.get_playback_position(), 0.01))
 	return posicoes
+
+
+func _teleportar(args: Array) -> void:
+	## Só pra teste: sai de buracos que a automação cavou. Pés em (x, y, z).
+	var jogador := _jogador()
+	if jogador != null and args.size() >= 3:
+		jogador.global_position = Vector3(float(args[0]), float(args[1]) + 0.95, float(args[2]))
+		jogador.velocity = Vector3.ZERO

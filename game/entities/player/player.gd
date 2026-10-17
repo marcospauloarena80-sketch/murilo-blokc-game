@@ -459,9 +459,27 @@ func _processar_interacao(bloco_mirado: Vector3i) -> void:
 		EventBus.chest_requested.emit(GameState.chave_posicao(bloco_mirado))
 
 
+func _celula_invade_o_corpo(celula: Vector3i) -> bool:
+	## Cápsula do jogador (raio ~0,3, altura 1,9, pés em global_position.y - 0,95)
+	## contra o cubo da célula.
+	var pes := global_position.y - 0.95
+	var minimo := Vector3(celula)
+	var maximo := minimo + Vector3.ONE
+	return (
+		global_position.x + 0.3 > minimo.x
+		and global_position.x - 0.3 < maximo.x
+		and global_position.z + 0.3 > minimo.z
+		and global_position.z - 0.3 < maximo.z
+		and pes + 1.9 > minimo.y
+		and pes < maximo.y
+	)
+
+
 func _tentar_colocar_bloco(adjacente: Vector3i) -> void:
 	## Só ar e água aceitam bloco. A água é substituída (lago raso, mirando o
 	## fundo) e não entra no save, então Continuar fica consistente.
+	if _celula_invade_o_corpo(adjacente):
+		return  ## bloco dentro do corpo prendia o jogador (achado no replay do Ciclo 7)
 	var id_destino := _chunk_manager.get_block(adjacente)
 	if id_destino != BlockRegistry.AR_ID and id_destino != BlockRegistry.AGUA_ID:
 		return

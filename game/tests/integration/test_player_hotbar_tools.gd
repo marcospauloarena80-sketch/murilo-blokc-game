@@ -135,3 +135,20 @@ func test_colocar_bloco_onde_o_mundo_nao_aceita_nao_consome_item() -> void:
 	player._tentar_colocar_bloco(Vector3i(-1, 40, 3))
 
 	assert_eq(GameState.inventario_hotbar.contar("pedra"), 5, "nada colocado, nada gasto")
+
+
+func test_colocar_bloco_dentro_do_proprio_corpo_nao_acontece() -> void:
+	var cm := ChunkManager.new()
+	cm.world_seed = 1
+	add_child_autofree(cm)
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
+	GameState.inventario_hotbar.adicionar("pedra", 5)
+	var player := PlayerScene.instantiate() as Player
+	add_child_autofree(player)
+	player.global_position = Vector3(3.5, 41.0, 3.5)  # pés em y=40,05
+
+	player._tentar_colocar_bloco(Vector3i(3, 40, 3))
+
+	assert_eq(cm.get_block(Vector3i(3, 40, 3)), 0, "a célula dos pés pertence ao jogador")
+	assert_eq(GameState.inventario_hotbar.contar("pedra"), 5, "nada gasto")

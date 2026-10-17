@@ -176,3 +176,7 @@ Criaturas elementais cúbicas do Vale Dourado. **Nada de nomes/designs de IPs ex
 | Arenas + insígnias + desafio final | F10 |
 | Biomas extras, clima, áudio, mapa | F11 |
 | 1.0: balanceamento, touch, exports | F12 |
+
+## 17. Estado de implementação (17/out/2026)
+
+O que existe de verdade, validado jogando (detalhes nos ADR-026 a 028): mundo finito 128x128x64 com 5 biomas em anéis, lagos, texturas e céu próprios; minerar, construir, craft por lista com bancada e fornalha, baú, tocha, cama (renascimento e dormir à noite), fome com regeneração, dia e noite, clima; Cubelins por bioma e período com batalha por turnos, captura, equipe de 3 com depósito, XP e evolução, 4 arenas e desafio final; NPCs com rosto, placa e missões; HUD com corações, cartão de objetivo e ícones; áudio gerado em código. Ainda não existe (planejado nos Ciclos 8 e 9): comida além da maçã, bichos, plantio, blocos não cúbicos, casas no vilarejo, minimapa, agachar, durabilidade e tier mínimo de ferramenta, túneis de caverna, nível de selvagem por região, batalha com visual das criaturas, Cubelin companheiro, caderno de espécies, apelido, treinadores pelo mundo.
