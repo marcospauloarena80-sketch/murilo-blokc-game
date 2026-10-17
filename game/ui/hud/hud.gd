@@ -9,6 +9,8 @@ const TAMANHO_SLOT := Vector2(44, 44)
 const COR_SLOT_VAZIO := Color(0.15, 0.15, 0.15, 0.6)
 const DURACAO_AVISO_SEG: float = 3.0
 const DURACAO_AVISO_IMPORTANTE_SEG: float = 5.0
+## Dica de tecla mostrada ao lado do nome do alvo sob a mira (Ciclo 5, 5E).
+const DICA_POR_TIPO: Dictionary = {"npc": "E falar", "criatura": "E desafiar", "bloco": "Q quebrar"}
 
 var _botoes: Array[Button] = []
 ## Um par (normal, selecionado) por slot, criado uma vez: antes, _process criava
@@ -21,6 +23,8 @@ var _ultimo_selecionado: Array[bool] = []
 var _chunk_manager: ChunkManager
 var _label_objetivo: Label
 var _label_aviso: Label
+var _label_alvo: Label
+var _jogador: Player
 var _tempo_aviso: float = 0.0
 var _aviso_importante: bool = false
 
@@ -64,6 +68,16 @@ func _ready() -> void:
 	_label_aviso.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_label_aviso.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label_aviso.visible = false
+	## Nome do alvo logo abaixo da mira "+", centrado como o aviso.
+	_label_alvo = _criar_label(16)
+	_label_alvo.set_anchors_preset(Control.PRESET_CENTER)
+	_label_alvo.offset_left = 0
+	_label_alvo.offset_right = 0
+	_label_alvo.offset_top = 28
+	_label_alvo.offset_bottom = 28
+	_label_alvo.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_label_alvo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_label_alvo.visible = false
 	EventBus.item_collected.connect(_ao_coletar_item)
 	EventBus.quest_completed.connect(_ao_concluir_missao)
 
@@ -125,6 +139,7 @@ func _process(delta: float) -> void:
 	_atualizar_label_carregando()
 	## A mira só faz sentido jogando; pausado ela ficava por cima dos menus.
 	_mira.visible = GameState.current_state == GameState.State.PLAYING
+	_atualizar_label_alvo()
 	_label_objetivo.text = texto_objetivo()
 	## O aviso só conta tempo jogando: concluído dentro da batalha ou do
 	## inventário, ele espera a tela fechar pra ser lido (senão expirava coberto).
@@ -135,6 +150,20 @@ func _process(delta: float) -> void:
 		_atualizar_slot(i)
 	_barra_vida.max_value = GameState.vida_maxima
 	_barra_vida.value = GameState.vida_atual
+
+
+func _atualizar_label_alvo() -> void:
+	## Nome do que está sob a mira com a dica de tecla (Ciclo 5, 5E), lido do
+	## jogador (grupo "player"), que o atualiza junto com o raio da mira. Só
+	## aparece com a mira: fora de PLAYING ficaria por cima dos menus.
+	if not is_instance_valid(_jogador):
+		_jogador = get_tree().get_first_node_in_group("player") as Player
+	var texto := ""
+	if _mira.visible and _jogador != null and _jogador.alvo_mirado != "":
+		var dica: String = DICA_POR_TIPO.get(_jogador.alvo_tipo, "")
+		texto = _jogador.alvo_mirado if dica == "" else "%s  %s" % [_jogador.alvo_mirado, dica]
+	_label_alvo.text = texto
+	_label_alvo.visible = texto != ""
 
 
 func _atualizar_label_carregando() -> void:

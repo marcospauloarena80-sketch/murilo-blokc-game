@@ -82,6 +82,8 @@ func _estado(_args: Array) -> void:
 			snappedf(jogador.velocity.x, 0.01), snappedf(jogador.velocity.z, 0.01)
 		]
 		dados["progresso_quebra"] = snappedf(jogador._progresso_quebra, 0.01)
+		## Nome e tipo do alvo sob a mira, como o HUD mostra (Ciclo 5, 5E).
+		dados["alvo"] = {"nome": jogador.alvo_mirado, "tipo": jogador.alvo_tipo}
 		dados["acoes"] = {
 			"quebrar": Input.is_action_pressed("quebrar"),
 			"frente": Input.is_action_pressed("mover_frente"),

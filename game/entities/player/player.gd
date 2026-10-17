@@ -42,6 +42,12 @@ const FOV_CORRIDA: float = 80.0
 const VELOCIDADE_FOV: float = 6.0  ## fração por segundo do lerp
 const ALTURA_QUEDA_POEIRA: float = 1.5  ## acima disso, aterrissar levanta poeira
 
+## O que está sob a mira neste quadro, pro HUD e pra sonda (Ciclo 5, 5E): nome
+## do NPC, da criatura ou do bloco e o tipo ("npc" | "criatura" | "bloco");
+## vazios quando a mira não acerta nada.
+var alvo_mirado: String = ""
+var alvo_tipo: String = ""
+
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
 var _progresso_quebra: float = 0.0
@@ -374,12 +380,17 @@ func _processar_mira_e_interacao(delta: float) -> void:
 	if resultado.is_empty():
 		_outline.visible = false
 		_progresso_quebra = 0.0
+		alvo_mirado = ""
+		alvo_tipo = ""
 		return
 
 	var colisor: Node = resultado.get("collider")
 	if colisor != null and colisor.is_in_group("creature"):
 		_outline.visible = false
 		_progresso_quebra = 0.0
+		var especie := (colisor as Creature).especie
+		alvo_tipo = "criatura"
+		alvo_mirado = especie.nome if especie != null else ""
 		if Input.is_action_just_pressed("quebrar") and _tempo_desde_ataque >= INTERVALO_ATAQUE_SEG:
 			_tempo_desde_ataque = 0.0
 			(colisor as Creature).receber_dano(_dano_de_ataque_atual())
@@ -390,6 +401,9 @@ func _processar_mira_e_interacao(delta: float) -> void:
 	if colisor != null and colisor.is_in_group("npc"):
 		_outline.visible = false
 		_progresso_quebra = 0.0
+		var def_npc := (colisor as Npc).def
+		alvo_tipo = "npc"
+		alvo_mirado = def_npc.nome if def_npc != null else ""
 		if Input.is_action_just_pressed("interagir"):
 			EventBus.dialogue_started.emit(colisor)
 		return
@@ -399,6 +413,9 @@ func _processar_mira_e_interacao(delta: float) -> void:
 	var bloco_mirado := Vector3i(
 		floori(ponto_dentro.x), floori(ponto_dentro.y), floori(ponto_dentro.z)
 	)
+	var def_bloco := BlockRegistry.get_block(_chunk_manager.get_block(bloco_mirado))
+	alvo_tipo = "bloco"
+	alvo_mirado = def_bloco.nome if def_bloco != null else ""
 
 	_outline.visible = true
 	_outline.global_position = Vector3(bloco_mirado) + Vector3(0.5, 0.5, 0.5)
