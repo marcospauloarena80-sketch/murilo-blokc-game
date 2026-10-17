@@ -7,7 +7,6 @@ const LADO_ICONE_RECEITA: int = 20
 
 var _botoes_mochila: Array[Button] = []
 var _slots_mochila: Array[SlotItem] = []
-var _craft_service := CraftService.new()
 var _aberto: bool = false
 
 @onready var _grid_mochila: GridContainer = $Control/Painel/Margem/VBox/GridMochila
@@ -81,24 +80,9 @@ func _criar_linha_receita(receita: RecipeDef) -> void:
 	_lista_receitas.add_child(linha)
 
 
-func _receita_desbloqueada(receita: RecipeDef) -> bool:
-	var quest_ok := (
-		receita.requer_quest == "" or GameState.quests_concluidas.has(receita.requer_quest)
-	)
-	var insignia_ok := (
-		receita.requer_insignia == "" or GameState.tem_insignia(receita.requer_insignia)
-	)
-	return quest_ok and insignia_ok
-
-
 func _ao_craftar(receita: RecipeDef) -> void:
-	var sucesso := _craft_service.craftar(
-		GameState.inventario_mochila,
-		receita,
-		GameState.tem_bancada(),
-		GameState.tem_fornalha(),
-		_receita_desbloqueada(receita)
-	)
+	## Ingredientes contam hotbar + mochila (Ciclo 6, 6E).
+	var sucesso := GameState.craftar(receita)
 	if sucesso:
 		EventBus.recipe_crafted.emit(receita.id)
 	_atualizar()
@@ -121,10 +105,4 @@ func _atualizar() -> void:
 		var linha: HBoxContainer = _lista_receitas.get_child(i)
 		var receita: RecipeDef = receitas[i]
 		var botao_craftar: Button = linha.get_child(linha.get_child_count() - 1)
-		botao_craftar.disabled = not _craft_service.pode_craftar(
-			GameState.inventario_mochila,
-			receita,
-			GameState.tem_bancada(),
-			GameState.tem_fornalha(),
-			_receita_desbloqueada(receita)
-		)
+		botao_craftar.disabled = not GameState.pode_craftar(receita)
