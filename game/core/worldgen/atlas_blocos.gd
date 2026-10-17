@@ -40,6 +40,11 @@ const NOMES: Array[String] = [
 	"trigo_2",
 	"trigo_3",
 	"terra_arada_topo",
+	## Frente 8C (blocos de construção)
+	"tabuas",
+	"vidro",
+	"porta_baixo",
+	"porta_cima",
 ]
 
 static var _textura: Texture2DArray

@@ -214,6 +214,20 @@ func set_block(world_pos: Vector3i, id: int) -> void:
 	_marcar_sujo_com_vizinhos(coord, local)
 
 
+func trocar_estado_do_bloco(world_pos: Vector3i, id: int) -> void:
+	## Troca o id de um bloco que já existe (porta abrindo e fechando, 8C) sem
+	## drop, som nem missão: não é quebrar nem construir. Entra no save.
+	if world_pos.y < 0 or world_pos.y >= ChunkData.SIZE_V:
+		return
+	var coord := _coord_do_chunk(world_pos)
+	if not _chunks.has(coord):
+		return
+	var local := Vector3i(world_pos.x & _MASCARA_LOCAL, world_pos.y, world_pos.z & _MASCARA_LOCAL)
+	(_chunks[coord] as ChunkData).set_block(local.x, local.y, local.z, id)
+	_edicoes[world_pos] = id
+	_marcar_sujo_com_vizinhos(coord, local)
+
+
 func exportar_delta() -> Dictionary:
 	## Chaves viram String pra caber em JSON (ADR-006).
 	var resultado: Dictionary = {}

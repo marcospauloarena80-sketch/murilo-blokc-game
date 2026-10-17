@@ -34,7 +34,11 @@ void vertex() {
 }
 
 void fragment() {
-	vec3 cor = texture(texturas, vec3(UV, camada)).rgb;
+	vec4 amostra = texture(texturas, vec3(UV, camada));
+	if (amostra.a < 0.5) {
+		discard; // vidro (8C): os furos do tile deixam ver através
+	}
+	vec3 cor = amostra.rgb;
 	ALBEDO = cor * oclusao;
 	EMISSION = cor * brilho * 1.6;
 }

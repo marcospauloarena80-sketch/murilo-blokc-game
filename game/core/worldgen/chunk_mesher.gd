@@ -36,9 +36,11 @@ const _CANTOS := [
 ## Luz do canto pela quantidade de vizinhos que o encobrem (3 = livre).
 const _LUZ_AO: Array[float] = [0.42, 0.62, 0.81, 1.0]
 const _BORDA_DESCONHECIDA: int = 2
+const _GRADE_VIDRO: int = 3  ## célula de vidro na grade (não oclui, mas some entre vidros)
 const _GRAMA_ID: int = 1
 const _DENSIDADE_DECORACAO: float = 0.14  ## fração das gramas com capim ou flor
 const _ALTURA_AGUA: float = 0.88  ## topo do lago um pouco abaixo da margem
+const _ESPESSURA_PORTA: float = 0.2
 
 ## Cantos e UVs por (face * 4 + canto), montados uma vez (sem match por vértice).
 static var _tab_cantos := PackedVector3Array()
@@ -51,6 +53,7 @@ func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 	var oclusao: PackedByteArray = BlockRegistry.tabela_oclusao()
 	var texturas: PackedInt32Array = BlockRegistry.tabela_texturas()
 	var brilhos: PackedFloat32Array = BlockRegistry.tabela_brilhos()
+	var formas: PackedByteArray = BlockRegistry.tabela_formas()
 	var h: int = ChunkData.SIZE_H
 	var v: int = ChunkData.SIZE_V
 
@@ -69,6 +72,13 @@ func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 				var id: int = dados[i]
 				if id != BlockRegistry.AR_ID:
 					grade[linha + x] = oclusao[id]
+					## Só cubo cheio oclui (1); vidro vale 3 (esconde só a face de outro
+					## vidro); laje, escada, porta e cerca não ocluem (8C).
+					var forma_id: int = formas[id]
+					if forma_id == BlockRegistry.FORMA_CUBO:
+						grade[linha + x] = solidos[id]
+					elif forma_id == BlockRegistry.FORMA_VIDRO:
+						grade[linha + x] = _GRADE_VIDRO
 					y_max = y
 	if y_max < 0:
 		return null
@@ -91,6 +101,8 @@ func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 	var uvs := PackedVector2Array()
 	var indices := PackedInt32Array()
 	var luz := PackedFloat32Array([1.0, 1.0, 1.0, 1.0])
+	var caixas := _NovaMalha.new()  ## laje, escada, porta e cerca (8C), juntadas no fim
+	var camada_h: int = h * h
 	i = -1
 	for y in range(y_max + 1):
 		for z in range(h):
@@ -111,9 +123,32 @@ func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 					continue  # bloco enterrado: o caso mais comum, sai cedo
 				var origem := Vector3(x, y, z)
 				var brilho: float = brilhos[id]
+				var forma_id: int = formas[id]
+				if forma_id >= BlockRegistry.FORMA_LAJE:
+					var abaixo: int = dados[i - camada_h] if y > 0 else BlockRegistry.AR_ID
+					var vizinhos_cheios: int = 0
+					for f in range(6):
+						if grade[g + desloc[f]] == 1:
+							vizinhos_cheios |= 1 << f
+					for caixa: Array in _caixas_da_forma(forma_id, id, abaixo):
+						_caixa(
+							caixas,
+							caixa[0],
+							caixa[1],
+							caixa[2],
+							vizinhos_cheios,
+							texturas,
+							id,
+							origem,
+							brilho
+						)
+					continue
 				for f in range(6):
 					var fora: int = g + desloc[f]
-					if grade[fora] == 1:
+					if (
+						grade[fora] == 1
+						or (forma_id == BlockRegistry.FORMA_VIDRO and grade[fora] == _GRADE_VIDRO)
+					):
 						continue
 					var base: int = verts.size()
 					var camada_tex: float = texturas[id * 6 + f] / 255.0
@@ -144,6 +179,13 @@ func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 					indices.append(base + (3 + d) % 4)
 					indices.append(base + (2 + d) % 4)
 
+	if not caixas.indices.is_empty():
+		var deslocamento: int = verts.size()
+		verts.append_array(caixas.verts)
+		cores_v.append_array(caixas.cores)
+		uvs.append_array(caixas.uvs)
+		for k: int in caixas.indices:
+			indices.append(deslocamento + k)
 	if indices.is_empty():
 		return null
 	var arrays: Array = []
@@ -155,6 +197,70 @@ func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 	var malha := ArrayMesh.new()
 	malha.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return malha
+
+
+static func _caixas_da_forma(forma_id: int, id: int, id_abaixo: int) -> Array:
+	## Formas não cúbicas (8C): caixas dentro da célula, orientação fixa (MVP).
+	## Cada caixa é [mínimo, máximo, faces ocultas (bit por face)].
+	var caixas: Array = []
+	match forma_id:
+		BlockRegistry.FORMA_LAJE:
+			caixas.append([Vector3(0, 0, 0), Vector3(1, 0.5, 1), 0])
+		BlockRegistry.FORMA_ESCADA:
+			caixas.append([Vector3(0, 0, 0), Vector3(1, 0.5, 1), 0])
+			caixas.append([Vector3(0, 0.5, 0), Vector3(1, 1, 0.5), 1 << 1])  # degrau alto ao norte
+		BlockRegistry.FORMA_PORTA:
+			## O topo acompanha o estado do bloco de baixo.
+			var estado: int = id_abaixo if id == BlockRegistry.PORTA_TOPO_ID else id
+			if estado == BlockRegistry.PORTA_ABERTA_ID:
+				caixas.append([Vector3(0, 0, 0), Vector3(_ESPESSURA_PORTA, 1, 1), 0])
+			else:
+				caixas.append([Vector3(0, 0, 0), Vector3(1, 1, _ESPESSURA_PORTA), 0])
+		BlockRegistry.FORMA_CERCA:
+			caixas.append([Vector3(0.375, 0, 0.375), Vector3(0.625, 1, 0.625), 0])
+			caixas.append([Vector3(0, 0.3, 0.4375), Vector3(1, 0.45, 0.5625), 0])
+			caixas.append([Vector3(0, 0.65, 0.4375), Vector3(1, 0.8, 0.5625), 0])
+	return caixas
+
+
+func _caixa(
+	m: _NovaMalha,
+	minimo: Vector3,
+	maximo: Vector3,
+	faces_ocultas: int,
+	vizinhos_cheios: int,
+	texturas: PackedInt32Array,
+	id: int,
+	origem: Vector3,
+	brilho: float
+) -> void:
+	## Face encostada na borda da célula some quando o vizinho é um cubo cheio
+	## (bit na máscara vizinhos_cheios); sem oclusão de canto, luz cheia.
+	var tamanho: Vector3 = maximo - minimo
+	var na_borda := PackedByteArray(
+		[
+			int(maximo.y >= 1.0),
+			int(minimo.y <= 0.0),
+			int(minimo.z <= 0.0),
+			int(maximo.z >= 1.0),
+			int(maximo.x >= 1.0),
+			int(minimo.x <= 0.0),
+		]
+	)
+	for f in range(6):
+		if faces_ocultas & (1 << f) != 0:
+			continue
+		if na_borda[f] == 1 and vizinhos_cheios & (1 << f) != 0:
+			continue
+		var base: int = m.verts.size()
+		var cor := Color(1.0, texturas[id * 6 + f] / 255.0, f / 255.0, brilho)
+		for c in range(4):
+			var canto: Vector3 = _CANTOS[f][c]
+			var local: Vector3 = minimo + canto * tamanho
+			m.verts.append(origem + local)
+			m.cores.append(cor)
+			m.uvs.append(_uv(f, local))
+		m.indices.append_array([base, base + 2, base + 1, base, base + 3, base + 2])
 
 
 func _preencher_borda(

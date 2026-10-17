@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BlockDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/worldgen/block_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = 27
+nome = "Porta"
+dureza = 0.8
+drop_id = "porta"
+cor = Color(0.71, 0.55, 0.35, 1)
+solido = true
+textura_lado = "porta_baixo"
+forma = "porta"
+tipo_especial = "porta"

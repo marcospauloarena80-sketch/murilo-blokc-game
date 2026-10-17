@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BlockDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/worldgen/block_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = 24
+nome = "Vidro"
+dureza = 0.3
+drop_id = "vidro"
+cor = Color(0.72, 0.88, 0.96, 1)
+solido = true
+textura_lado = "vidro"
+forma = "vidro"
+transparente = true

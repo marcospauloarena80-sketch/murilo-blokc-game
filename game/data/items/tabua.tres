@@ -8,4 +8,4 @@ id = "tabua"
 nome = "Tábua"
 stack_maximo = 64
 cor = Color(0.71, 0.55, 0.35, 1)
-bloco_id = 0
+bloco_id = 23

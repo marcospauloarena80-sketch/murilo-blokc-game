@@ -5,6 +5,18 @@ extends RefCounted
 
 const AR_ID: int = 0
 const AGUA_ID: int = 16  ## não sólida: sem colisão, desenhada à parte (Ciclo 4)
+const PORTA_FECHADA_ID: int = 27  ## 8C: porta de 2 blocos; embaixo fechada, embaixo aberta
+const PORTA_ABERTA_ID: int = 28
+const PORTA_TOPO_ID: int = 29  ## bloco de cima, acompanha o estado do de baixo
+
+## Códigos de forma na tabela_formas() (8C). 0 = cubo cheio.
+const FORMA_CUBO: int = 0
+const FORMA_VIDRO: int = 1
+const FORMA_LAJE: int = 2
+const FORMA_ESCADA: int = 3
+const FORMA_PORTA: int = 4
+const FORMA_CERCA: int = 5
+const _NOMES_DE_FORMA: Array[String] = ["cubo", "vidro", "laje", "escada", "porta", "cerca"]
 
 static var _blocos: Dictionary = {
 	1: preload("res://data/blocks/grama.tres"),
@@ -29,6 +41,14 @@ static var _blocos: Dictionary = {
 	20: preload("res://data/blocks/trigo_2.tres"),
 	21: preload("res://data/blocks/trigo_3.tres"),
 	22: preload("res://data/blocks/terra_arada.tres"),
+	23: preload("res://data/blocks/tabua.tres"),
+	24: preload("res://data/blocks/vidro.tres"),
+	25: preload("res://data/blocks/laje.tres"),
+	26: preload("res://data/blocks/escada.tres"),
+	27: preload("res://data/blocks/porta_fechada.tres"),
+	28: preload("res://data/blocks/porta_aberta.tres"),
+	29: preload("res://data/blocks/porta_topo.tres"),
+	30: preload("res://data/blocks/cerca.tres"),
 }
 
 static var _tabela_solidos: PackedByteArray = PackedByteArray()
@@ -37,6 +57,7 @@ static var _tabela_texturas: PackedInt32Array = PackedInt32Array()
 static var _tabela_brilhos: PackedFloat32Array = PackedFloat32Array()
 static var _tabela_oclusao: PackedByteArray = PackedByteArray()
 static var _tabela_cruz: PackedByteArray = PackedByteArray()
+static var _tabela_formas: PackedByteArray = PackedByteArray()
 
 
 static func get_block(id: int) -> BlockDef:
@@ -120,6 +141,20 @@ static func e_oclusor(id: int) -> bool:
 static func e_cruz(id: int) -> bool:
 	var bloco := get_block(id)
 	return bloco != null and bloco.forma == "cruz"
+static func tabela_formas() -> PackedByteArray:
+	## 256 entradas: código FORMA_* de cada id (8C). Só FORMA_CUBO oclui vizinhos;
+	## FORMA_VIDRO esconde a face entre vidros, o resto vira caixas no mesher.
+	if _tabela_formas.is_empty():
+		_tabela_formas.resize(256)
+		for id: int in _blocos:
+			_tabela_formas[id] = maxi(0, _NOMES_DE_FORMA.find((_blocos[id] as BlockDef).forma))
+	return _tabela_formas
+
+
+static func e_oclusor(id: int) -> bool:
+	## Esconde as faces dos vizinhos: sólido e cubo cheio (vidro, laje, escada,
+	## porta e cerca não ocluem).
+	return e_solido(id) and tabela_formas()[id] == FORMA_CUBO
 
 
 static func e_solido(id: int) -> bool:

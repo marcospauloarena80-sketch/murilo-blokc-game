@@ -24,6 +24,8 @@ const AMBAR: Array[String] = ["c86e0a", "f0a020", "ffd070"]
 const CARNE_CRUA: Array[String] = ["a8323c", "d9545e", "f08a92"]
 const CARNE_ASSADA: Array[String] = ["5a2a10", "8e4a22", "c07a42"]
 const LA: Array[String] = ["b8b8c4", "ececf2", "ffffff"]
+## Itens que são bloco mas têm ícone próprio em vez do tile do atlas (8C).
+const ICONES_DESENHADOS: Array[String] = ["tabua", "vidro", "laje", "escada", "porta", "cerca"]
 
 
 func _init() -> void:
@@ -47,6 +49,7 @@ func _desenhar(item_id: String, atlas: Image) -> Image:
 	var def: ItemDef = ItemRegistry.get_item(item_id)
 	var img := Image.create(L, L, false, Image.FORMAT_RGBA8)
 	if def.bloco_id != 0 and item_id != "semente":  # semente tem desenho próprio
+	if def.bloco_id != 0 and not ICONES_DESENHADOS.has(item_id):
 		_copiar_tile(img, atlas, BlockRegistry.get_block(def.bloco_id).textura_lado)
 		return img
 	match item_id:
@@ -92,6 +95,16 @@ func _desenhar(item_id: String, atlas: Image) -> Image:
 			_carne(img, CARNE_ASSADA)
 		"la":
 			_la(img)
+		"vidro":
+			_vidro(img)
+		"laje":
+			_laje(img)
+		"escada":
+			_escada(img)
+		"porta":
+			_porta(img)
+		"cerca":
+			_cerca(img)
 		"carvao":
 			_pedras(img, CARVAO)
 		"ferrite":
@@ -277,6 +290,77 @@ func _tabua(img: Image) -> void:
 	_retangulo(img, 18, 18, 25, 18, cores[0])
 	_disco(img, Vector2(21.0, 16.0), 1.4, cores[0])
 	_ponto(img, 21, 16, cores[1])
+
+
+func _bloco_de_madeira(img: Image, x0: int, y0: int, x1: int, y1: int) -> void:
+	## Retângulo de tábua com luz em cima e sombra embaixo e à direita.
+	var cores := _cores(MADEIRA)
+	_retangulo(img, x0, y0, x1, y1, cores[1])
+	_retangulo(img, x0, y0, x1, y0, cores[2])
+	_retangulo(img, x0, y1, x1, y1, cores[0])
+	_retangulo(img, x1, y0, x1, y1, cores[0])
+
+
+func _vidro(img: Image) -> void:
+	var cores := _cores(VIDRO)
+	_retangulo(img, 5, 5, 26, 26, cores[1])
+	_retangulo(img, 5, 5, 26, 6, cores[2])
+	_retangulo(img, 5, 5, 6, 26, cores[2])
+	_retangulo(img, 5, 25, 26, 26, cores[0])
+	_retangulo(img, 25, 5, 26, 26, cores[0])
+	## Reflexos diagonais.
+	_linha(img, Vector2(9.0, 19.0), Vector2(17.0, 11.0), 1.6, Color.html("ffffff"))
+	_linha(img, Vector2(15.0, 22.0), Vector2(21.0, 16.0), 1.2, Color.html("ffffff"))
+
+
+func _laje(img: Image) -> void:
+	_bloco_de_madeira(img, 3, 17, 28, 25)
+	var cores := _cores(MADEIRA)
+	_retangulo(img, 9, 20, 15, 20, cores[0])
+	_retangulo(img, 19, 22, 25, 22, cores[0])
+
+
+func _escada(img: Image) -> void:
+	_bloco_de_madeira(img, 3, 17, 28, 26)
+	_bloco_de_madeira(img, 3, 8, 16, 17)
+	var cores := _cores(MADEIRA)
+	_retangulo(img, 6, 12, 12, 12, cores[0])
+	_retangulo(img, 18, 21, 25, 21, cores[0])
+
+
+func _porta(img: Image) -> void:
+	var cores := _cores(MADEIRA)
+	var escuro := _cores(CABO)
+	var vidro := _cores(VIDRO)
+	_retangulo(img, 8, 2, 23, 29, cores[1])
+	_retangulo(img, 8, 2, 23, 3, escuro[1])
+	_retangulo(img, 8, 2, 9, 29, escuro[1])
+	_retangulo(img, 22, 2, 23, 29, escuro[0])
+	_retangulo(img, 8, 29, 23, 29, escuro[0])
+	## Janelinha em cima, tábuas embaixo e maçaneta.
+	_retangulo(img, 12, 6, 19, 12, vidro[1])
+	_retangulo(img, 12, 6, 19, 6, vidro[2])
+	_retangulo(img, 15, 6, 16, 12, escuro[1])
+	for x: int in [13, 17, 21]:
+		_retangulo(img, x, 15, x, 27, escuro[0])
+	_disco(img, Vector2(20.0, 20.0), 1.4, Color.html("e8c24a"))
+
+
+func _cerca(img: Image) -> void:
+	var cores := _cores(MADEIRA)
+	var escuro := _cores(CABO)
+	## Duas travessas ligando dois postes.
+	_retangulo(img, 3, 10, 28, 13, cores[1])
+	_retangulo(img, 3, 10, 28, 10, cores[2])
+	_retangulo(img, 3, 13, 28, 13, escuro[1])
+	_retangulo(img, 3, 16, 28, 19, cores[1])
+	_retangulo(img, 3, 16, 28, 16, cores[2])
+	_retangulo(img, 3, 19, 28, 19, escuro[1])
+	for x0: int in [6, 21]:
+		_retangulo(img, x0, 5, x0 + 4, 28, cores[1])
+		_retangulo(img, x0, 5, x0 + 4, 6, cores[2])
+		_retangulo(img, x0 + 4, 5, x0 + 4, 28, cores[0])
+		_retangulo(img, x0, 28, x0 + 4, 28, cores[0])
 
 
 func _bancada(img: Image) -> void:

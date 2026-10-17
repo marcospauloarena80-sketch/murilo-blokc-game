@@ -44,6 +44,11 @@ static var _itens: Dictionary = {
 	"carne_crua": preload("res://data/items/carne_crua.tres"),
 	"carne_assada": preload("res://data/items/carne_assada.tres"),
 	"la": preload("res://data/items/la.tres"),
+	"vidro": preload("res://data/items/vidro.tres"),
+	"laje": preload("res://data/items/laje.tres"),
+	"escada": preload("res://data/items/escada.tres"),
+	"porta": preload("res://data/items/porta.tres"),
+	"cerca": preload("res://data/items/cerca.tres"),
 }
 
 

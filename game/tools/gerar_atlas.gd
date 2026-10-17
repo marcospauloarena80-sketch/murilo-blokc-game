@@ -92,6 +92,14 @@ func _desenhar(nome: String, semente: int) -> Image:
 			_trigo(img, rng, 22, Color.html("d9b43a"), true)
 		"terra_arada_topo":
 			_terra_arada_topo(img, rng)
+		"tabuas":
+			_tabuas(img, rng)
+		"vidro":
+			_vidro(img)
+		"porta_baixo":
+			_porta(img, rng, false)
+		"porta_cima":
+			_porta(img, rng, true)
 	return img
 
 
@@ -500,3 +508,54 @@ func _terra_arada_topo(img: Image, rng: RandomNumberGenerator) -> void:
 			_ponto(img, x, y, Color.html("4a2c16"))
 			_ponto(img, x, y + 1, Color.html("5f3b22"))
 			_ponto(img, x, y - 1, Color.html("a3744d"))
+func _vidro(img: Image) -> void:
+	## Moldura opaca e brilhos; o miolo fica transparente (o shader do terreno
+	## descarta alpha < 0,5), então o vidro deixa ver o outro lado.
+	var moldura := Color.html("9cc6e0")
+	var moldura_clara := Color.html("e8f6ff")
+	var moldura_escura := Color.html("5f8fb0")
+	for y: int in range(L):
+		for x: int in range(L):
+			var borda: int = mini(mini(x, L - 1 - x), mini(y, L - 1 - y))
+			if borda == 0:
+				img.set_pixel(x, y, moldura_clara if (x + y) % 2 == 0 else moldura)
+			elif borda == 1:
+				img.set_pixel(x, y, moldura_escura)
+	for k: int in range(4, 12):  # reflexo diagonal
+		img.set_pixel(k + 2, 16 - k, moldura_clara)
+		img.set_pixel(k + 6, 16 - k, moldura_clara)
+	for k: int in range(18, 24):
+		img.set_pixel(k, 38 - k, moldura_clara)
+
+
+func _porta(img: Image, rng: RandomNumberGenerator, parte_de_cima: bool) -> void:
+	## Porta de tábuas na vertical, com moldura. A de baixo leva a maçaneta; a
+	## de cima, uma janelinha de 4 vidros.
+	var madeira := _paleta(["a8743a", "b98245", "cf9a58", "8e5f2c"])
+	var n := _ruido(rng, 16)
+	for y: int in range(L):
+		for x: int in range(L):
+			var v: float = n[y * L + (x / 2)]
+			var cor: Color = madeira[2] if v > 0.66 else (madeira[1] if v > 0.4 else madeira[0])
+			if x % 8 == 7:
+				cor = Color.html("5e3c19")  # junta entre tábuas
+			elif x % 8 == 0:
+				cor = madeira[2]
+			img.set_pixel(x, y, cor)
+	var moldura := Color.html("5e3c19")
+	for y: int in range(L):
+		for x: int in range(L):
+			var na_beira: bool = x < 2 or x > L - 3
+			if (parte_de_cima and y < 2) or (not parte_de_cima and y > L - 3):
+				na_beira = true
+			if na_beira:
+				img.set_pixel(x, y, moldura)
+	if parte_de_cima:
+		for y: int in range(7, 21):
+			for x: int in range(8, 24):
+				var travessa: bool = x == 15 or x == 16 or y == 13 or y == 14
+				img.set_pixel(x, y, moldura if travessa else Color.html("a6d8fa"))
+	else:
+		for y: int in range(14, 19):
+			for x: int in range(23, 28):
+				img.set_pixel(x, y, Color.html("e8c24a") if y < 17 else Color.html("b8901f"))

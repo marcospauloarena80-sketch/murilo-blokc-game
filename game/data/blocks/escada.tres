@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BlockDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/worldgen/block_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = 26
+nome = "Escada"
+dureza = 0.8
+drop_id = "escada"
+cor = Color(0.71, 0.55, 0.35, 1)
+solido = true
+textura_lado = "tabuas"
+forma = "escada"

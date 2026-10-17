@@ -27,6 +27,11 @@ static var _receitas: Array[RecipeDef] = [
 	preload("res://data/recipes/pao.tres"),
 	preload("res://data/recipes/enxada_madeira.tres"),
 	preload("res://data/recipes/carne_assada.tres"),
+	preload("res://data/recipes/vidro.tres"),
+	preload("res://data/recipes/laje.tres"),
+	preload("res://data/recipes/escada.tres"),
+	preload("res://data/recipes/porta.tres"),
+	preload("res://data/recipes/cerca.tres"),
 ]
 
 

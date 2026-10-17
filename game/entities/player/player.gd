@@ -452,7 +452,9 @@ func _processar_mira_e_interacao(delta: float) -> void:
 		return
 
 	var normal: Vector3 = resultado["normal"]
-	var ponto_dentro: Vector3 = resultado["position"] - normal * 0.5
+	## Um fio para dentro da face acertada (não meio bloco): as formas finas de
+	## construção (porta, cerca, laje) têm faces no meio da célula.
+	var ponto_dentro: Vector3 = resultado["position"] - normal * 0.01
 	var bloco_mirado := Vector3i(
 		floori(ponto_dentro.x), floori(ponto_dentro.y), floori(ponto_dentro.z)
 	)
@@ -473,7 +475,7 @@ func _processar_mira_e_interacao(delta: float) -> void:
 		if def != null:
 			_progresso_quebra += delta * _multiplicador_ferramenta_atual()
 			if _progresso_quebra >= def.dureza:
-				_chunk_manager.set_block(bloco_mirado, BlockRegistry.AR_ID)
+				_quebrar_bloco(bloco_mirado)
 				_progresso_quebra = 0.0
 	else:
 		_progresso_quebra = 0.0
@@ -502,6 +504,44 @@ func _processar_interacao(bloco_mirado: Vector3i) -> void:
 			EventBus.aviso.emit("Você só consegue dormir à noite")
 	elif def.tipo_especial == "bau":
 		EventBus.chest_requested.emit(GameState.chave_posicao(bloco_mirado))
+	elif def.tipo_especial == "porta":
+		_alternar_porta(bloco_mirado, id_alvo)
+
+
+func _base_da_porta(pos: Vector3i, id: int) -> Vector3i:
+	## O topo da porta (29) olha o bloco de baixo; as outras partes são a base.
+	return pos + Vector3i.DOWN if id == BlockRegistry.PORTA_TOPO_ID else pos
+
+
+func _alternar_porta(pos: Vector3i, id: int) -> void:
+	## Abre ou fecha a porta (8C). O topo lê o estado da base no mesher, então
+	## só a base muda de id. Troca de estado não é construir nem quebrar.
+	var base := _base_da_porta(pos, id)
+	var id_base := _chunk_manager.get_block(base)
+	if id_base == BlockRegistry.PORTA_FECHADA_ID:
+		_chunk_manager.trocar_estado_do_bloco(base, BlockRegistry.PORTA_ABERTA_ID)
+	elif id_base == BlockRegistry.PORTA_ABERTA_ID:
+		_chunk_manager.trocar_estado_do_bloco(base, BlockRegistry.PORTA_FECHADA_ID)
+
+
+func _quebrar_bloco(pos: Vector3i) -> void:
+	## Quebra o bloco; porta sai inteira (base e topo), dropando uma vez só.
+	var id := _chunk_manager.get_block(pos)
+	var def := BlockRegistry.get_block(id)
+	_chunk_manager.set_block(pos, BlockRegistry.AR_ID)
+	if def == null or def.tipo_especial != "porta":
+		return
+	var era_topo: bool = id == BlockRegistry.PORTA_TOPO_ID
+	var parceiro := pos + (Vector3i.DOWN if era_topo else Vector3i.UP)
+	var id_parceiro := _chunk_manager.get_block(parceiro)
+	var parceiro_e_da_porta: bool = id_parceiro == BlockRegistry.PORTA_TOPO_ID
+	if era_topo:
+		parceiro_e_da_porta = (
+			id_parceiro == BlockRegistry.PORTA_FECHADA_ID
+			or id_parceiro == BlockRegistry.PORTA_ABERTA_ID
+		)
+	if parceiro_e_da_porta:
+		_chunk_manager.set_block(parceiro, BlockRegistry.AR_ID)
 
 
 func _tentar_arar(celula: Vector3i, id_alvo: int) -> bool:
@@ -540,10 +580,12 @@ func _celula_invade_o_corpo(celula: Vector3i) -> bool:
 func _tentar_colocar_bloco(adjacente: Vector3i) -> void:
 	## Só ar e água aceitam bloco. A água é substituída (lago raso, mirando o
 	## fundo) e não entra no save, então Continuar fica consistente.
-	if _celula_invade_o_corpo(adjacente):
-		return  ## bloco dentro do corpo prendia o jogador (achado no replay do Ciclo 7)
 	var id_destino := _chunk_manager.get_block(adjacente)
-	if id_destino != BlockRegistry.AR_ID and id_destino != BlockRegistry.AGUA_ID:
+	var destino_livre: bool = (
+		id_destino == BlockRegistry.AR_ID or id_destino == BlockRegistry.AGUA_ID
+	)
+	## Bloco dentro do corpo prendia o jogador (achado no replay do Ciclo 7).
+	if not destino_livre or _celula_invade_o_corpo(adjacente):
 		return
 	var item_id: String = GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
 	if item_id == "":
@@ -557,9 +599,32 @@ func _tentar_colocar_bloco(adjacente: Vector3i) -> void:
 		if not def_bloco.chao_exigido.has(chao):
 			EventBus.aviso.emit("Não dá pra plantar aqui")
 			return
+	var eh_porta: bool = def.bloco_id == BlockRegistry.PORTA_FECHADA_ID
+	if eh_porta and not _cabe_porta_em_cima(adjacente):
+		return
 	## Fora do mundo, acima do topo ou em chunk ainda não gerado o set_block
 	## não faz nada: confere antes de gastar o item.
 	_chunk_manager.set_block(adjacente, def.bloco_id)
 	if _chunk_manager.get_block(adjacente) != def.bloco_id:
 		return
+	if eh_porta and not _completar_porta(adjacente):
+		return
 	GameState.inventario_hotbar.remover(item_id, 1)
+
+
+func _cabe_porta_em_cima(base: Vector3i) -> bool:
+	## Porta tem 2 blocos de altura: precisa de ar em cima e fora do corpo.
+	var acima := base + Vector3i.UP
+	return (
+		_chunk_manager.get_block(acima) == BlockRegistry.AR_ID and not _celula_invade_o_corpo(acima)
+	)
+
+
+func _completar_porta(base: Vector3i) -> bool:
+	## Põe o topo da porta; se o mundo não deixar (acima do limite), desfaz a base.
+	var acima := base + Vector3i.UP
+	_chunk_manager.set_block(acima, BlockRegistry.PORTA_TOPO_ID)
+	if _chunk_manager.get_block(acima) == BlockRegistry.PORTA_TOPO_ID:
+		return true
+	_chunk_manager.set_block(base, BlockRegistry.AR_ID)
+	return false

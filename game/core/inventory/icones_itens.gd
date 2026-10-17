@@ -50,6 +50,12 @@ const NOMES: Array[String] = [
 	"carne_crua",
 	"carne_assada",
 	"la",
+	## Frente 8C (blocos de construção)
+	"vidro",
+	"laje",
+	"escada",
+	"porta",
+	"cerca",
 ]
 
 static var _folha: Texture2D

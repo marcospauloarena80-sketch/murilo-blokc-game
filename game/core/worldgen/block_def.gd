@@ -28,3 +28,7 @@ extends Resource
 @export var drop_extra_chance: float = 0.0
 @export var drop_extra_min: int = 1
 @export var drop_extra_max: int = 1
+
+## Frente 8C (Ciclo 8): blocos de construção.
+@export var forma: String = "cubo"  ## "cubo" | "vidro" | "laje" | "escada" | "porta" | "cerca"
+@export var transparente: bool = false  ## vidro: não oclui e a textura tem furos (discard)
