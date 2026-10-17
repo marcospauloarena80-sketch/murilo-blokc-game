@@ -20,6 +20,7 @@ var _cb_especies: JavaScriptObject
 var _cb_medir: JavaScriptObject
 var _cb_limpar: JavaScriptObject
 var _cb_teleportar: JavaScriptObject
+var _cb_dar: JavaScriptObject
 ## Frente 5D (áudio)
 var _cb_audio: JavaScriptObject
 ## Frente 8A (crescimento)
@@ -54,6 +55,8 @@ func _ready() -> void:
 	_janela.muriloLimparCriaturas = _cb_limpar
 	_cb_teleportar = JavaScriptBridge.create_callback(_teleportar)
 	_janela.muriloTeleportar = _cb_teleportar
+	_cb_dar = JavaScriptBridge.create_callback(_dar)
+	_janela.muriloDar = _cb_dar
 	## Frente 5D (áudio)
 	_cb_audio = JavaScriptBridge.create_callback(_audio)
 	_janela.muriloAudio = _cb_audio
@@ -332,3 +335,10 @@ func _acelerar_crescimento(args: Array) -> void:
 	if crescimento != null and args.size() >= 1:
 		crescimento.avancar(float(args[0]))
 	_janela.muriloUltimoCrescimento = crescimento != null
+
+
+func _dar(args: Array) -> void:
+	## Só pra teste: põe itens na hotbar (muriloDar("semente", 5)) pra validar
+	## sistemas sem repetir a coleta inteira.
+	if args.size() >= 2:
+		GameState.inventario_hotbar.adicionar(str(args[0]), int(args[1]))
