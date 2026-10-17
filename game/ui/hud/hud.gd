@@ -160,6 +160,7 @@ func _ready() -> void:
 	_label_alvo.visible = false
 	EventBus.item_collected.connect(_ao_coletar_item)
 	EventBus.quest_completed.connect(_ao_concluir_missao)
+	EventBus.aviso.connect(_mostrar_aviso.bind(false))
 
 
 func _criar_label(tamanho: int, pai: Node = null) -> Label:

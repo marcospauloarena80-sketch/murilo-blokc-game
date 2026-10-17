@@ -6,6 +6,6 @@
 script = ExtResource("1")
 id = "fornalha"
 nome = "Fornalha"
-stack_maximo = 1
+stack_maximo = 8
 cor = Color(0.4, 0.4, 0.4, 1)
 bloco_id = 0

@@ -8,11 +8,22 @@ const ItemDropScene := preload("res://entities/props/item_drop.tscn")
 const INTERVALO_AUTOSAVE: float = 60.0
 const INTERVALO_FOME_SEG: float = 60.0
 const INTERVALO_DANO_FOME_SEG: float = 10.0
+## Regeneração (Ciclo 6): com a fome quase cheia, +1 de vida a cada 4 s e
+## -1 de fome a cada 2 regenerações. Só roda em PLAYING (ver _process).
+const INTERVALO_REGENERACAO_SEG: float = 4.0
+const FOME_MINIMA_REGENERACAO: int = 18
+const REGENERACOES_POR_PONTO_DE_FOME: int = 2
+## Dormir (Ciclo 6): fade preto 0 -> 1 -> 0 e cura ao acordar.
+const DURACAO_FADE_DORMIR_SEG: float = 1.2
+const CURA_AO_DORMIR: int = 4
 
 var _tempo_desde_autosave: float = 0.0
 var _tempo_desde_fome: float = 0.0
 var _tempo_desde_dano_fome: float = 0.0
+var _tempo_desde_regeneracao: float = 0.0
+var _regeneracoes_sem_custo: int = 0
 var _era_noite: bool = false
+var _fade_dormir: ColorRect
 
 @onready var _chunk_manager: ChunkManager = $ChunkManager
 @onready var _player: Player = $Player
@@ -30,6 +41,7 @@ func _ready() -> void:
 	if GameState.veio_de_continuar:
 		_chunk_manager.aplicar_delta(GameState.delta_blocos_carregado)
 	_chunk_manager.chunk_pronto.connect(_posicionar_npcs_no_chunk)
+	EventBus.player_slept.connect(_ao_dormir)
 
 
 func _posicionar_npcs_no_chunk(coord: Vector2i) -> void:
@@ -58,6 +70,7 @@ func _process(delta: float) -> void:
 	_verificar_transicao_dia_noite()
 
 	_atualizar_fome(delta)
+	_regenerar_vida(delta)
 	_verificar_morte()
 
 	_tempo_desde_autosave += delta
@@ -81,10 +94,56 @@ func _atualizar_fome(delta: float) -> void:
 		_tempo_desde_dano_fome = 0.0
 
 
+func _regenerar_vida(delta: float) -> void:
+	## Chamada só pelo _process, que já exige PLAYING: pausado ou em batalha
+	## o relógio nem anda.
+	if (
+		GameState.fome_atual < FOME_MINIMA_REGENERACAO
+		or GameState.vida_atual >= GameState.vida_maxima
+	):
+		_tempo_desde_regeneracao = 0.0
+		return
+	_tempo_desde_regeneracao += delta
+	if _tempo_desde_regeneracao < INTERVALO_REGENERACAO_SEG:
+		return
+	_tempo_desde_regeneracao = 0.0
+	GameState.vida_atual += 1
+	_regeneracoes_sem_custo += 1
+	if _regeneracoes_sem_custo >= REGENERACOES_POR_PONTO_DE_FOME:
+		_regeneracoes_sem_custo = 0
+		GameState.fome_atual = max(0, GameState.fome_atual - 1)
+
+
 func _verificar_morte() -> void:
 	if GameState.vida_atual > 0:
 		return
 	_processar_morte()
+
+
+func _ao_dormir() -> void:
+	## Amanhece na hora (o fade é só cosmético): o teste e a sonda leem o
+	## ciclo logo depois de interagir com a cama.
+	GameState.ciclo_dia_noite_seg = 0.0
+	GameState.vida_atual = mini(GameState.vida_atual + CURA_AO_DORMIR, GameState.vida_maxima)
+	EventBus.aviso.emit("Bom dia!")
+	_animar_fade_dormir()
+
+
+func _animar_fade_dormir() -> void:
+	if _fade_dormir == null:
+		## Camada própria acima do HUD e das telas, criada só no primeiro sono.
+		var camada := CanvasLayer.new()
+		camada.layer = 100
+		add_child(camada)
+		_fade_dormir = ColorRect.new()
+		_fade_dormir.color = Color.BLACK
+		_fade_dormir.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_fade_dormir.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_fade_dormir.modulate.a = 0.0
+		camada.add_child(_fade_dormir)
+	var tween := create_tween()
+	tween.tween_property(_fade_dormir, "modulate:a", 1.0, DURACAO_FADE_DORMIR_SEG * 0.5)
+	tween.tween_property(_fade_dormir, "modulate:a", 0.0, DURACAO_FADE_DORMIR_SEG * 0.5)
 
 
 func _processar_morte() -> void:

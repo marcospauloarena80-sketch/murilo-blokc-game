@@ -15,6 +15,12 @@ signal player_died
 ## Jogador tocou o chão depois de cair mais de 1,5 bloco (Ciclo 5): pos é a
 ## posição dos pés; só cosmético (poeira), o dano de queda fica no Player.
 signal player_landed(pos: Vector3, altura_queda: float)
+## Jogador deitou numa cama à noite (Ciclo 6): o main.gd amanhece o dia, cura
+## e faz o fade preto.
+signal player_slept
+## Texto curto pro toast do HUD, vindo de quem não enxerga o HUD (Player,
+## main.gd). O HUD liga este sinal ao _mostrar_aviso.
+signal aviso(texto: String)
 signal day_started
 signal night_started
 signal battle_started(criatura: Creature)

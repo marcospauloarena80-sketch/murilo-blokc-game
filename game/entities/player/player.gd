@@ -449,6 +449,12 @@ func _processar_interacao(bloco_mirado: Vector3i) -> void:
 		return
 	if def.tipo_especial == "cama":
 		GameState.ponto_respawn = Vector3(bloco_mirado) + Vector3(0.5, 1.0, 0.5)
+		## Dormir (Ciclo 6): à noite o main.gd amanhece, cura e faz o fade;
+		## de dia a cama só marca o respawn.
+		if GameState.eh_noite():
+			EventBus.player_slept.emit()
+		else:
+			EventBus.aviso.emit("Você só consegue dormir à noite")
 	elif def.tipo_especial == "bau":
 		EventBus.chest_requested.emit(GameState.chave_posicao(bloco_mirado))
 

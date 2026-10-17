@@ -97,3 +97,22 @@ func test_mover_itens_diferentes_troca() -> void:
 	inv.mover(0, 1)
 	assert_eq(inv.get_item_id(0), "tronco")
 	assert_eq(inv.get_item_id(1), "pedra")
+
+
+func test_adicionar_bancada_duas_vezes_vira_uma_pilha_de_2() -> void:
+	## Bancada e fornalha tinham stack_maximo 1: cada craft abria um slot novo
+	## (bug das duas pilhas, Ciclo 6 / Frente 6E — agora empilham até 8).
+	var inv := InventoryModel.new(8)
+	inv.adicionar("bancada", 1)
+	inv.adicionar("bancada", 1)
+	assert_eq(inv.contar("bancada"), 2)
+	assert_eq(inv.get_quantidade(0), 2, "deveria ter empilhado no mesmo slot")
+	assert_true(inv.slot_vazio(1))
+
+
+func test_adicionar_fornalha_duas_vezes_vira_uma_pilha_de_2() -> void:
+	var inv := InventoryModel.new(8)
+	inv.adicionar("fornalha", 1)
+	inv.adicionar("fornalha", 1)
+	assert_eq(inv.get_quantidade(0), 2, "deveria ter empilhado no mesmo slot")
+	assert_true(inv.slot_vazio(1))

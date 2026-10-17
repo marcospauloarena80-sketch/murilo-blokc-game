@@ -42,6 +42,8 @@ var posicao_salva: Vector3 = Vector3(64, 45, 64)
 ## batalha, batalha -> créditos) não despausam por baixo da tela nova.
 var telas_abertas: Array[String] = []
 
+var _craft_service: CraftService = CraftService.new()
+
 
 func mudar_estado(novo_estado: State) -> void:
 	current_state = novo_estado
@@ -110,6 +112,38 @@ func tem_bancada() -> bool:
 
 func tem_fornalha() -> bool:
 	return inventario_hotbar.contar("fornalha") > 0 or inventario_mochila.contar("fornalha") > 0
+
+
+func _receita_desbloqueada(receita: RecipeDef) -> bool:
+	## Gates de missão (ADR-022) e de insígnia de Arena (ADR-023).
+	var quest_ok: bool = receita.requer_quest == "" or quests_concluidas.has(receita.requer_quest)
+	var insignia_ok: bool = receita.requer_insignia == "" or tem_insignia(receita.requer_insignia)
+	return quest_ok and insignia_ok
+
+
+func pode_craftar(receita: RecipeDef) -> bool:
+	## Craft com as duas mochilas (Ciclo 6): ingredientes somam hotbar + mochila.
+	return _craft_service.pode_craftar_em(
+		inventario_mochila,
+		inventario_hotbar,
+		receita,
+		tem_bancada(),
+		tem_fornalha(),
+		_receita_desbloqueada(receita)
+	)
+
+
+func craftar(receita: RecipeDef) -> bool:
+	## Consome da mochila primeiro e depois da hotbar; o resultado vai pra
+	## mochila e a sobra cai na hotbar.
+	return _craft_service.craftar_em(
+		inventario_mochila,
+		inventario_hotbar,
+		receita,
+		tem_bancada(),
+		tem_fornalha(),
+		_receita_desbloqueada(receita)
+	)
 
 
 func eh_noite() -> bool:
