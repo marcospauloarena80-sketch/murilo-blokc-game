@@ -438,6 +438,9 @@ func _tentar_colocar_bloco(adjacente: Vector3i) -> void:
 	var def := ItemRegistry.get_item(item_id)
 	if def == null or def.bloco_id == BlockRegistry.AR_ID:
 		return
-	if not GameState.inventario_hotbar.remover(item_id, 1):
-		return
+	## Fora do mundo, acima do topo ou em chunk ainda não gerado o set_block
+	## não faz nada: confere antes de gastar o item.
 	_chunk_manager.set_block(adjacente, def.bloco_id)
+	if _chunk_manager.get_block(adjacente) != def.bloco_id:
+		return
+	GameState.inventario_hotbar.remover(item_id, 1)

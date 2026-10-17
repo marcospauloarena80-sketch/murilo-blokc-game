@@ -117,3 +117,21 @@ func test_colocar_item_nao_placeavel_nao_faz_nada() -> void:
 	assert_eq(
 		GameState.inventario_hotbar.contar("picareta_pedra"), 1, "ferramenta não deve ser consumida"
 	)
+
+
+func test_colocar_bloco_onde_o_mundo_nao_aceita_nao_consome_item() -> void:
+	## Acima do topo do mundo (ou fora dele / em chunk não gerado) o set_block
+	## é ignorado em silêncio; o item sumia da hotbar sem bloco nenhum.
+	var cm := ChunkManager.new()
+	cm.world_seed = 1
+	add_child_autofree(cm)
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
+	GameState.inventario_hotbar.adicionar("pedra", 5)
+	var player := PlayerScene.instantiate() as Player
+	add_child_autofree(player)
+
+	player._tentar_colocar_bloco(Vector3i(3, ChunkData.SIZE_V, 3))
+	player._tentar_colocar_bloco(Vector3i(-1, 40, 3))
+
+	assert_eq(GameState.inventario_hotbar.contar("pedra"), 5, "nada colocado, nada gasto")

@@ -28,6 +28,9 @@ const CHANCE_AMBAR: float = 0.05  ## nódulo raro na areia do Deserto de Âmbar 
 ## fundo e margem de areia. Nos Picos Gelados o lago é gelo sólido até o nível
 ## da água; no Deserto de Âmbar os vales ficam secos.
 const NIVEL_AGUA: int = 27
+## Sem lago perto do vilarejo: os NPCs são aterrados no bloco sólido mais alto
+## e em ~22% das sementes algum deles (até a Lina) ficava no fundo de um lago.
+const RAIO_VILAREJO_SECO: float = 19.0
 
 ## Cavernas decoradas (F11, ADR-024): bolsão pequeno e determinístico, não
 ## geração 3D completa — resolve o hedge do ADR-020 sem risco de perf novo.
@@ -144,7 +147,7 @@ func gerar_chunk(cx: int, cz: int) -> ChunkData:
 			for y in range(0, altura - 2):
 				chunk.set_block(lx, y, lz, _bloco_de_subsolo(world_x, y, world_z))
 			_aplicar_superficie(chunk, lx, lz, altura, bioma_id, world_x, world_z)
-			_encher_lago(chunk, lx, lz, altura, bioma_id)
+			_encher_lago(chunk, lx, lz, altura, bioma_id, world_x, world_z)
 
 	_talvez_cavar_caverna(chunk, cx, cz)
 
@@ -192,8 +195,12 @@ func _aplicar_superficie(
 			chunk.set_block(lx, altura, lz, 1)  # grama
 
 
-func _encher_lago(chunk: ChunkData, lx: int, lz: int, altura: int, bioma_id: String) -> void:
+func _encher_lago(
+	chunk: ChunkData, lx: int, lz: int, altura: int, bioma_id: String, world_x: int, world_z: int
+) -> void:
 	if bioma_id == "deserto_de_ambar" or altura > NIVEL_AGUA + 1:
+		return
+	if Vector2(world_x, world_z).distance_to(CENTRO_MUNDO) < RAIO_VILAREJO_SECO:
 		return
 	if bioma_id == "picos_gelados":
 		## Lago congelado é gelo sólido até o nível da água, sem água por baixo:

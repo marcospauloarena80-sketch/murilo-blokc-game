@@ -93,7 +93,9 @@ func _process(_delta: float) -> void:
 
 	## Gerar e montar a malha são unidades separadas de trabalho: com o
 	## orçamento curto de jogo, um frame paga só uma delas (sem engasgo na Web).
-	while not _fila_malha.is_empty() or not _fila_geracao.is_empty():
+	## Se o remesh de edição já gastou o orçamento, o resto espera o próximo quadro.
+	var orcamento_gasto := houve_trabalho and Time.get_ticks_usec() - inicio >= orcamento
+	while not orcamento_gasto and (not _fila_malha.is_empty() or not _fila_geracao.is_empty()):
 		if not _fila_malha.is_empty():
 			_remesh_chunk(_fila_malha.pop_front())
 			_verificar_area_inicial()
@@ -284,7 +286,7 @@ func _local_para_mundo(coord: Vector2i, local: Vector3i) -> Vector3i:
 
 
 func _marcar_sujo_com_vizinhos(coord: Vector2i, local: Vector3i) -> void:
-	_marcar_sujo(coord)
+	_marcar_sujo(coord, true)
 	if local.x == 0:
 		_marcar_sujo(coord + Vector2i(-1, 0))
 	if local.x == ChunkData.SIZE_H - 1:
@@ -295,8 +297,13 @@ func _marcar_sujo_com_vizinhos(coord: Vector2i, local: Vector3i) -> void:
 		_marcar_sujo(coord + Vector2i(0, 1))
 
 
-func _marcar_sujo(coord: Vector2i) -> void:
-	if _chunks.has(coord) and not _fila_sujos.has(coord):
+func _marcar_sujo(coord: Vector2i, na_frente: bool = false) -> void:
+	if not _chunks.has(coord):
+		return
+	if na_frente:
+		_fila_sujos.erase(coord)  # já estava como vizinho: a edição passa na frente
+		_fila_sujos.push_front(coord)
+	elif not _fila_sujos.has(coord):
 		_fila_sujos.append(coord)
 
 

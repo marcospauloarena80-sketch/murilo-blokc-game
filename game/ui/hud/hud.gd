@@ -126,7 +126,9 @@ func _process(delta: float) -> void:
 	## A mira só faz sentido jogando; pausado ela ficava por cima dos menus.
 	_mira.visible = GameState.current_state == GameState.State.PLAYING
 	_label_objetivo.text = texto_objetivo()
-	if _tempo_aviso > 0.0:
+	## O aviso só conta tempo jogando: concluído dentro da batalha ou do
+	## inventário, ele espera a tela fechar pra ser lido (senão expirava coberto).
+	if _tempo_aviso > 0.0 and GameState.current_state == GameState.State.PLAYING:
 		_tempo_aviso -= delta
 		_label_aviso.visible = _tempo_aviso > 0.0
 	for i in range(8):

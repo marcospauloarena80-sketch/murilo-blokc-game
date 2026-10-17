@@ -68,3 +68,18 @@ func test_mudar_selecao_troca_o_stylebox_do_slot_novo_para_o_selecionado() -> vo
 	var estilo_slot_0: StyleBoxFlat = hud._botoes[0].get_theme_stylebox("normal") as StyleBoxFlat
 	assert_same(estilo_slot_0, hud._estilos_normal[0])
 	assert_eq(estilo_slot_0.border_width_left, 0)
+
+
+func test_aviso_nao_expira_enquanto_uma_tela_cobre_o_jogo() -> void:
+	## Missão concluída dentro da batalha ou do inventário: o aviso contava
+	## tempo coberto pela tela e já tinha sumido quando o jogador voltava.
+	var hud := _criar_hud()
+	GameState.mudar_estado(GameState.State.PAUSED)
+	hud._mostrar_aviso("Missão concluída!", true)
+
+	hud._process(Hud.DURACAO_AVISO_IMPORTANTE_SEG + 1.0)
+
+	assert_true(hud._label_aviso.visible, "pausado, o aviso espera a tela fechar")
+	GameState.mudar_estado(GameState.State.PLAYING)
+	hud._process(Hud.DURACAO_AVISO_IMPORTANTE_SEG + 1.0)
+	assert_false(hud._label_aviso.visible, "jogando, o aviso expira normalmente")

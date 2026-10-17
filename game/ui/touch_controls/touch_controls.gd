@@ -22,6 +22,7 @@ const SENSIBILIDADE_ARRASTO: float = 0.006
 ## Só pra teste: força o caminho "com tela de toque" sem depender do hardware.
 var forcar_toque: bool = false
 
+var _tem_toque: bool = false
 var _indice_toque_joystick: int = -1
 var _centro_joystick: Vector2 = Vector2.ZERO
 var _indice_toque_olhar: int = -1
@@ -39,9 +40,20 @@ var _jogador: Node3D
 
 func _ready() -> void:
 	$Joystick.visible = false
-	var tem_toque := _tem_tela_de_toque()
-	$Acoes.visible = tem_toque
-	$Pausa.visible = tem_toque
+	_tem_toque = _tem_tela_de_toque()
+	$Acoes.visible = _tem_toque
+	$Pausa.visible = _tem_toque
+	## Sem foco de teclado: senão, num aparelho com toque e teclado, Espaço ou
+	## Enter reativavam o último botão tocado (Bolsa/Pausa reabrindo a tela).
+	for botao: Button in [
+		_botao_pular,
+		_botao_quebrar,
+		_botao_colocar,
+		_botao_interagir,
+		_botao_inventario,
+		_botao_pausa
+	]:
+		botao.focus_mode = Control.FOCUS_NONE
 	_conectar_botao(_botao_pular, "pular")
 	_conectar_botao(_botao_quebrar, "quebrar")
 	_conectar_botao(_botao_colocar, "colocar")
@@ -52,6 +64,14 @@ func _ready() -> void:
 
 func _tem_tela_de_toque() -> bool:
 	return forcar_toque or DisplayServer.is_touchscreen_available()
+
+
+func _process(_delta: float) -> void:
+	## Na criação de personagem os botões cobririam o "Jogar" (eles ficam
+	## acima do painel na árvore); o HUD se esconde do mesmo jeito.
+	var criando := GameState.current_state == GameState.State.CHARACTER_CREATION
+	$Acoes.visible = _tem_toque and not criando
+	$Pausa.visible = _tem_toque and not criando
 
 
 func _conectar_botao(botao: Button, acao: String) -> void:

@@ -18,6 +18,7 @@ var _cb_hora: JavaScriptObject
 var _cb_spawnar: JavaScriptObject
 var _cb_especies: JavaScriptObject
 var _cb_medir: JavaScriptObject
+var _cb_limpar: JavaScriptObject
 var _janela: JavaScriptObject
 
 
@@ -44,6 +45,8 @@ func _ready() -> void:
 	_janela.muriloEspecies = _cb_especies
 	_cb_medir = JavaScriptBridge.create_callback(_medir)
 	_janela.muriloMedir = _cb_medir
+	_cb_limpar = JavaScriptBridge.create_callback(_limpar_criaturas)
+	_janela.muriloLimparCriaturas = _cb_limpar
 
 
 func _jogador() -> Player:
@@ -265,3 +268,10 @@ func _medir(_args: Array) -> void:
 				cm._remesh_chunk(coord)
 			dados["remesh_chunk_ms"] = snappedf((Time.get_ticks_usec() - t0) / 3000.0, 0.1)
 	_janela.muriloUltimaMedida = JSON.stringify(dados)
+
+
+func _limpar_criaturas(_args: Array) -> void:
+	## Libera o limite do spawner (MAX_CRIATURAS) pra testar criaturas de
+	## outro período sem andar 48 blocos até as atuais sumirem.
+	for no: Node in get_tree().get_nodes_in_group("creature"):
+		no.queue_free()

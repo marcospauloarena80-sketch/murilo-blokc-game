@@ -185,3 +185,36 @@ func test_dois_dedos_ao_mesmo_tempo_movem_e_olham() -> void:
 
 	assert_true(Input.is_action_pressed("mover_frente"))
 	assert_ne(jogador.rotation.y, yaw_antes)
+
+
+func test_botoes_nao_guardam_foco_de_teclado() -> void:
+	## Num aparelho com toque e teclado, Espaço/Enter reativavam o último
+	## botão tocado (a Bolsa reabria o inventário a cada pulo).
+	var controles := _controles_com_toque()
+
+	for caminho: String in [
+		"Acoes/BotaoPular",
+		"Acoes/BotaoQuebrar",
+		"Acoes/BotaoColocar",
+		"Acoes/BotaoInteragir",
+		"Acoes/BotaoInventario",
+		"Pausa/BotaoPausa"
+	]:
+		var botao: Button = controles.get_node(caminho)
+		assert_eq(botao.focus_mode, Control.FOCUS_NONE, "%s sem foco de teclado" % caminho)
+
+
+func test_botoes_somem_na_criacao_de_personagem_e_voltam_jogando() -> void:
+	## Com tela de toque os botões cobriam a metade direita do "Jogar".
+	var controles := _controles_com_toque()
+	GameState.mudar_estado(GameState.State.CHARACTER_CREATION)
+	await get_tree().process_frame
+
+	assert_false(controles.get_node("Acoes").visible, "botões de ação escondidos ao criar o Murilo")
+	assert_false(controles.get_node("Pausa").visible, "pausa escondida ao criar o Murilo")
+
+	GameState.mudar_estado(GameState.State.PLAYING)
+	await get_tree().process_frame
+
+	assert_true(controles.get_node("Acoes").visible)
+	assert_true(controles.get_node("Pausa").visible)

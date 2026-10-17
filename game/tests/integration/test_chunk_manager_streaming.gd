@@ -124,3 +124,26 @@ func test_quebrar_bloco_de_quina_remonta_um_chunk_por_quadro() -> void:
 		cm._process(0.0)
 		quadros += 1
 	assert_eq(quadros, 2, "os vizinhos saem um por quadro até esvaziar a fila")
+
+
+func test_nova_edicao_passa_na_frente_dos_vizinhos_pendentes() -> void:
+	## Minerando rápido perto da borda, o chunk editado já estava na fila como
+	## vizinho e ia pro fim: o bloco quebrado continuava desenhado por quadros.
+	var cm := ChunkManager.new()
+	cm.world_seed = 1
+	add_child_autofree(cm)
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
+	cm.orcamento_jogando_usec = 0
+	cm.set_block(Vector3i(32, 40, 32), 3)  # quina: fila [ (2,2), (1,2), (2,1) ]
+	cm._process(0.0)  # remonta (2,2); sobram (1,2) e (2,1)
+	var no_antes: int = (cm._chunk_nodes[Vector2i(2, 1)] as Node).get_instance_id()
+
+	cm.set_block(Vector3i(33, 40, 16), 3)  # dentro de (2,1), que já esperava como vizinho
+	cm._process(0.0)
+
+	assert_ne(
+		(cm._chunk_nodes[Vector2i(2, 1)] as Node).get_instance_id(),
+		no_antes,
+		"o chunk da nova edição é remontado antes do vizinho (1,2)"
+	)

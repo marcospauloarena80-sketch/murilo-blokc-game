@@ -93,3 +93,34 @@ func test_deserto_de_ambar_fica_seco() -> void:
 	for coord: Vector2i in chunks:
 		var chunk := gerador.gerar_chunk(coord.x, coord.y)
 		assert_false(_tem_bloco(chunk, BlockRegistry.AGUA_ID), "deserto não deve ter água")
+
+
+func test_vilarejo_fica_seco_em_qualquer_semente() -> void:
+	## Os NPCs são aterrados no bloco sólido mais alto; com lago no vilarejo
+	## eles iam parar no fundo da água (acontecia em ~22% das sementes).
+	var colunas_npc: Array[Vector2i] = [
+		Vector2i(64, 64),
+		Vector2i(66, 66),
+		Vector2i(70, 64),
+		Vector2i(62, 66),
+		Vector2i(66, 62),
+		Vector2i(74, 74),
+		Vector2i(54, 74),
+		Vector2i(54, 54),
+		Vector2i(74, 54),
+		Vector2i(64, 80),
+	]
+	for semente in range(1, 41):
+		var gerador := WorldGenerator.new(semente)
+		var chunks: Dictionary = {}
+		for coluna: Vector2i in colunas_npc:
+			var coord := Vector2i(coluna.x / 16, coluna.y / 16)
+			if not chunks.has(coord):
+				chunks[coord] = gerador.gerar_chunk(coord.x, coord.y)
+			var chunk: ChunkData = chunks[coord]
+			for y in range(64):
+				assert_ne(
+					chunk.get_block(coluna.x % 16, y, coluna.y % 16),
+					BlockRegistry.AGUA_ID,
+					"semente %d: água na coluna de NPC %s" % [semente, coluna]
+				)
