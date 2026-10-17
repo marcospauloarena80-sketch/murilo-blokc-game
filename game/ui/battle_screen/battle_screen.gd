@@ -13,6 +13,10 @@ const VARIACAO_MIN: float = 0.9
 const VARIACAO_MAX: float = 1.1
 const NIVEL_SELVAGEM_PADRAO: int = 5
 const LINHAS_LOG: int = 3
+const MENSAGEM_FALHA_AO_SALVAR: String = (
+	"Vitória! Mas não foi possível salvar o jogo, então a conclusão ainda não está gravada.\n"
+	+ "Tente salvar de novo, ou saia sem ver os créditos."
+)
 
 ## Persiste o jogo (devolve true se gravou). Vazio = usa `salvar_jogo` da cena
 ## principal; os testes injetam o próprio.
@@ -23,6 +27,10 @@ var _criatura_mundo: Creature
 var _guardiao: GuardianBattle
 var _arena: ArenaDef
 var _vitoria_inedita: bool = false  ## 1ª vitória contra o desafio final nesta partida (E0-3)
+## A gravação da conclusão falhou: a batalha fica aberta, só com as duas saídas.
+var _salvamento_pendente: bool = false
+var _botao_tentar_salvar: Button
+var _botao_sair_sem_creditos: Button
 var _aberto: bool = false
 var _botoes_ataque: Array[Button] = []
 var _linhas_log: Array[String] = []
@@ -58,6 +66,12 @@ func _ready() -> void:
 	_botao_cubo.pressed.connect(_ao_usar_cubo)
 	_botao_fugir.pressed.connect(_ao_fugir)
 	_botao_fechar.pressed.connect(_fechar)
+	_botao_tentar_salvar = _criar_botao_de_falha(
+		"BotaoTentarSalvar", "Tentar salvar novamente", _ao_tentar_salvar_de_novo
+	)
+	_botao_sair_sem_creditos = _criar_botao_de_falha(
+		"BotaoSairSemCreditos", "Sair sem créditos", _ao_sair_sem_creditos
+	)
 
 	EventBus.battle_started.connect(_abrir)
 	EventBus.arena_challenge_started.connect(_abrir_arena)
@@ -83,6 +97,7 @@ func _abrir_arena(arena_id: String) -> void:
 	_guardiao = GuardianBattle.new(GameState.equipe_cubelins, _arena.construir_equipe())
 	_batalha = _guardiao.batalha_atual
 	_vitoria_inedita = false
+	_salvamento_pendente = false
 	for membro: CreatureInstance in _guardiao.equipe_guardiao:
 		CadernoRegistro.registrar_vista(membro.especie_id)  ## E0-5
 	_limpar_log()
@@ -101,9 +116,16 @@ func _fechar() -> void:
 		and _batalha.resultado == BattleService.Resultado.VITORIA
 		and _vitoria_inedita
 	):
-		_concluir_o_jogo()
+		if not _tentar_concluir_o_jogo():
+			_atualizar()  ## mostra a falha com as duas saídas; a batalha segue aberta
+			return
+	_encerrar()
+
+
+func _encerrar() -> void:
 	_aberto = false
 	visible = false
+	_salvamento_pendente = false
 	_inst_jogador_exibida = null
 	_inst_selvagem_exibida = null
 	_batalha = null
@@ -114,18 +136,50 @@ func _fechar() -> void:
 	EventBus.battle_ended.emit()
 
 
-func _concluir_o_jogo() -> void:
-	## Créditos só na 1ª vitória E só depois de a conclusão estar gravada no save
-	## (senão, voltar ao menu e continuar reabria os créditos). Se a gravação
-	## falhar, desfaz o registro em memória: a vitória vale de novo numa revanche.
+## Créditos só na 1ª vitória E só depois de a conclusão estar gravada no save
+## (senão, voltar ao menu e continuar reabria os créditos). Devolve false se a
+## gravação falhou: o registro da vitória (já feito, uma vez) fica como está e a
+## tela espera "Tentar salvar novamente" ou "Sair sem créditos". Repetir a
+## tentativa só regrava o jogo; não regista outra vitória nem premia de novo.
+func _tentar_concluir_o_jogo() -> bool:
+	if not _salvar_progresso():
+		_salvamento_pendente = true
+		return false
 	_vitoria_inedita = false
-	if _salvar_progresso():
-		EventBus.game_completed.emit()
+	_salvamento_pendente = false
+	EventBus.game_completed.emit()
+	return true
+
+
+func _ao_tentar_salvar_de_novo() -> void:
+	if not _salvamento_pendente:
+		return
+	if _tentar_concluir_o_jogo():
+		_encerrar()
+	else:
+		_atualizar()
+
+
+## Sai sem créditos e sem dar a conclusão por gravada: o registro em memória é
+## desfeito (senão um "Salvar" qualquer da pausa a gravaria sem ninguém ver os
+## créditos) e uma vitória futura volta a valer como a primeira.
+func _ao_sair_sem_creditos() -> void:
+	if not _salvamento_pendente:
 		return
 	GameState.treinadores_vencidos.erase(_arena.arena_id)
-	EventBus.aviso.emit(
-		"Não foi possível salvar o jogo. Vença o Guardião de novo para ver os créditos."
-	)
+	_vitoria_inedita = false
+	EventBus.aviso.emit("Conclusão não salva. Vença o Guardião de novo para ver os créditos.")
+	_encerrar()
+
+
+func _criar_botao_de_falha(nome: String, texto: String, acao: Callable) -> Button:
+	var botao := Button.new()
+	botao.name = nome
+	botao.text = texto
+	botao.visible = false
+	botao.pressed.connect(acao)
+	_botao_fechar.get_parent().add_child(botao)
+	return botao
 
 
 func _salvar_progresso() -> bool:
@@ -410,8 +464,10 @@ func _atualizar() -> void:
 	_botao_fugir.visible = not eh_guardiao
 	_botao_fugir.disabled = not pode_agir
 
-	_botao_fechar.visible = not em_andamento
-	_label_status.text = _texto_resultado()
+	_botao_fechar.visible = not em_andamento and not _salvamento_pendente
+	_botao_tentar_salvar.visible = _salvamento_pendente
+	_botao_sair_sem_creditos.visible = _salvamento_pendente
+	_label_status.text = MENSAGEM_FALHA_AO_SALVAR if _salvamento_pendente else _texto_resultado()
 
 	if _batalha.resultado == BattleService.Resultado.VITORIA and _criatura_mundo != null:
 		EventBus.creature_defeated.emit(_batalha.selvagem.especie_id)

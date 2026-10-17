@@ -300,3 +300,15 @@ Formato curto: contexto → decisão → consequências. Toda decisão nova entr
 **3. Nova tentativa após falha antes dos créditos: NÃO implementada.** Hoje a falha avisa e exige uma nova vitória. A solução mais barata, manter a batalha aberta e usar o botão Fechar como nova tentativa, deixaria o jogador preso se a gravação falhar sempre (armazenamento cheio ou bloqueado), porque a tela da batalha não tem outra saída. Seria preciso um segundo botão ("Sair sem créditos") na tela de resultado, só depois de uma falha: uma mudança de interface com testes próprios, fora do escopo autorizado.
 
 **Validação.** Automatizada: 870 testes. Manual no navegador: confirmação, cancelamento e substituição com a missão "Um Teto Sobre a Cabeça" a 3 de 10 contra a oferta do Renato; "Jogo salvo!" da pausa. Não reproduzível pela interface: falha de gravação (testada só por injeção). A missão com progresso foi preparada editando o save local do navegador de teste.
+
+## ADR-035: Falha ao salvar antes dos créditos tem duas saídas (17/out/2026)
+
+Substitui o tratamento da falha descrito no ADR-033 (aviso e nova vitória) e fecha o item 3 do ADR-034.
+
+**Fluxo.** Na primeira vitória sobre o Coração Dourado, `BattleScreen._fechar` tenta gravar o jogo antes dos créditos. Se gravar, abre os créditos uma vez e fecha a batalha. Se falhar, a batalha **continua aberta**, o resultado fica como está e a tela mostra uma mensagem clara com duas saídas no lugar do botão Fechar:
+- **Tentar salvar novamente:** repete só a gravação. Não repete a batalha, não registra outra vitória nem premia de novo (o registro da vitória foi feito uma vez, no fim da luta, e continua em memória justamente para a nova tentativa gravá-lo). Se gravar, abre os créditos e fecha; se falhar de novo, continua pendente.
+- **Sair sem créditos:** fecha a batalha sem créditos, desfaz o registro da conclusão em memória (para um "Salvar" qualquer da pausa não gravar a conclusão sem ninguém ver os créditos), avisa "Conclusão não salva" e deixa uma vitória futura valer como a primeira.
+
+Nenhuma insígnia do Coração Dourado é concedida em nenhum caminho. Revanche depois de uma conclusão gravada não reabre os créditos (o registro vem do save). Não há recuperação automática: se o jogador sair sem créditos, a conclusão não é dada como salva.
+
+**Limites.** Os dois botões são criados em código; nenhuma cena foi alterada. O autosave continua sem aviso de falha (fora do escopo). A falha de gravação não é reproduzível pela interface do navegador: só tem teste automatizado, com o salvamento simulado.

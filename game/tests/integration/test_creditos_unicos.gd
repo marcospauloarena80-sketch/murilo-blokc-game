@@ -125,28 +125,138 @@ func test_nenhuma_insignia_do_coracao_dourado_e_concedida() -> void:
 	assert_true(GameState.insignias_conquistadas.is_empty())
 
 
-func test_falha_ao_gravar_nao_abre_creditos_nem_marca_como_concluido() -> void:
+func _vencer_o_final_sem_fechar(tela: BattleScreen) -> void:
+	tela._abrir_arena(ARENA_FINAL)
+	for i in range(3):
+		tela._batalha.selvagem.vida_atual = 1
+		var ativo := tela._batalha.jogador_ativo()
+		ativo.vida_atual = ativo.vida_maxima_efetiva()
+		tela._ao_atacar(0)
+	assert_eq(tela._batalha.resultado, BattleService.Resultado.VITORIA, "pré-condição: venceu")
+
+
+func _contar_vitorias_de_treinador() -> Array:
+	var vezes: Array = [0]
+	EventBus.treinador_vencido.connect(func(_id: String) -> void: vezes[0] += 1)
+	return vezes
+
+
+func test_primeira_tentativa_ok_grava_uma_vez_e_abre_os_creditos() -> void:
+	var gravacoes: Array = [0]
+	var tela := _nova_tela(
+		func() -> bool:
+			gravacoes[0] += 1
+			return true
+	)
+
+	_vencer_o_final_e_fechar(tela)
+
+	assert_eq(gravacoes[0], 1)
+	assert_eq(_creditos, 1)
+	assert_false(tela.visible, "a batalha fecha")
+	assert_true(GameState.treinadores_vencidos.has(ARENA_FINAL))
+
+
+func test_falha_ao_gravar_mantem_a_batalha_aberta_com_as_duas_saidas() -> void:
 	var tela := _nova_tela(func() -> bool: return false)
 
 	_vencer_o_final_e_fechar(tela)
 
 	assert_eq(_creditos, 0, "sem gravação confirmada, sem créditos")
-	assert_false(GameState.treinadores_vencidos.has(ARENA_FINAL), "não fica marcado em memória")
-	assert_eq(_avisos.size(), 1, "o jogador é avisado")
-	assert_string_contains(_avisos[0], "Não foi possível salvar")
+	assert_true(tela.visible, "a batalha segue aberta e consistente")
+	assert_eq(tela._batalha.resultado, BattleService.Resultado.VITORIA)
+	assert_true(tela._botao_tentar_salvar.visible)
+	assert_true(tela._botao_sair_sem_creditos.visible)
+	assert_false(tela._botao_fechar.visible, "só as duas saídas")
+	assert_string_contains(tela._label_status.text, "não foi possível salvar")
 	assert_false(GameState.tem_insignia(ARENA_FINAL))
 
 
-func test_depois_de_uma_falha_a_proxima_vitoria_com_gravacao_ok_abre_os_creditos() -> void:
+func test_falha_seguida_de_sucesso_na_segunda_tentativa() -> void:
+	var sucesso: Array = [false]
+	var gravacoes: Array = [0]
+	var vitorias := _contar_vitorias_de_treinador()
+	var tela := _nova_tela(
+		func() -> bool:
+			gravacoes[0] += 1
+			return sucesso[0]
+	)
+	var mochila_antes: Array = GameState.inventario_mochila.serializar()
+	_vencer_o_final_e_fechar(tela)
+	assert_eq(_creditos, 0)
+
+	sucesso[0] = true
+	tela._ao_tentar_salvar_de_novo()
+
+	assert_eq(gravacoes[0], 2, "só regravou, uma tentativa por clique")
+	assert_eq(_creditos, 1, "créditos abrem uma vez, depois de gravar")
+	assert_false(tela.visible)
+	assert_true(GameState.treinadores_vencidos.has(ARENA_FINAL))
+	assert_eq(vitorias[0], 1, "a vitória foi registrada uma única vez")
+	assert_eq(GameState.inventario_mochila.serializar(), mochila_antes, "sem recompensa duplicada")
+	assert_false(GameState.tem_insignia(ARENA_FINAL))
+
+
+func test_falhas_repetidas_nao_duplicam_nada_e_continuam_pendentes() -> void:
+	var vitorias := _contar_vitorias_de_treinador()
+	var tela := _nova_tela(func() -> bool: return false)
+	_vencer_o_final_e_fechar(tela)
+
+	tela._ao_tentar_salvar_de_novo()
+	tela._ao_tentar_salvar_de_novo()
+
+	assert_true(tela.visible)
+	assert_true(tela._botao_tentar_salvar.visible)
+	assert_eq(_creditos, 0)
+	assert_eq(vitorias[0], 1)
+	assert_true(GameState.treinadores_vencidos.has(ARENA_FINAL))
+
+
+func test_falha_persistente_e_sair_sem_creditos() -> void:
+	var tela := _nova_tela(func() -> bool: return false)
+	_vencer_o_final_e_fechar(tela)
+
+	tela._ao_sair_sem_creditos()
+
+	assert_eq(_creditos, 0, "sair não abre créditos")
+	assert_false(tela.visible)
+	assert_false(
+		GameState.treinadores_vencidos.has(ARENA_FINAL), "a conclusão não fica como registrada"
+	)
+	assert_false(GameState.tem_insignia(ARENA_FINAL), "nenhuma insígnia final")
+	assert_eq(_avisos.size(), 1)
+	assert_string_contains(_avisos[0], "Conclusão não salva")
+
+
+func test_depois_de_sair_sem_creditos_uma_vitoria_futura_vale_como_a_primeira() -> void:
 	var sucesso: Array = [false]
 	var tela := _nova_tela(func() -> bool: return sucesso[0])
-
 	_vencer_o_final_e_fechar(tela)
+	tela._ao_sair_sem_creditos()
+
 	sucesso[0] = true
 	_vencer_o_final_e_fechar(tela)
 
 	assert_eq(_creditos, 1)
 	assert_true(GameState.treinadores_vencidos.has(ARENA_FINAL))
+
+
+func test_botoes_de_falha_nao_fazem_nada_fora_do_estado_de_falha() -> void:
+	var gravacoes: Array = [0]
+	var tela := _nova_tela(
+		func() -> bool:
+			gravacoes[0] += 1
+			return true
+	)
+	_vencer_o_final_sem_fechar(tela)
+
+	tela._ao_tentar_salvar_de_novo()
+	tela._ao_sair_sem_creditos()
+
+	assert_eq(gravacoes[0], 0)
+	assert_eq(_creditos, 0)
+	assert_true(tela.visible)
+	assert_false(tela._botao_tentar_salvar.visible)
 
 
 func test_sem_cena_que_salve_a_falha_e_tratada_como_nao_gravado() -> void:
@@ -156,7 +266,34 @@ func test_sem_cena_que_salve_a_falha_e_tratada_como_nao_gravado() -> void:
 	_vencer_o_final_e_fechar(tela)
 
 	assert_eq(_creditos, 0)
-	assert_false(GameState.treinadores_vencidos.has(ARENA_FINAL))
+	assert_true(tela.visible, "fica aguardando uma das duas saídas")
+
+
+func test_falha_depois_sucesso_com_save_real_e_revanche_apos_carregar_nao_reabre_creditos() -> void:
+	var main_instance := MainScene.instantiate()
+	add_child_autofree(main_instance)
+	var cm: ChunkManager = main_instance.get_node("ChunkManager")
+	while cm.tem_chunks_pendentes():
+		cm._process(0.0)
+	var tentativas: Array = [0]
+	var tela := _nova_tela(
+		func() -> bool:
+			tentativas[0] += 1
+			return false if tentativas[0] == 1 else main_instance.salvar_jogo()
+	)
+	_vencer_o_final_e_fechar(tela)
+	assert_eq(_creditos, 0)
+	assert_false(FileAccess.file_exists(SaveManager.SAVE_PATH), "nada gravado na 1ª tentativa")
+
+	tela._ao_tentar_salvar_de_novo()
+
+	assert_eq(_creditos, 1)
+	var dados := SaveManager.carregar()
+	assert_true(dados["treinadores_vencidos"].has(ARENA_FINAL), "conclusão persistida")
+	GameState.treinadores_vencidos = MenuScript._dicionario_de_dias(dados["treinadores_vencidos"])
+	var tela_depois := _nova_tela(Callable(main_instance, "salvar_jogo"))
+	_vencer_o_final_e_fechar(tela_depois)
+	assert_eq(_creditos, 1, "a revanche depois de carregar não reabre os créditos")
 
 
 func test_salvar_jogo_devolve_true_e_grava_a_conclusao_no_arquivo() -> void:
