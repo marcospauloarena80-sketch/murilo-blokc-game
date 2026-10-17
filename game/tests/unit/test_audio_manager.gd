@@ -1,7 +1,7 @@
 extends GutTest
-## Ver docs/02-ARQUITETURA.md §4.12 e docs/07-DECISOES.md ADR-024 — SFX
-## sintetizados em código (sem asset externo); música fica em silêncio sem
-## arquivo real, sem erro.
+## Ver docs/02-ARQUITETURA.md §4.12 e docs/07-DECISOES.md ADR-024/ADR-028 — SFX
+## sintetizados em código (sem asset externo); música desconhecida fica em
+## silêncio, sem erro.
 
 
 func test_buses_musica_e_sfx_existem() -> void:
@@ -26,9 +26,10 @@ func test_tocar_sfx_com_nome_invalido_nao_cria_player() -> void:
 	assert_eq(AudioManager.get_child_count(), antes)
 
 
-func test_tocar_musica_sem_arquivo_fica_em_silencio() -> void:
+func test_tocar_musica_sem_arquivo_nem_partitura_fica_em_silencio() -> void:
+	var antes := AudioManager._musica_atual
 	AudioManager.tocar_musica("bioma_que_nao_existe")
-	assert_null(AudioManager._music_player, "sem arquivo real, não deveria criar o player")
+	assert_eq(AudioManager._musica_atual, antes, "sem arquivo nem partitura, não muda a música")
 
 
 func test_todos_os_sfx_catalogados_tocam_sem_erro() -> void:

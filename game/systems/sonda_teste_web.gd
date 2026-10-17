@@ -19,6 +19,8 @@ var _cb_spawnar: JavaScriptObject
 var _cb_especies: JavaScriptObject
 var _cb_medir: JavaScriptObject
 var _cb_limpar: JavaScriptObject
+## Frente 5D (áudio)
+var _cb_audio: JavaScriptObject
 var _janela: JavaScriptObject
 
 
@@ -47,6 +49,9 @@ func _ready() -> void:
 	_janela.muriloMedir = _cb_medir
 	_cb_limpar = JavaScriptBridge.create_callback(_limpar_criaturas)
 	_janela.muriloLimparCriaturas = _cb_limpar
+	## Frente 5D (áudio)
+	_cb_audio = JavaScriptBridge.create_callback(_audio)
+	_janela.muriloAudio = _cb_audio
 
 
 func _jogador() -> Player:
@@ -275,3 +280,15 @@ func _limpar_criaturas(_args: Array) -> void:
 	## outro período sem andar 48 blocos até as atuais sumirem.
 	for no: Node in get_tree().get_nodes_in_group("creature"):
 		no.queue_free()
+
+
+func _audio(_args: Array) -> void:
+	## Frente 5D: estado do áudio gerado em código — música atual, quantos SFX
+	## já tocaram e quantos AudioStreamPlayer estão tocando agora
+	## (window.muriloUltimoAudio).
+	var dados: Dictionary = {
+		"musica_atual": AudioManager._musica_atual,
+		"sfx_tocados": AudioManager.sfx_tocados,
+		"players_ativos": AudioManager.players_ativos(),
+	}
+	_janela.muriloUltimoAudio = JSON.stringify(dados)
