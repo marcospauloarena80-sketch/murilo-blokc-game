@@ -501,7 +501,8 @@ func _atualizar_slot(indice: int) -> void:
 
 	_slots[indice].mostrar(
 		GameState.inventario_hotbar.get_item_id(indice),
-		GameState.inventario_hotbar.get_quantidade(indice)
+		GameState.inventario_hotbar.get_quantidade(indice),
+		GameState.inventario_hotbar.fracao_durabilidade(indice)
 	)
 
 	if selecionado != _ultimo_selecionado[indice]:

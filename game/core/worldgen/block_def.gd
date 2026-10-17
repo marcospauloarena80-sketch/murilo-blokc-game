@@ -32,3 +32,7 @@ extends Resource
 ## Frente 8C (Ciclo 8): blocos de construção.
 @export var forma: String = "cubo"  ## "cubo" | "vidro" | "laje" | "escada" | "porta" | "cerca"
 @export var transparente: bool = false  ## vidro: não oclui e a textura tem furos (discard)
+
+## Ciclo 8 (8E): ferramenta que acelera a quebra e tier mínimo para quebrar.
+@export var ferramenta_ideal: String = ""  ## "" | "picareta" | "machado"
+@export var tier_minimo: int = 0  ## 0 = quebra na mão

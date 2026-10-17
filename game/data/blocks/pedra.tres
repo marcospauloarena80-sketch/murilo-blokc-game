@@ -11,3 +11,5 @@ drop_id = "pedra"
 cor = Color(0.55, 0.55, 0.55, 1)
 solido = true
 textura_lado = "pedra"
+ferramenta_ideal = "picareta"
+tier_minimo = 1

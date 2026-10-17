@@ -11,3 +11,6 @@ cor = Color(0.63, 0.47, 0.29, 1)
 bloco_id = 0
 eh_ferramenta = true
 multiplicador_velocidade = 2.0
+tipo_ferramenta = "picareta"
+tier = 1
+durabilidade = 60

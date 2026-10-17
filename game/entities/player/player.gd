@@ -45,12 +45,19 @@ const FOV_PARADO: float = 72.0
 const FOV_CORRIDA: float = 80.0
 const VELOCIDADE_FOV: float = 6.0  ## fração por segundo do lerp
 const ALTURA_QUEDA_POEIRA: float = 1.5  ## acima disso, aterrissar levanta poeira
+## Agachar (Ciclo 8, 8E): anda devagar, câmera mais baixa e não cai de bordas.
+const FATOR_VELOCIDADE_AGACHADO: float = 0.4
+const DESCIDA_CAMERA_AGACHADO: float = 0.3
+const VELOCIDADE_CAMERA_AGACHAR: float = 12.0  ## fração por segundo do lerp
+const ALCANCE_CHAO_AGACHADO: float = 0.6  ## sem chão até aqui abaixo = borda
 
 ## O que está sob a mira neste quadro, pro HUD e pra sonda (Ciclo 5, 5E): nome
 ## do NPC, da criatura ou do bloco e o tipo ("npc" | "criatura" | "bloco");
 ## vazios quando a mira não acerta nada.
 var alvo_mirado: String = ""
 var alvo_tipo: String = ""
+## Agachado neste quadro (Shift): atualizado no _physics_process.
+var agachado: bool = false
 
 var _chunk_manager: ChunkManager
 var _outline: MeshInstance3D
@@ -61,6 +68,8 @@ var _tempo_energia: float = 0.0
 var _estava_no_ar: bool = false
 var _y_inicio_queda: float = 0.0
 var _tempo_desde_ataque: float = INTERVALO_ATAQUE_SEG
+var _altura_base_camera: float = 0.0
+var _avisou_tier: bool = false  ## evita repetir o aviso de tier a cada quadro
 
 ## Atalhos pros materiais do CorpoBlocos (o criador de personagem lê a camisa).
 var _mat_pele: StandardMaterial3D
@@ -83,6 +92,7 @@ func _ready() -> void:
 	_configurar_materiais()
 	aplicar_aparencia(GameState.aparencia_atual)
 
+	_altura_base_camera = camera_pivot.position.y
 	_outline = _criar_outline()
 	add_child(_outline)
 	_outline.visible = false
@@ -251,7 +261,12 @@ func _physics_process(delta: float) -> void:
 			and direcao != Vector3.ZERO
 			and GameState.energia_atual > 0
 		)
+		agachado = Input.is_action_pressed("agachar") and not na_agua
+		if agachado:
+			esta_correndo = false
 		var velocidade_atual := VELOCIDADE_CORRIDA if esta_correndo else VELOCIDADE
+		if agachado:
+			velocidade_atual *= FATOR_VELOCIDADE_AGACHADO
 		if na_agua:
 			velocidade_atual *= FATOR_VELOCIDADE_AGUA
 		_atualizar_energia(delta, esta_correndo)
@@ -263,9 +278,13 @@ func _physics_process(delta: float) -> void:
 			velocity.x = move_toward(velocity.x, 0, velocidade_atual)
 			velocity.z = move_toward(velocity.z, 0, velocidade_atual)
 	else:
+		agachado = false
 		velocity.x = move_toward(velocity.x, 0, VELOCIDADE)
 		velocity.z = move_toward(velocity.z, 0, VELOCIDADE)
 
+	if agachado and is_on_floor():
+		_travar_bordas(delta)
+	_atualizar_camera_agachada(delta)
 	move_and_slide()
 	_animar_membros(delta)
 	_atualizar_fov(delta, esta_correndo)
@@ -277,6 +296,40 @@ func _physics_process(delta: float) -> void:
 			_tentar_comer()
 	elif _outline:
 		_outline.visible = false
+
+
+func _tem_chao_em(deslocamento: Vector3) -> bool:
+	## Com o corpo deslocado na horizontal, há chão sob o CENTRO da cápsula até
+	## ALCANCE_CHAO_AGACHADO abaixo dos pés? Raio no centro (não test_move da
+	## cápsula): a cápsula apoiada na quina já escorrega pra fora antes de
+	## perder o contato, e o jogador caía mesmo agachado.
+	var origem := global_position + deslocamento
+	var fim := origem - Vector3(0.0, DESLOCAMENTO_SONDA_PES + ALCANCE_CHAO_AGACHADO, 0.0)
+	var consulta := PhysicsRayQueryParameters3D.create(origem, fim)
+	consulta.exclude = [get_rid()]
+	return not get_world_3d().direct_space_state.intersect_ray(consulta).is_empty()
+
+
+func _travar_bordas(delta: float) -> void:
+	## Agachado no chão: zera o componente horizontal que levaria a uma borda
+	## (sem chão logo abaixo da posição do próximo quadro).
+	var dx := velocity.x * delta
+	var dz := velocity.z * delta
+	if dx != 0.0 and not _tem_chao_em(Vector3(dx, 0.0, 0.0)):
+		velocity.x = 0.0
+	if dz != 0.0 and not _tem_chao_em(Vector3(0.0, 0.0, dz)):
+		velocity.z = 0.0
+	## Quina: cada eixo sozinho tem chão, mas o passo diagonal não.
+	if velocity.x != 0.0 and velocity.z != 0.0:
+		if not _tem_chao_em(Vector3(velocity.x * delta, 0.0, velocity.z * delta)):
+			velocity.z = 0.0
+
+
+func _atualizar_camera_agachada(delta: float) -> void:
+	var alvo := _altura_base_camera - (DESCIDA_CAMERA_AGACHADO if agachado else 0.0)
+	camera_pivot.position.y = lerpf(
+		camera_pivot.position.y, alvo, minf(1.0, VELOCIDADE_CAMERA_AGACHAR * delta)
+	)
 
 
 func _animar_membros(delta: float) -> void:
@@ -343,6 +396,27 @@ func _multiplicador_ferramenta_atual() -> float:
 	if def == null or not def.eh_ferramenta:
 		return 1.0
 	return def.multiplicador_velocidade
+
+
+func _multiplicador_para(def_bloco: BlockDef) -> float:
+	return Ferramentas.multiplicador(def_bloco, _ferramenta_atual())
+
+
+func _ferramenta_atual() -> ItemDef:
+	return ItemRegistry.get_item(
+		GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
+	)
+
+
+func _gastar_ferramenta() -> void:
+	## Cada bloco quebrado (ou golpe de arma) gasta 1 de durabilidade da pilha
+	## selecionada; ao zerar, o item some com som.
+	var def := _ferramenta_atual()
+	if def == null or def.durabilidade <= 0:
+		return
+	if GameState.inventario_hotbar.gastar_durabilidade(GameState.hotbar_selecionado):
+		AudioManager.tocar_sfx("ui_clique")
+		EventBus.aviso.emit("%s quebrou" % def.nome)
 
 
 func _raycast_mira() -> Dictionary:
@@ -439,6 +513,9 @@ func _processar_mira_e_interacao(delta: float) -> void:
 			(colisor as Creature).receber_dano(_dano_de_ataque_atual())
 		elif Input.is_action_just_pressed("interagir"):
 			interagir_com_criatura(colisor as Creature)
+			_gastar_ferramenta()
+		elif Input.is_action_just_pressed("interagir") and GameState.tem_cubelin_disponivel():
+			EventBus.battle_started.emit(colisor)
 		return
 
 	if colisor != null and colisor.is_in_group("npc"):
@@ -468,6 +545,7 @@ func _processar_mira_e_interacao(delta: float) -> void:
 	if bloco_mirado != _bloco_em_quebra:
 		_bloco_em_quebra = bloco_mirado
 		_progresso_quebra = 0.0
+		_avisou_tier = false
 
 	if Input.is_action_pressed("quebrar"):
 		var id_alvo := _chunk_manager.get_block(bloco_mirado)
@@ -477,14 +555,33 @@ func _processar_mira_e_interacao(delta: float) -> void:
 			if _progresso_quebra >= def.dureza:
 				_quebrar_bloco(bloco_mirado)
 				_progresso_quebra = 0.0
+		_quebrar_bloco(bloco_mirado, delta)
 	else:
 		_progresso_quebra = 0.0
+		_avisou_tier = false
 
 	if Input.is_action_just_pressed("colocar"):
 		_tentar_colocar_bloco(bloco_mirado + Vector3i(normal.round()))
 
 	if Input.is_action_just_pressed("interagir"):
 		_processar_interacao(bloco_mirado)
+
+
+func _quebrar_bloco(bloco_mirado: Vector3i, delta: float) -> void:
+	## Avança a quebra do bloco; tier insuficiente não avança e avisa uma vez.
+	var def := BlockRegistry.get_block(_chunk_manager.get_block(bloco_mirado))
+	if def == null:
+		return
+	if not Ferramentas.pode_quebrar(def, _ferramenta_atual()):
+		if not _avisou_tier:
+			EventBus.aviso.emit(Ferramentas.aviso_tier(def))
+			_avisou_tier = true
+		return
+	_progresso_quebra += delta * _multiplicador_para(def)
+	if _progresso_quebra >= def.dureza:
+		_chunk_manager.set_block(bloco_mirado, BlockRegistry.AR_ID)
+		_progresso_quebra = 0.0
+		_gastar_ferramenta()
 
 
 func _processar_interacao(bloco_mirado: Vector3i) -> void:

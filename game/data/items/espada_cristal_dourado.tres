@@ -11,3 +11,6 @@ cor = Color(0.9, 0.78, 0.25, 1)
 bloco_id = 0
 eh_arma = true
 dano_ataque = 7
+tipo_ferramenta = ""
+tier = 4
+durabilidade = 1000

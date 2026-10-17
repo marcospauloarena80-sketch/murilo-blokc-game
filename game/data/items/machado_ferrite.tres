@@ -11,3 +11,6 @@ cor = Color(0.75, 0.75, 0.8, 1)
 bloco_id = 0
 eh_ferramenta = true
 multiplicador_velocidade = 5.0
+tipo_ferramenta = "machado"
+tier = 3
+durabilidade = 250

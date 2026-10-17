@@ -17,3 +17,8 @@ extends Resource
 @export var eh_pocao: bool = false
 @export var cura_pontos: int = 0
 @export var pode_arar: bool = false  ## enxada: interagir em grama/terra vira terra arada (Ciclo 8)
+
+## Ciclo 8 (8E): ferramenta certa, tier mínimo e desgaste.
+@export var tipo_ferramenta: String = ""  ## "picareta" | "machado" | "enxada" | ""
+@export var tier: int = 0  ## 0 a 4: madeira 1, pedra 2, ferrite 3, cristal 4
+@export var durabilidade: int = 0  ## usos até quebrar; 0 = infinita

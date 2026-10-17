@@ -37,7 +37,39 @@ func carregar_serializado(dados: Array) -> void:
 			continue
 		var slot: Dictionary = slot_bruto.duplicate()
 		slot["quantidade"] = int(slot.get("quantidade", 0))
+		if slot.has("durabilidade_restante"):
+			slot["durabilidade_restante"] = int(slot["durabilidade_restante"])
 		_slots[i] = slot
+
+
+func get_durabilidade(indice: int) -> int:
+	## Durabilidade restante da pilha; sem o campo (save antigo, item recém
+	## criado) vale a durabilidade cheia do item. 0 = item sem desgaste.
+	var def := ItemRegistry.get_item(get_item_id(indice))
+	if def == null or def.durabilidade <= 0:
+		return 0
+	return int(_slots[indice].get("durabilidade_restante", def.durabilidade))
+
+
+func fracao_durabilidade(indice: int) -> float:
+	## 1.0 = cheia (ou item sem desgaste); usada pela barrinha da hotbar.
+	var def := ItemRegistry.get_item(get_item_id(indice))
+	if def == null or def.durabilidade <= 0:
+		return 1.0
+	return clampf(float(get_durabilidade(indice)) / float(def.durabilidade), 0.0, 1.0)
+
+
+func gastar_durabilidade(indice: int, quantidade: int = 1) -> bool:
+	## Gasta durabilidade do item do slot. Ao zerar, o item some e retorna true.
+	var def := ItemRegistry.get_item(get_item_id(indice))
+	if def == null or def.durabilidade <= 0:
+		return false
+	var restante: int = get_durabilidade(indice) - quantidade
+	if restante <= 0:
+		_slots[indice] = {}
+		return true
+	_slots[indice]["durabilidade_restante"] = restante
+	return false
 
 
 func get_item_id(indice: int) -> String:

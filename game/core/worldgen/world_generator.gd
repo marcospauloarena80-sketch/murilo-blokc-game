@@ -41,6 +41,18 @@ const RAIO_CAVERNA: int = 2
 const Y_MIN_CAVERNA: int = 10
 const Y_MAX_CAVERNA: int = 16
 
+## Túneis (Ciclo 8, 8E): "minhocas" são caminhos aleatórios determinísticos que
+## cavam ar contínuo no subsolo, sempre dentro do próprio chunk.
+const SEMENTE_MINHOCA: int = 130363
+const CHANCE_MINHOCAS_POR_CHUNK: float = 0.2
+const MINHOCAS_POR_CHUNK: int = 2
+const PASSOS_MINHOCA: int = 24
+const RAIO_MINHOCA: float = 1.5
+const Y_MIN_MINHOCA: int = 8
+const Y_MAX_MINHOCA: int = 24
+const MARGEM_MINHOCA: int = 2  ## o centro da minhoca fica a esta distância da borda do chunk
+const FOLGA_SUPERFICIE_MINHOCA: int = 3  ## o túnel nunca chega perto do topo do terreno
+
 var _seed: int
 var _ruido: FastNoiseLite
 var _luzes_locais_ultima_chunk: Array[Vector3i] = []  ## posições locais (lx,y,lz) de tochas geradas
@@ -117,6 +129,68 @@ func _talvez_cavar_caverna(chunk: ChunkData, cx: int, cz: int) -> void:
 	_luzes_locais_ultima_chunk.append(Vector3i(lx_tocha, y_centro, lz_centro))
 
 
+func _talvez_cavar_minhocas(chunk: ChunkData, cx: int, cz: int) -> void:
+	if _hash01(_seed + SEMENTE_MINHOCA, cx, cz) >= CHANCE_MINHOCAS_POR_CHUNK:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = (
+		((_seed * 73856093) ^ (cx * 19349663) ^ (cz * 83492791) ^ SEMENTE_MINHOCA) & 0x7fffffff
+	)
+	var limite_h := float(ChunkData.SIZE_H - 1 - MARGEM_MINHOCA)
+	for _m in range(MINHOCAS_POR_CHUNK):
+		var pos := Vector3(
+			rng.randf_range(MARGEM_MINHOCA, limite_h),
+			rng.randf_range(Y_MIN_MINHOCA + 2, Y_MAX_MINHOCA - 2),
+			rng.randf_range(MARGEM_MINHOCA, limite_h)
+		)
+		var direcao := Vector3(
+			rng.randf_range(-1, 1), rng.randf_range(-0.3, 0.3), rng.randf_range(-1, 1)
+		)
+		direcao = direcao.normalized()
+		for _passo in range(PASSOS_MINHOCA):
+			_cavar_esfera(chunk, cx, cz, pos)
+			## Vira um pouco a cada passo; ao chegar numa borda do chunk ou nos
+			## limites de altura, reflete o componente para continuar dentro.
+			direcao += Vector3(
+				rng.randf_range(-0.5, 0.5), rng.randf_range(-0.25, 0.25), rng.randf_range(-0.5, 0.5)
+			)
+			direcao = direcao.normalized()
+			var proxima := pos + direcao
+			if proxima.x < MARGEM_MINHOCA or proxima.x > limite_h:
+				direcao.x = -direcao.x
+			if proxima.z < MARGEM_MINHOCA or proxima.z > limite_h:
+				direcao.z = -direcao.z
+			if proxima.y < Y_MIN_MINHOCA or proxima.y > Y_MAX_MINHOCA:
+				direcao.y = -direcao.y
+			pos += direcao
+
+
+func _cavar_esfera(chunk: ChunkData, cx: int, cz: int, centro: Vector3) -> void:
+	var r := int(ceil(RAIO_MINHOCA))
+	var cxi := roundi(centro.x)
+	var cyi := roundi(centro.y)
+	var czi := roundi(centro.z)
+	for dx in range(-r, r + 1):
+		for dz in range(-r, r + 1):
+			for dy in range(-r, r + 1):
+				if float(dx * dx + dy * dy + dz * dz) > RAIO_MINHOCA * RAIO_MINHOCA:
+					continue
+				var lx := cxi + dx
+				var lz := czi + dz
+				var y := cyi + dy
+				if lx < 0 or lx >= ChunkData.SIZE_H or lz < 0 or lz >= ChunkData.SIZE_H:
+					continue
+				if y < 1:
+					continue
+				var altura := _altura_em(cx * ChunkData.SIZE_H + lx, cz * ChunkData.SIZE_H + lz)
+				if y > altura - FOLGA_SUPERFICIE_MINHOCA:
+					continue
+				var atual := chunk.get_block(lx, y, lz)
+				if atual == 9 or atual == BlockRegistry.AGUA_ID:
+					continue  # preserva a tocha da caverna decorada
+				chunk.set_block(lx, y, lz, BlockRegistry.AR_ID)
+
+
 static func _hash01(seed: int, x: int, z: int) -> float:
 	var h: int = seed
 	h = (h * 374761393 + x * 668265263) & 0x7fffffff
@@ -150,6 +224,7 @@ func gerar_chunk(cx: int, cz: int) -> ChunkData:
 			_encher_lago(chunk, lx, lz, altura, bioma_id, world_x, world_z)
 
 	_talvez_cavar_caverna(chunk, cx, cz)
+	_talvez_cavar_minhocas(chunk, cx, cz)
 
 	var tem_arvore := bioma_id == "campos_dourados" or bioma_id == "floresta_cubica"
 	if tem_arvore:
