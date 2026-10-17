@@ -22,6 +22,8 @@ var _cb_limpar: JavaScriptObject
 var _cb_teleportar: JavaScriptObject
 ## Frente 5D (áudio)
 var _cb_audio: JavaScriptObject
+## Frente 8A (crescimento)
+var _cb_crescimento: JavaScriptObject
 var _janela: JavaScriptObject
 
 
@@ -55,6 +57,9 @@ func _ready() -> void:
 	## Frente 5D (áudio)
 	_cb_audio = JavaScriptBridge.create_callback(_audio)
 	_janela.muriloAudio = _cb_audio
+	## Frente 8A (crescimento)
+	_cb_crescimento = JavaScriptBridge.create_callback(_acelerar_crescimento)
+	_janela.muriloAcelerarCrescimento = _cb_crescimento
 
 
 func _jogador() -> Player:
@@ -317,3 +322,13 @@ func _teleportar(args: Array) -> void:
 	if jogador != null and args.size() >= 3:
 		jogador.global_position = Vector3(float(args[0]), float(args[1]) + 0.95, float(args[2]))
 		jogador.velocity = Vector3.ZERO
+
+
+func _acelerar_crescimento(args: Array) -> void:
+	## Só pra teste: passa N segundos de crescimento de uma vez (muda vira árvore,
+	## trigo amadurece) sem esperar o relógio. window.muriloUltimoCrescimento diz
+	## se o sistema existe na cena.
+	var crescimento := get_tree().current_scene.get_node_or_null("Crescimento") as Crescimento
+	if crescimento != null and args.size() >= 1:
+		crescimento.avancar(float(args[0]))
+	_janela.muriloUltimoCrescimento = crescimento != null

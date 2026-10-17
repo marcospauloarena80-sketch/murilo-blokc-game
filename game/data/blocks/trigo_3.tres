@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BlockDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/worldgen/block_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = 21
+nome = "Trigo Maduro"
+dureza = 0.05
+drop_id = "trigo"
+cor = Color(0.9, 0.78, 0.25, 1)
+solido = false
+textura_lado = "trigo_3"
+forma = "cruz"
+oclui = false
+altura_cruz = 0.95
+chao_exigido = PackedInt32Array(22)
+drop_extra_id = "semente"
+drop_extra_chance = 1.0
+drop_extra_min = 1
+drop_extra_max = 2

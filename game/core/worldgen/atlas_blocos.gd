@@ -34,6 +34,12 @@ const NOMES: Array[String] = [
 	"flor_amarela",
 	"flor_rosa",
 	"flor_lumen",
+	"muda",
+	"cogumelo",
+	"trigo_1",
+	"trigo_2",
+	"trigo_3",
+	"terra_arada_topo",
 ]
 
 static var _textura: Texture2DArray

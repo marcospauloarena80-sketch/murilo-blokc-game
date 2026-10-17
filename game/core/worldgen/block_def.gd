@@ -16,3 +16,15 @@ extends Resource
 @export var textura_topo: String = ""  ## vazio = mesma do lado
 @export var textura_base: String = ""  ## vazio = mesma do topo
 @export var brilho: float = 0.0  ## luz própria na textura (0 = nenhuma)
+## Ciclo 8 (frente 8A): blocos em cruz e plantas que crescem.
+@export var forma: String = "cubo"  ## "cubo" | "cruz" (dois planos cruzados, sem colisão)
+@export var oclui: bool = true  ## false: não esconde a face dos vizinhos
+@export var altura_cruz: float = 0.9  ## altura dos planos da forma "cruz"
+@export var cresce_para: int = 0  ## id do próximo estágio (0 = não cresce)
+@export var tempo_crescimento_seg: float = 0.0
+## ids aceitos no bloco de baixo (vazio = qualquer)
+@export var chao_exigido: PackedInt32Array = PackedInt32Array()
+@export var drop_extra_id: String = ""  ## segundo drop, sorteado
+@export var drop_extra_chance: float = 0.0
+@export var drop_extra_min: int = 1
+@export var drop_extra_max: int = 1

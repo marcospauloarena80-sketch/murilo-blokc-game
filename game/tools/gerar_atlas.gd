@@ -80,6 +80,18 @@ func _desenhar(nome: String, semente: int) -> Image:
 			_flor(img, rng, Color.html("ff8fc4"), Color.html("ffe066"))
 		"flor_lumen":
 			_flor(img, rng, Color.html("8fe9ff"), Color.html("ffffff"))
+		"muda":
+			_muda(img, rng)
+		"cogumelo":
+			_cogumelo(img, rng)
+		"trigo_1":
+			_trigo(img, rng, 8, Color.html("6fbf4a"), false)
+		"trigo_2":
+			_trigo(img, rng, 16, Color.html("a8c23a"), false)
+		"trigo_3":
+			_trigo(img, rng, 22, Color.html("d9b43a"), true)
+		"terra_arada_topo":
+			_terra_arada_topo(img, rng)
 	return img
 
 
@@ -427,3 +439,64 @@ func _flor(img: Image, rng: RandomNumberGenerator, petala: Color, miolo: Color) 
 				img.set_pixel(centro.x + dx, centro.y + dy, miolo)
 			elif d <= 4.2 and (absi(dx) <= 1 or absi(dy) <= 1 or d <= 3.3):
 				img.set_pixel(centro.x + dx, centro.y + dy, petala.lightened(0.15 * rng.randf()))
+
+
+func _muda(img: Image, rng: RandomNumberGenerator) -> void:
+	## Broto de árvore: tronquinho fino e uma copa redonda. Fundo transparente.
+	var casca := _paleta(["6e4826", "84592f", "9a6d38", "3f2814"])
+	var verdes := _paleta(["3a8a33", "4fae3e", "8ade63", "2a6a28"])
+	for k: int in range(14):
+		_ponto(img, 15, L - 1 - k, casca[1])
+		_ponto(img, 16, L - 1 - k, casca[0])
+	_bolha(img, 16, L - 21, 7.0, verdes)
+	_bolha(img, 10, L - 15, 4.0, verdes)
+	_bolha(img, 22, L - 16, 4.5, verdes)
+	for i: int in range(6):  # folhinhas claras
+		_ponto(img, rng.randi_range(10, 22), L - rng.randi_range(17, 27), verdes[2])
+
+
+func _cogumelo(img: Image, rng: RandomNumberGenerator) -> void:
+	var pe := _paleta(["c9b99a", "e8dcc0", "fff6e0", "8a7a5c"])
+	var capa := _paleta(["a8201c", "d63a30", "ff6b5a", "701410"])
+	_bolha(img, 16, L - 12, 8.0, capa)
+	for dy: int in range(1, 10):  # a copa é meia esfera: apaga a metade de baixo
+		for dx: int in range(-9, 10):
+			_ponto(img, 16 + dx, L - 12 + dy, Color(0, 0, 0, 0))
+	for k: int in range(12):
+		for dx: int in range(-2, 3):
+			_ponto(img, 16 + dx, L - 1 - k, pe[1] if dx < 1 else pe[0])
+	for i: int in range(4):  # pintas
+		_ponto(img, rng.randi_range(11, 21), L - rng.randi_range(14, 18), Color.html("fff6e0"))
+	_bolha(img, 25, L - 4, 3.0, capa)
+	for k: int in range(3):
+		_ponto(img, 25, L - 1 - k, pe[1])
+
+
+func _trigo(
+	img: Image, rng: RandomNumberGenerator, altura: int, haste: Color, espiga: bool
+) -> void:
+	for i: int in range(7):
+		var x: int = 4 + i * 4 + rng.randi_range(-1, 1)
+		var h: int = altura + rng.randi_range(-2, 2)
+		var inclina: float = rng.randf_range(-0.12, 0.12)
+		for k: int in range(h):
+			var px: int = clampi(x + int(inclina * k), 0, L - 1)
+			_ponto(img, px, L - 1 - k, haste.darkened(0.2) if k < 3 else haste)
+		if espiga:
+			var topo_x: int = clampi(x + int(inclina * h), 1, L - 2)
+			for k: int in range(5):
+				var grao := Color.html("f2c94c") if k % 2 == 0 else Color.html("d9a520")
+				_ponto(img, topo_x, L - 1 - h - k, grao)
+				if k > 0 and k < 4:
+					_ponto(img, topo_x - 1, L - 1 - h - k, grao)
+					_ponto(img, topo_x + 1, L - 1 - h - k, grao)
+
+
+func _terra_arada_topo(img: Image, rng: RandomNumberGenerator) -> void:
+	_terra(img, rng)
+	for sulco: int in range(4):
+		var y: int = 3 + sulco * 8
+		for x: int in range(L):
+			_ponto(img, x, y, Color.html("4a2c16"))
+			_ponto(img, x, y + 1, Color.html("5f3b22"))
+			_ponto(img, x, y - 1, Color.html("a3744d"))

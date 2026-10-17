@@ -43,7 +43,7 @@ func _init() -> void:
 func _desenhar(item_id: String, atlas: Image) -> Image:
 	var def: ItemDef = ItemRegistry.get_item(item_id)
 	var img := Image.create(L, L, false, Image.FORMAT_RGBA8)
-	if def.bloco_id != 0:
+	if def.bloco_id != 0 and item_id != "semente":  # semente tem desenho próprio
 		_copiar_tile(img, atlas, BlockRegistry.get_block(def.bloco_id).textura_lado)
 		return img
 	match item_id:
@@ -91,6 +91,14 @@ func _desenhar(item_id: String, atlas: Image) -> Image:
 			_gema(img, CRISTAL)
 		"ambar":
 			_gota(img, AMBAR)
+		"semente":
+			_semente(img)
+		"trigo":
+			_trigo_item(img)
+		"pao":
+			_pao(img)
+		"enxada_madeira":
+			_enxada(img, MADEIRA)
 		_:
 			_quadrado(img, def.cor)
 	_contornar(img)
@@ -440,3 +448,48 @@ func _quadrado(img: Image, cor: Color) -> void:
 	_retangulo(img, 5, 5, 26, 26, cor)
 	_retangulo(img, 5, 5, 26, 6, cor.lightened(0.3))
 	_retangulo(img, 5, 25, 26, 26, cor.darkened(0.3))
+
+
+func _enxada(img: Image, tier: Array[String]) -> void:
+	var cores := _cores(tier)
+	_cabo(img, Vector2(5.0, 27.0), Vector2(19.0, 9.0))
+	## Lâmina chata dobrada pra baixo na ponta do cabo.
+	_retangulo(img, 15, 5, 26, 8, cores[1])
+	_retangulo(img, 15, 5, 26, 5, cores[2])
+	_retangulo(img, 15, 8, 26, 8, cores[0])
+	_retangulo(img, 23, 9, 26, 13, cores[1])
+	_retangulo(img, 26, 9, 26, 13, cores[0])
+	_retangulo(img, 23, 9, 23, 13, cores[2])
+
+
+func _semente(img: Image) -> void:
+	var cores := _cores(["6b4a1e", "a8782f", "d9a95a"] as Array[String])
+	for p: Vector2 in [
+		Vector2(16, 16), Vector2(9, 20), Vector2(22, 11), Vector2(21, 22), Vector2(10, 10)
+	]:
+		_esfera(img, p, 3.4, cores)
+	_ponto(img, 17, 12, cores[2])
+	_ponto(img, 10, 16, cores[2])
+
+
+func _trigo_item(img: Image) -> void:
+	var haste := Color.html("b89a2e")
+	var grao := _cores(["a87612", "e0b830", "ffe27a"] as Array[String])
+	var topos: Array[Vector2] = [Vector2(10, 8), Vector2(16, 6), Vector2(22, 8)]
+	var bases: Array[Vector2] = [Vector2(13, 28), Vector2(16, 28), Vector2(19, 28)]
+	for i: int in range(3):
+		_linha(img, bases[i], topos[i], 1.6, haste)
+		for k: int in range(5):
+			var cor: Color = grao[1] if k % 2 == 0 else grao[0]
+			_disco(img, topos[i] + Vector2((k % 2) * 1.5 - 0.75, k * 2.2), 1.6, cor)
+		_ponto(img, roundi(topos[i].x), roundi(topos[i].y), grao[2])
+
+
+func _pao(img: Image) -> void:
+	var cores := _cores(["8a4a16", "c47a2a", "e8a859"] as Array[String])
+	_esfera(img, Vector2(16.0, 17.0), 10.0, cores)
+	for x: int in range(8, 25):  # fundo achatado
+		_ponto(img, x, 26, cores[0])
+	for g: int in range(3):  # cortes da casca
+		_linha(img, Vector2(11.0 + g * 5.0, 12.0), Vector2(13.0 + g * 5.0, 18.0), 1.2, cores[0])
+		_ponto(img, 12 + g * 5, 13, cores[2])

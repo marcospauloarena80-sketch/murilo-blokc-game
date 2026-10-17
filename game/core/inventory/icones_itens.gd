@@ -41,6 +41,12 @@ const NOMES: Array[String] = [
 	"espada_cristal_dourado",
 	"pocao_maior",
 	"cubo_captura_avancado",
+	"semente",
+	"trigo",
+	"pao",
+	"enxada_madeira",
+	"muda",
+	"cogumelo",
 ]
 
 static var _folha: Texture2D

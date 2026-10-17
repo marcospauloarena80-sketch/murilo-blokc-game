@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BlockDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/worldgen/block_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = 19
+nome = "Trigo Brotando"
+dureza = 0.05
+drop_id = "semente"
+cor = Color(0.5, 0.75, 0.3, 1)
+solido = false
+textura_lado = "trigo_1"
+forma = "cruz"
+oclui = false
+altura_cruz = 0.35
+cresce_para = 20
+tempo_crescimento_seg = 60.0
+chao_exigido = PackedInt32Array(22)

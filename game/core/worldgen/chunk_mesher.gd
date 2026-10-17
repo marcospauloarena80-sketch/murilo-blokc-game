@@ -48,6 +48,7 @@ static var _tab_uvs := PackedVector2Array()
 func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 	var dados: PackedByteArray = chunk.dados()
 	var solidos: PackedByteArray = BlockRegistry.tabela_solidos()
+	var oclusao: PackedByteArray = BlockRegistry.tabela_oclusao()
 	var texturas: PackedInt32Array = BlockRegistry.tabela_texturas()
 	var brilhos: PackedFloat32Array = BlockRegistry.tabela_brilhos()
 	var h: int = ChunkData.SIZE_H
@@ -67,7 +68,7 @@ func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 				i += 1
 				var id: int = dados[i]
 				if id != BlockRegistry.AR_ID:
-					grade[linha + x] = solidos[id]
+					grade[linha + x] = oclusao[id]
 					y_max = y
 	if y_max < 0:
 		return null
@@ -248,13 +249,27 @@ func construir_detalhes(chunk: ChunkData, semente: int) -> Dictionary:
 		AtlasBlocos.indice("flor_rosa"),
 		AtlasBlocos.indice("flor_lumen"),
 	]
+	var cruzes: PackedByteArray = BlockRegistry.tabela_cruz()
+	var texturas: PackedInt32Array = BlockRegistry.tabela_texturas()
+	var brilhos: PackedFloat32Array = BlockRegistry.tabela_brilhos()
 	for y in range(v - 1):
 		for z in range(h):
 			for x in range(h):
 				var i: int = y * camada + z * h + x
 				var id: int = dados[i]
 				var acima: int = dados[i + camada]
-				if id == BlockRegistry.AGUA_ID and acima == BlockRegistry.AR_ID:
+				if cruzes[id] == 1:
+					## Bloco em cruz (muda, cogumelo, trigo): mesma via do capim,
+					## mas centrado, na altura do BlockDef e sem sorteio.
+					_cruz(
+						decoracao,
+						Vector3(x, y, z),
+						texturas[id * 6],
+						brilhos[id],
+						0.0,
+						BlockRegistry.get_block(id).altura_cruz
+					)
+				elif id == BlockRegistry.AGUA_ID and acima == BlockRegistry.AR_ID:
 					_quad_de_agua(agua, Vector3(x, y, z))
 				elif id == _GRAMA_ID and acima == BlockRegistry.AR_ID:
 					var sorteio: float = _hash01(semente, x + 31 * z, y)
@@ -275,12 +290,23 @@ func _quad_de_agua(m: _NovaMalha, origem: Vector3) -> void:
 	m.indices.append_array([base, base + 2, base + 1, base, base + 3, base + 2])
 
 
-func _cruz(m: _NovaMalha, origem: Vector3, tile: int, brilho: float, sorteio: float) -> void:
+func _cruz(
+	m: _NovaMalha,
+	origem: Vector3,
+	tile: int,
+	brilho: float,
+	sorteio: float,
+	altura_fixa: float = -1.0
+) -> void:
 	## Dois planos cruzados em X, um pouco deslocados pra não ficarem alinhados.
+	## Com altura_fixa >= 0 (bloco em cruz do mundo) ficam centrados na célula.
 	var desvio := Vector3(fmod(sorteio * 97.0, 0.3) - 0.15, 0.0, fmod(sorteio * 57.0, 0.3) - 0.15)
+	var altura: float = 0.75 + fmod(sorteio * 13.0, 0.3)
+	if altura_fixa >= 0.0:
+		desvio = Vector3.ZERO
+		altura = altura_fixa
 	var c := origem + Vector3(0.5, 0.0, 0.5) + desvio
 	var r: float = 0.42
-	var altura: float = 0.75 + fmod(sorteio * 13.0, 0.3)
 	var camada_tex: float = tile / 255.0
 	for diagonal: Vector3 in [Vector3(r, 0, r), Vector3(r, 0, -r)]:
 		var base: int = m.verts.size()

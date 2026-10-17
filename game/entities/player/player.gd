@@ -25,6 +25,11 @@ const FATOR_VELOCIDADE_AGUA: float = 0.55
 ## ela lê o bloco onde os pés estão, não o chão.
 const DESLOCAMENTO_SONDA_PES: float = 0.9
 const ALCANCE: float = 5.5
+## Passo do raio auxiliar que acha blocos em cruz (sem colisão), em blocos.
+const PASSO_RAIO_CRUZ: float = 0.1
+const GRAMA_ID: int = 1
+const TERRA_ID: int = 2
+const TERRA_ARADA_ID: int = 22
 const AMPLITUDE_MAX_BALANCO: float = 0.6
 const SEGUNDOS_POR_PONTO_ENERGIA: float = 2.0
 const ALTURA_QUEDA_SEGURA: float = 3.0
@@ -363,6 +368,36 @@ func _raycast_mira() -> Dictionary:
 	return resultado
 
 
+func _resultado_com_cruz(resultado: Dictionary) -> Dictionary:
+	## Blocos em cruz (muda, cogumelo, trigo) não têm colisão, então o raio
+	## principal os atravessa. Este raio auxiliar anda pelo mesmo caminho em
+	## passos curtos e, se passar por uma célula em cruz antes de onde o raio
+	## principal acertou (ou ao alcance, se não acertou nada), mira nela: devolve
+	## um resultado sintético com a face de cima da célula como superfície.
+	if _chunk_manager == null:
+		return resultado
+	var origem := _camera.global_position
+	var direcao := -_camera.global_transform.basis.z
+	var comeco: float = _braco_camera.get_hit_length()
+	var fim: float = comeco + ALCANCE
+	if not resultado.is_empty():
+		fim = minf(fim, origem.distance_to(resultado["position"]))
+	var t: float = comeco
+	var ultima := Vector3i(0, -999, 0)
+	while t <= fim:
+		var celula := Vector3i((origem + direcao * t).floor())
+		if celula != ultima:
+			ultima = celula
+			if BlockRegistry.e_cruz(_chunk_manager.get_block(celula)):
+				return {
+					"collider": null,
+					"position": Vector3(celula) + Vector3(0.5, 1.0, 0.5),
+					"normal": Vector3.UP,
+				}
+		t += PASSO_RAIO_CRUZ
+	return resultado
+
+
 func _dano_de_ataque_atual() -> int:
 	var item_id: String = GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
 	if item_id == "":
@@ -376,7 +411,7 @@ func _dano_de_ataque_atual() -> int:
 func _processar_mira_e_interacao(delta: float) -> void:
 	_tempo_desde_ataque += delta
 
-	var resultado := _raycast_mira()
+	var resultado := _resultado_com_cruz(_raycast_mira())
 	if resultado.is_empty():
 		_outline.visible = false
 		_progresso_quebra = 0.0
@@ -447,6 +482,8 @@ func _processar_interacao(bloco_mirado: Vector3i) -> void:
 	var def := BlockRegistry.get_block(id_alvo)
 	if def == null:
 		return
+	if _tentar_arar(bloco_mirado, id_alvo):
+		return
 	if def.tipo_especial == "cama":
 		GameState.ponto_respawn = Vector3(bloco_mirado) + Vector3(0.5, 1.0, 0.5)
 		## Dormir (Ciclo 6): à noite o main.gd amanhece, cura e faz o fade;
@@ -457,6 +494,23 @@ func _processar_interacao(bloco_mirado: Vector3i) -> void:
 			EventBus.aviso.emit("Você só consegue dormir à noite")
 	elif def.tipo_especial == "bau":
 		EventBus.chest_requested.emit(GameState.chave_posicao(bloco_mirado))
+
+
+func _tentar_arar(celula: Vector3i, id_alvo: int) -> bool:
+	## Enxada na mão (ItemDef.pode_arar): grama ou terra vira terra arada, desde
+	## que nada sólido esteja em cima. É obra do jogador mas não "bloco colocado":
+	## usa a troca sem evento, então não conta pra missão de construir.
+	if id_alvo != GRAMA_ID and id_alvo != TERRA_ID:
+		return false
+	var item_id: String = GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
+	var def_item := ItemRegistry.get_item(item_id) if item_id != "" else null
+	if def_item == null or not def_item.pode_arar:
+		return false
+	var acima := _chunk_manager.get_block(celula + Vector3i.UP)
+	if acima != BlockRegistry.AR_ID and not BlockRegistry.e_cruz(acima):
+		return false
+	_chunk_manager.trocar_bloco_sem_evento(celula, TERRA_ARADA_ID)
+	return true
 
 
 func _celula_invade_o_corpo(celula: Vector3i) -> bool:
@@ -489,6 +543,12 @@ func _tentar_colocar_bloco(adjacente: Vector3i) -> void:
 	var def := ItemRegistry.get_item(item_id)
 	if def == null or def.bloco_id == BlockRegistry.AR_ID:
 		return
+	var def_bloco := BlockRegistry.get_block(def.bloco_id)
+	if def_bloco != null and not def_bloco.chao_exigido.is_empty():
+		var chao := _chunk_manager.get_block(adjacente + Vector3i.DOWN)
+		if not def_bloco.chao_exigido.has(chao):
+			EventBus.aviso.emit("Não dá pra plantar aqui")
+			return
 	## Fora do mundo, acima do topo ou em chunk ainda não gerado o set_block
 	## não faz nada: confere antes de gastar o item.
 	_chunk_manager.set_block(adjacente, def.bloco_id)

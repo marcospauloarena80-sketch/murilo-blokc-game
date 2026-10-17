@@ -5,6 +5,9 @@ extends Node3D
 
 const ItemDropScene := preload("res://entities/props/item_drop.tscn")
 
+## Sorteio dos drops extras (muda nas folhas, sementes): os testes trocam a semente.
+var rng := RandomNumberGenerator.new()
+
 
 func _ready() -> void:
 	EventBus.block_broken.connect(_ao_quebrar_bloco)
@@ -16,11 +19,19 @@ func _ao_quebrar_bloco(pos: Vector3i, block_id: int) -> void:
 		return
 	if bloco.tipo_especial == "bau":
 		_dropar_conteudo_do_bau(pos)
+	if bloco.drop_extra_id != "" and rng.randf() < bloco.drop_extra_chance:
+		_dropar(
+			bloco.drop_extra_id, rng.randi_range(bloco.drop_extra_min, bloco.drop_extra_max), pos
+		)
 	if bloco.drop_id == "":
 		return
+	_dropar(bloco.drop_id, 1, pos)
+
+
+func _dropar(item_id: String, quantidade: int, pos: Vector3i) -> void:
 	var drop: ItemDrop = ItemDropScene.instantiate()
-	drop.item_id = bloco.drop_id
-	drop.quantidade = 1
+	drop.item_id = item_id
+	drop.quantidade = quantidade
 	drop.position = Vector3(pos) + Vector3(0.5, 0.5, 0.5)
 	add_child(drop)
 

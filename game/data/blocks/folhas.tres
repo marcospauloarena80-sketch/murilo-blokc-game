@@ -11,3 +11,5 @@ drop_id = "maca"
 cor = Color(0.18, 0.47, 0.18, 1)
 solido = true
 textura_lado = "folhas"
+drop_extra_id = "muda"
+drop_extra_chance = 0.15

@@ -53,6 +53,7 @@ var _fila_ordenada: bool = false
 var _centro_area: Vector2i = Vector2i.ZERO
 var _fila_sujos: Array[Vector2i] = []
 var _edicoes: Dictionary = {}
+var _plantas: Dictionary = {}  ## Vector3i -> true: blocos com cresce_para (Ciclo 8)
 var _delta_pendente: Dictionary = {}
 var _mundo_gerado_emitido: bool = false
 
@@ -205,6 +206,7 @@ func set_block(world_pos: Vector3i, id: int) -> void:
 	var id_anterior := chunk.get_block(local.x, local.y, local.z)
 	chunk.set_block(local.x, local.y, local.z, id)
 	_edicoes[world_pos] = id
+	_atualizar_planta(world_pos, id)
 	if id == BlockRegistry.AR_ID:
 		EventBus.block_broken.emit(world_pos, id_anterior)
 	else:
@@ -234,6 +236,7 @@ func aplicar_delta(delta: Dictionary) -> void:
 			continue
 		var id: int = int(delta[chave])
 		_edicoes[pos] = id
+		_atualizar_planta(pos, id)
 		var coord := _coord_do_chunk(pos)
 		var edicao := Vector4i(pos.x & _MASCARA_LOCAL, pos.y, pos.z & _MASCARA_LOCAL, id)
 		if _chunks.has(coord):
@@ -246,6 +249,74 @@ func aplicar_delta(delta: Dictionary) -> void:
 			if not _delta_pendente.has(coord):
 				_delta_pendente[coord] = []
 			(_delta_pendente[coord] as Array).append(edicao)
+
+
+func _atualizar_planta(pos: Vector3i, id: int) -> void:
+	var def := BlockRegistry.get_block(id)
+	if def != null and def.cresce_para != 0:
+		_plantas[pos] = true
+	else:
+		_plantas.erase(pos)
+
+
+func plantas_perto(chunk_central: Vector2i, raio_chunks: int) -> Array[Vector3i]:
+	## Blocos que crescem (muda, trigo) nos chunks a até raio_chunks do central,
+	## em ordem estável (Crescimento depende disso pra ser determinístico).
+	var achadas: Array[Vector3i] = []
+	for pos: Vector3i in _plantas:
+		var coord := _coord_do_chunk(pos)
+		if maxi(absi(coord.x - chunk_central.x), absi(coord.y - chunk_central.y)) <= raio_chunks:
+			achadas.append(pos)
+	achadas.sort_custom(
+		func(a: Vector3i, b: Vector3i) -> bool:
+			if a.x != b.x:
+				return a.x < b.x
+			if a.y != b.y:
+				return a.y < b.y
+			return a.z < b.z
+	)
+	return achadas
+
+
+func trocar_bloco_sem_evento(pos: Vector3i, id: int) -> void:
+	## Troca feita pelo mundo (planta que cresce), não pelo jogador: entra no
+	## save como edição mas não solta drop, som nem avança missão.
+	aplicar_delta({"%d,%d,%d" % [pos.x, pos.y, pos.z]: id})
+
+
+func plantar_arvore(pos: Vector3i) -> bool:
+	## Reproduz _plantar_arvore do WorldGenerator em blocos editados (entram no
+	## save), com a base do tronco em pos (onde estava a muda). false se algo
+	## sólido atrapalha o tronco: a muda fica e tenta de novo depois.
+	var topo: int = pos.y + 3
+	if topo + 2 >= ChunkData.SIZE_V:
+		return false
+	var id_tronco: int = 4
+	if WorldGenerator.bioma_em(pos.x, pos.z) == "floresta_cubica":
+		id_tronco = 13
+	var delta: Dictionary = {}
+	for i in range(4):
+		var celula := Vector3i(pos.x, pos.y + i, pos.z)
+		if i > 0 and not _celula_livre_pra_arvore(celula):
+			return false
+		delta["%d,%d,%d" % [celula.x, celula.y, celula.z]] = id_tronco
+	var folhas: Array[Vector3i] = [Vector3i(pos.x, topo + 2, pos.z)]
+	for dx in range(-1, 2):
+		for dz in range(-1, 2):
+			for dy in range(0, 2):
+				if dx == 0 and dz == 0 and dy == 0:
+					continue
+				folhas.append(Vector3i(pos.x + dx, topo + dy, pos.z + dz))
+	for celula: Vector3i in folhas:
+		if _celula_livre_pra_arvore(celula):
+			delta["%d,%d,%d" % [celula.x, celula.y, celula.z]] = 5
+	aplicar_delta(delta)
+	return true
+
+
+func _celula_livre_pra_arvore(celula: Vector3i) -> bool:
+	var id := get_block(celula)
+	return id == BlockRegistry.AR_ID or BlockRegistry.e_cruz(id)
 
 
 func tem_chunks_pendentes() -> bool:
@@ -322,7 +393,7 @@ func _remesh_chunk(coord: Vector2i) -> void:
 	var vizinho_solido := func(lx: int, ly: int, lz: int) -> bool:
 		var wx: int = coord.x * ChunkData.SIZE_H + lx
 		var wz: int = coord.y * ChunkData.SIZE_H + lz
-		return BlockRegistry.e_solido(get_block(Vector3i(wx, ly, wz)))
+		return BlockRegistry.e_oclusor(get_block(Vector3i(wx, ly, wz)))
 	var malha := _mesher.construir_malha(chunk, vizinho_solido)
 	var detalhes := _mesher.construir_detalhes(
 		chunk, coord.x * 7919 + coord.y * 104729 + world_seed

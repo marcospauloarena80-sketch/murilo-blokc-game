@@ -16,3 +16,4 @@ extends Resource
 @export var dano_ataque: int = 0
 @export var eh_pocao: bool = false
 @export var cura_pontos: int = 0
+@export var pode_arar: bool = false  ## enxada: interagir em grama/terra vira terra arada (Ciclo 8)

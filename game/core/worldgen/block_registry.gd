@@ -23,12 +23,20 @@ static var _blocos: Dictionary = {
 	14: preload("res://data/blocks/gelo.tres"),
 	15: preload("res://data/blocks/ambar_bloco.tres"),
 	16: preload("res://data/blocks/agua.tres"),
+	17: preload("res://data/blocks/muda.tres"),
+	18: preload("res://data/blocks/cogumelo.tres"),
+	19: preload("res://data/blocks/trigo_1.tres"),
+	20: preload("res://data/blocks/trigo_2.tres"),
+	21: preload("res://data/blocks/trigo_3.tres"),
+	22: preload("res://data/blocks/terra_arada.tres"),
 }
 
 static var _tabela_solidos: PackedByteArray = PackedByteArray()
 static var _tabela_cores: PackedColorArray = PackedColorArray()
 static var _tabela_texturas: PackedInt32Array = PackedInt32Array()
 static var _tabela_brilhos: PackedFloat32Array = PackedFloat32Array()
+static var _tabela_oclusao: PackedByteArray = PackedByteArray()
+static var _tabela_cruz: PackedByteArray = PackedByteArray()
 
 
 static func get_block(id: int) -> BlockDef:
@@ -79,6 +87,39 @@ static func tabela_brilhos() -> PackedFloat32Array:
 		for id: int in _blocos:
 			_tabela_brilhos[id] = (_blocos[id] as BlockDef).brilho
 	return _tabela_brilhos
+
+
+static func tabela_oclusao() -> PackedByteArray:
+	## 256 entradas: 1 = esconde a face dos vizinhos. Separada de tabela_solidos:
+	## cruz (Ciclo 8) não oclui nem colide; formas parciais futuras podem
+	## colidir sem ocluir.
+	if _tabela_oclusao.is_empty():
+		_tabela_oclusao.resize(256)
+		for id: int in _blocos:
+			var bloco: BlockDef = _blocos[id]
+			_tabela_oclusao[id] = 1 if bloco.solido and bloco.oclui else 0
+	return _tabela_oclusao
+
+
+static func tabela_cruz() -> PackedByteArray:
+	## 256 entradas: 1 = bloco de forma "cruz" (sai em construir_detalhes).
+	if _tabela_cruz.is_empty():
+		_tabela_cruz.resize(256)
+		for id: int in _blocos:
+			_tabela_cruz[id] = 1 if (_blocos[id] as BlockDef).forma == "cruz" else 0
+	return _tabela_cruz
+
+
+static func e_oclusor(id: int) -> bool:
+	if id == AR_ID:
+		return false
+	var bloco := get_block(id)
+	return bloco != null and bloco.solido and bloco.oclui
+
+
+static func e_cruz(id: int) -> bool:
+	var bloco := get_block(id)
+	return bloco != null and bloco.forma == "cruz"
 
 
 static func e_solido(id: int) -> bool:
