@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "faiscolt"
 nome = "Faiscolt"
+descricao = "Solta faíscas quando fica animado ou com medo."
 elemento = "faisca"
 cor = Color(0.95, 0.85, 0.2, 1)
 formato = "cubo"

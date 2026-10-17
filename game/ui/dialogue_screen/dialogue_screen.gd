@@ -14,6 +14,7 @@ var _aberto: bool = false
 @onready var _botao_aceitar: Button = $Control/Painel/Margem/VBox/Acoes/BotaoAceitar
 @onready var _botao_recusar: Button = $Control/Painel/Margem/VBox/Acoes/BotaoRecusar
 @onready var _botao_laboratorio: Button = $Control/Painel/Margem/VBox/Acoes/BotaoLaboratorio
+@onready var _botao_caderno: Button = $Control/Painel/Margem/VBox/Acoes/BotaoCaderno
 @onready var _botao_trocar: Button = $Control/Painel/Margem/VBox/Acoes/BotaoTrocar
 @onready var _botao_desafiar: Button = $Control/Painel/Margem/VBox/Acoes/BotaoDesafiar
 @onready var _botao_fechar: Button = $Control/Painel/Margem/VBox/Acoes/BotaoFechar
@@ -25,6 +26,7 @@ func _ready() -> void:
 	_botao_aceitar.pressed.connect(_ao_aceitar_quest)
 	_botao_recusar.pressed.connect(_ao_recusar_quest)
 	_botao_laboratorio.pressed.connect(_ao_abrir_laboratorio)
+	_botao_caderno.pressed.connect(_ao_abrir_caderno)
 	_botao_trocar.pressed.connect(_ao_trocar)
 	_botao_desafiar.pressed.connect(_ao_desafiar)
 	_botao_fechar.pressed.connect(_fechar)
@@ -75,6 +77,11 @@ func _ao_recusar_quest() -> void:
 
 func _ao_abrir_laboratorio() -> void:
 	EventBus.laboratorio_requested.emit()
+	_fechar()
+
+
+func _ao_abrir_caderno() -> void:
+	EventBus.caderno_requested.emit()
 	_fechar()
 
 
@@ -171,6 +178,7 @@ func _atualizar() -> void:
 	_botao_aceitar.visible = mostra_oferta
 	_botao_recusar.visible = mostra_oferta
 	_botao_laboratorio.visible = mostra_laboratorio
+	_botao_caderno.visible = mostra_laboratorio
 	_botao_trocar.visible = mostra_troca
 	_botao_trocar.disabled = not _pode_trocar()
 	_botao_desafiar.visible = mostra_desafio

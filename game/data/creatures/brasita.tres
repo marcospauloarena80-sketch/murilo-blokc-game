@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "brasita"
 nome = "Brasita"
+descricao = "Pequena brasa que aquece as mãos de quem é gentil."
 elemento = "brasa"
 cor = Color(0.95, 0.45, 0.2, 1)
 formato = "cubo"

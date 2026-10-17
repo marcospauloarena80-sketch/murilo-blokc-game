@@ -13,6 +13,8 @@ var xp: int = 0
 var vida_atual: int
 var energia_atual: int
 var ataques_conhecidos: Array[String] = []
+## Apelido dado no Laboratório (Ciclo 9, 9D); "" = usa o nome da espécie.
+var apelido: String = ""
 
 
 func _init(especie: String, nivel_inicial: int = 1) -> void:
@@ -25,6 +27,12 @@ func _init(especie: String, nivel_inicial: int = 1) -> void:
 
 func especie_def() -> CreatureDef:
 	return CreatureRegistry.get_creature(especie_id)
+
+
+func nome_exibido() -> String:
+	if apelido != "":
+		return apelido
+	return especie_def().nome
 
 
 func _stat_no_nivel(base: int) -> int:
@@ -97,13 +105,16 @@ func _atualizar_ataques_conhecidos() -> void:
 
 
 func serializar() -> Dictionary:
-	return {
+	var dados: Dictionary = {
 		"especie_id": especie_id,
 		"nivel": nivel,
 		"xp": xp,
 		"vida_atual": vida_atual,
 		"energia_atual": energia_atual,
 	}
+	if apelido != "":
+		dados["apelido"] = apelido
+	return dados
 
 
 static func carregar_serializado(dados: Dictionary) -> CreatureInstance:
@@ -113,4 +124,5 @@ static func carregar_serializado(dados: Dictionary) -> CreatureInstance:
 	instancia.xp = int(dados.get("xp", 0))
 	instancia.vida_atual = int(dados.get("vida_atual", instancia.vida_atual))
 	instancia.energia_atual = int(dados.get("energia_atual", instancia.energia_atual))
+	instancia.apelido = String(dados.get("apelido", ""))
 	return instancia

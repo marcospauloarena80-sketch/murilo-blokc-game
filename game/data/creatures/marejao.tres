@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "marejao"
 nome = "Marejão"
+descricao = "Grande como a maré, calmo como o lago."
 elemento = "gota"
 cor = Color(0.08, 0.25, 0.55, 1)
 formato = "alto"

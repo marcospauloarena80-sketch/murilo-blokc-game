@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://ui/battle_screen/battle_screen.tscn" id="12"]
 [ext_resource type="PackedScene" path="res://ui/dialogue_screen/dialogue_screen.tscn" id="14"]
 [ext_resource type="PackedScene" path="res://ui/laboratorio_screen/laboratorio_screen.tscn" id="15"]
+[ext_resource type="PackedScene" path="res://ui/caderno_screen/caderno_screen.tscn" id="caderno_screen"]
 [ext_resource type="PackedScene" path="res://entities/npcs/npc.tscn" id="16"]
 [ext_resource type="PackedScene" path="res://ui/credits_screen/credits_screen.tscn" id="17"]
 [ext_resource type="Script" path="res://systems/weather_system.gd" id="18"]
@@ -126,6 +127,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 45, 64)
 [node name="DialogueScreen" parent="." instance=ExtResource("14")]
 
 [node name="LaboratorioScreen" parent="." instance=ExtResource("15")]
+
+[node name="CadernoScreen" parent="." instance=ExtResource("caderno_screen")]
 
 [node name="CreditsScreen" parent="." instance=ExtResource("17")]
 

@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "brisura"
 nome = "Brisura"
+descricao = "Faz vendaval só de bater as asas de cubo."
 elemento = "vento"
 cor = Color(0.6, 0.75, 0.85, 1)
 formato = "alto"

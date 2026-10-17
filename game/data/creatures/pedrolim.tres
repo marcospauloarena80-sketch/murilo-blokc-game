@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "pedrolim"
 nome = "Pedrolim"
+descricao = "Pedra teimosa que vive nas cavernas e acorda à noite."
 elemento = "pedra"
 cor = Color(0.45, 0.42, 0.4, 1)
 formato = "cubo"

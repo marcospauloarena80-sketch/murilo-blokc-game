@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "centelha"
 nome = "Centelha"
+descricao = "Brilha no escuro e adora assustar os distraídos."
 elemento = "faisca"
 cor = Color(0.9, 0.7, 0.15, 1)
 formato = "cubo"

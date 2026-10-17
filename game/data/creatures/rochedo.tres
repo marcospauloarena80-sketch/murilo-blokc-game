@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "rochedo"
 nome = "Rochedo"
+descricao = "Duro por fora, tímido por dentro."
 elemento = "pedra"
 cor = Color(0.35, 0.32, 0.3, 1)
 formato = "achatado"

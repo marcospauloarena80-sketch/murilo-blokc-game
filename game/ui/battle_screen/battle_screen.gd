@@ -312,7 +312,7 @@ func _atualizar() -> void:
 		_label_jogador.text = (
 			"%s Nv.%d — HP %d/%d"
 			% [
-				jogador.especie_def().nome,
+				jogador.nome_exibido(),
 				jogador.nivel,
 				jogador.vida_atual,
 				jogador.vida_maxima_efetiva()
@@ -332,7 +332,7 @@ func _atualizar() -> void:
 				_arena.guardiao_nome,
 				_guardiao.indice_guardiao + 1,
 				_guardiao.equipe_guardiao.size(),
-				selvagem.especie_def().nome,
+				selvagem.nome_exibido(),
 				selvagem.vida_atual,
 				selvagem.vida_maxima_efetiva()
 			]
@@ -340,7 +340,7 @@ func _atualizar() -> void:
 	else:
 		_label_selvagem.text = (
 			"%s selvagem — HP %d/%d"
-			% [selvagem.especie_def().nome, selvagem.vida_atual, selvagem.vida_maxima_efetiva()]
+			% [selvagem.nome_exibido(), selvagem.vida_atual, selvagem.vida_maxima_efetiva()]
 		)
 
 	for i in range(4):

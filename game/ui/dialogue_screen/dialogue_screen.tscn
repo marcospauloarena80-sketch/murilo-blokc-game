@@ -68,6 +68,10 @@ text = "Recusar"
 layout_mode = 2
 text = "Laboratório"
 
+[node name="BotaoCaderno" type="Button" parent="Control/Painel/Margem/VBox/Acoes"]
+layout_mode = 2
+text = "Caderno"
+
 [node name="BotaoTrocar" type="Button" parent="Control/Painel/Margem/VBox/Acoes"]
 layout_mode = 2
 text = "Trocar"

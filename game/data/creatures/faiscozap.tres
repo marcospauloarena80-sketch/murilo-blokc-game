@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "faiscozap"
 nome = "Faiscozap"
+descricao = "Raio em forma de cubo, rápido como um relâmpago."
 elemento = "faisca"
 cor = Color(1.0, 0.95, 0.4, 1)
 formato = "alto"

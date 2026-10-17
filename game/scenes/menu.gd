@@ -85,6 +85,8 @@ func _ao_continuar() -> void:
 	GameState.progresso_quest_atual = int(dados.get("progresso_quest_atual", 0))
 	GameState.quests_concluidas = _array_para_strings(dados.get("quests_concluidas", []))
 	GameState.insignias_conquistadas = _array_para_strings(dados.get("insignias_conquistadas", []))
+	GameState.especies_vistas = _array_para_strings(dados.get("especies_vistas", []))
+	GameState.especies_capturadas = _array_para_strings(dados.get("especies_capturadas", []))
 	GameState.veio_de_continuar = true
 
 	get_tree().change_scene_to_file("res://scenes/main.tscn")

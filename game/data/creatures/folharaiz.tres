@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "folharaiz"
 nome = "Folharaiz"
+descricao = "Suas raízes fortes seguram o chão e protegem os amigos."
 elemento = "mato"
 cor = Color(0.2, 0.45, 0.18, 1)
 formato = "alto"

@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "maruja"
 nome = "Maruja"
+descricao = "Dança com as ondas e canta quando chove."
 elemento = "gota"
 cor = Color(0.15, 0.4, 0.75, 1)
 formato = "cubo"

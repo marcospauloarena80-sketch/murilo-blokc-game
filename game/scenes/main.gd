@@ -257,6 +257,8 @@ func salvar_jogo() -> void:
 		"progresso_quest_atual": GameState.progresso_quest_atual,
 		"quests_concluidas": GameState.quests_concluidas,
 		"insignias_conquistadas": GameState.insignias_conquistadas,
+		"especies_vistas": GameState.especies_vistas,
+		"especies_capturadas": GameState.especies_capturadas,
 	}
 	SaveManager.salvar(dados)
 	EventBus.game_saved.emit()

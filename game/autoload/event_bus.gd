@@ -33,6 +33,7 @@ signal creature_defeated(species_id: String)
 signal quest_completed(quest_id: String)
 signal dialogue_started(npc: Npc)
 signal laboratorio_requested
+signal caderno_requested
 signal arena_challenge_started(arena_id: String)
 signal game_completed
 signal game_saved

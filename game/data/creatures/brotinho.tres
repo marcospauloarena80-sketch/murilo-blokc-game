@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "brotinho"
 nome = "Brotinho"
+descricao = "Um cubinho verde que gosta de tomar sol nos campos."
 elemento = "mato"
 cor = Color(0.3, 0.7, 0.25, 1)
 formato = "cubo"

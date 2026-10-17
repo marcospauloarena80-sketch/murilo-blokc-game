@@ -31,6 +31,9 @@ var quest_atual_id: String = ""  ## "" = nenhuma ativa (F9)
 var progresso_quest_atual: int = 0
 var quests_concluidas: Array[String] = []
 var insignias_conquistadas: Array[String] = []  ## ids das Arenas vencidas (F10)
+## Caderno de Cubelins (Ciclo 9, 9D): espécies já vistas em batalha / capturadas.
+var especies_vistas: Array[String] = []
+var especies_capturadas: Array[String] = []
 
 ## Preenchidos pelo menu antes de trocar pra scenes/main.tscn (F5).
 var veio_de_continuar: bool = false
@@ -43,6 +46,11 @@ var posicao_salva: Vector3 = Vector3(64, 45, 64)
 var telas_abertas: Array[String] = []
 
 var _craft_service: CraftService = CraftService.new()
+
+
+func _ready() -> void:
+	EventBus.battle_started.connect(_ao_iniciar_batalha)
+	EventBus.creature_captured.connect(CadernoRegistro.registrar_capturada)
 
 
 func mudar_estado(novo_estado: State) -> void:
@@ -83,6 +91,8 @@ func reiniciar_para_novo_jogo() -> void:
 	progresso_quest_atual = 0
 	quests_concluidas = []
 	insignias_conquistadas = []
+	especies_vistas = []
+	especies_capturadas = []
 	veio_de_continuar = false
 	delta_blocos_carregado = {}
 
@@ -154,11 +164,17 @@ func eh_noite() -> bool:
 
 func adicionar_cubelin(instancia: CreatureInstance) -> void:
 	## Equipe até MAX_EQUIPE; excedente vai pro depósito (Laboratório na F9).
+	CadernoRegistro.registrar_capturada(instancia.especie_id)  ## cobre capturas e presentes de missão
 	if equipe_cubelins.size() < MAX_EQUIPE:
 		equipe_cubelins.append(instancia)
 	else:
 		deposito_cubelins.append(instancia)
 	EventBus.team_changed.emit()
+
+
+func _ao_iniciar_batalha(criatura: Creature) -> void:
+	if criatura != null and criatura.especie != null:
+		CadernoRegistro.registrar_vista(criatura.especie.especie_id)
 
 
 func tem_cubelin_disponivel() -> bool:

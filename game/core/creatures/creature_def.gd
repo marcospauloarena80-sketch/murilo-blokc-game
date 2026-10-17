@@ -6,6 +6,7 @@ extends Resource
 
 @export var especie_id: String = ""
 @export var nome: String = ""
+@export var descricao: String = ""  ## uma frase curta, mostrada no Caderno (Ciclo 9, 9D)
 @export var elemento: String = ""  ## pedra | mato | brasa | gota | vento | faisca
 @export var cor: Color = Color.WHITE
 ## Visual (Ciclo 5, Frente 5B): só muda a caixa desenhada, a colisão fica 0,7³.

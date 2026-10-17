@@ -6,6 +6,7 @@
 script = ExtResource("1")
 especie_id = "gotelo"
 nome = "Gotelo"
+descricao = "Pinga alegria por onde passa e adora poças."
 elemento = "gota"
 cor = Color(0.3, 0.55, 0.85, 1)
 formato = "achatado"
