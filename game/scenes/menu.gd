@@ -1,15 +1,50 @@
 extends Control
-## Menu principal: Novo Jogo / Continuar. Ver docs/02-ARQUITETURA.md §4.1 (F5).
+## Menu principal: Novo Jogo / Continuar / Opções. Ver docs/02-ARQUITETURA.md §4.1 (F5).
+## Ao fundo, o mundo de verdade (Frente 6D): um ChunkManager pequeno dentro de
+## um SubViewport gera só os 3x3 chunks do centro e a câmera orbita devagar.
+
+## Órbita da câmera do cenário: ponto olhado, raio, altura e velocidade angular.
+const CENTRO_CENARIO := Vector3(64, 34, 64)
+const RAIO_ORBITA: float = 22.0
+const ALTURA_ORBITA: float = 42.0
+const VELOCIDADE_ORBITA_RAD_S: float = 0.08
+
+var _angulo_orbita: float = 0.0
 
 @onready var _botao_novo_jogo: Button = $VBox/BotaoNovoJogo
 @onready var _botao_continuar: Button = $VBox/BotaoContinuar
+@onready var _botao_opcoes: Button = $VBox/BotaoOpcoes
+@onready var _camera_cenario: Camera3D = $Cenario3D/SubViewport/Cenario/Camera3D
+@onready var _opcoes: OptionsScreen = $OptionsScreen
 
 
 func _ready() -> void:
 	GameState.mudar_estado(GameState.State.MENU)
+	## O ChunkManager do cenário não tem Player e, com veio_de_continuar ligado
+	## (volta da pausa), ordenaria a fila pela posição salva; o menu é estado
+	## limpo e a câmera olha pro centro do mundo. Continuar religa a flag.
+	GameState.veio_de_continuar = false
+	Opcoes.carregar()
+	Opcoes.aplicar()
 	_botao_continuar.disabled = not SaveManager.existe_save()
 	_botao_novo_jogo.pressed.connect(_ao_novo_jogo)
 	_botao_continuar.pressed.connect(_ao_continuar)
+	_botao_opcoes.pressed.connect(_opcoes.abrir)
+	_posicionar_camera()
+
+
+func _process(delta: float) -> void:
+	_angulo_orbita = fmod(_angulo_orbita + VELOCIDADE_ORBITA_RAD_S * delta, TAU)
+	_posicionar_camera()
+
+
+func _posicionar_camera() -> void:
+	_camera_cenario.position = Vector3(
+		CENTRO_CENARIO.x + cos(_angulo_orbita) * RAIO_ORBITA,
+		ALTURA_ORBITA,
+		CENTRO_CENARIO.z + sin(_angulo_orbita) * RAIO_ORBITA
+	)
+	_camera_cenario.look_at(CENTRO_CENARIO)
 
 
 func _ao_novo_jogo() -> void:

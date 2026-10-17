@@ -1,7 +1,8 @@
 class_name PauseScreen
 extends CanvasLayer
-## Pausa (tecla "pausar"): Continuar/Salvar/Sair. Reaproveita GameState.PAUSED
+## Pausa (tecla "pausar"): Continuar/Salvar/Opções/Sair. Reaproveita GameState.PAUSED
 ## (mesmo estado usado pela tela de inventário). Ver docs/04-ROADMAP.md F5.
+## Opções abre a OptionsScreen por cima (entra na pilha de telas, Frente 6D).
 
 const DURACAO_CONFIRMACAO_SEG: float = 1.5
 const COR_SALVO: Color = Color(0.6, 1.0, 0.6)
@@ -10,14 +11,17 @@ var _aberto: bool = false
 
 @onready var _botao_continuar: Button = $Control/Painel/Margem/VBox/BotaoContinuar
 @onready var _botao_salvar: Button = $Control/Painel/Margem/VBox/BotaoSalvar
+@onready var _botao_opcoes: Button = $Control/Painel/Margem/VBox/BotaoOpcoes
 @onready var _botao_sair: Button = $Control/Painel/Margem/VBox/BotaoSair
 @onready var _rotulo_status: Label = $Control/Painel/Margem/VBox/RotuloStatus
+@onready var _opcoes: OptionsScreen = $OptionsScreen
 
 
 func _ready() -> void:
 	visible = false
 	_botao_continuar.pressed.connect(_fechar)
 	_botao_salvar.pressed.connect(_ao_salvar)
+	_botao_opcoes.pressed.connect(_opcoes.abrir)
 	_botao_sair.pressed.connect(_ao_sair)
 
 

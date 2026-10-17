@@ -29,6 +29,9 @@ const _DESLOCAMENTO_CHUNK: int = 4
 const _MASCARA_LOCAL: int = 15
 
 @export var world_seed: int = 12345
+## Limita a geração ao quadrado de chunks em volta do centro (-1 = mundo
+## inteiro, o padrão). O menu usa 1: só os 3x3 do centro pro cenário de fundo.
+@export var raio_chunks: int = -1
 
 var area_pronta: bool = false
 ## Cópias das constantes lidas em _process: os testes zeram o orçamento pra
@@ -121,6 +124,13 @@ func _ordenar_fila_de_geracao() -> void:
 	_fila_ordenada = true
 	_centro_area = _chunk_central()
 	var centro := _centro_area
+	if raio_chunks >= 0:
+		var dentro_do_raio: Array[Vector2i] = []
+		for coord: Vector2i in _fila_geracao:
+			var distancia := (coord - centro).abs()
+			if maxi(distancia.x, distancia.y) <= raio_chunks:
+				dentro_do_raio.append(coord)
+		_fila_geracao = dentro_do_raio
 	_fila_geracao.sort_custom(
 		func(a: Vector2i, b: Vector2i) -> bool:
 			return (a - centro).length_squared() < (b - centro).length_squared()

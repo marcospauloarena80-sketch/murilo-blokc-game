@@ -30,7 +30,6 @@ const SEGUNDOS_POR_PONTO_ENERGIA: float = 2.0
 const ALTURA_QUEDA_SEGURA: float = 3.0
 const INTERVALO_ATAQUE_SEG: float = 0.5
 const DANO_MAO_NUA: int = 1
-const SENSIBILIDADE_MOUSE: float = 0.003
 const ALTURA_LIMITE_QUEDA: float = -20.0
 ## Centro da cápsula (altura 1.9) fica 0.95 acima dos pés; o topo do bloco de
 ## superfície está em y+1. Margem pequena pra não nascer dentro do chão.
@@ -146,7 +145,8 @@ func _criar_outline() -> MeshInstance3D:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		girar_camera(event.relative.x, event.relative.y, SENSIBILIDADE_MOUSE)
+		## Sensibilidade vem das opções do jogador (Frente 6D), não de uma constante.
+		girar_camera(event.relative.x, event.relative.y, Opcoes.sensibilidade)
 	elif event is InputEventMouseButton and event.pressed:
 		_talvez_capturar_mouse()
 
