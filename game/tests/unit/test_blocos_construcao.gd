@@ -25,7 +25,12 @@ func test_tiles_dos_blocos_sao_opacos_menos_o_miolo_do_vidro() -> void:
 	var lado: int = AtlasBlocos.LADO
 	for id: int in range(1, 31):
 		var bloco := BlockRegistry.get_block(id)
-		if bloco == null or id == BlockRegistry.AGUA_ID or bloco.transparente:
+		if (
+			bloco == null
+			or id == BlockRegistry.AGUA_ID
+			or bloco.transparente
+			or bloco.forma == "cruz"
+		):
 			continue
 		for nome: String in [bloco.textura_lado, bloco.textura_topo, bloco.textura_base]:
 			if nome == "":

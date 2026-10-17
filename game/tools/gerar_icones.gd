@@ -25,7 +25,9 @@ const CARNE_CRUA: Array[String] = ["a8323c", "d9545e", "f08a92"]
 const CARNE_ASSADA: Array[String] = ["5a2a10", "8e4a22", "c07a42"]
 const LA: Array[String] = ["b8b8c4", "ececf2", "ffffff"]
 ## Itens que são bloco mas têm ícone próprio em vez do tile do atlas (8C).
-const ICONES_DESENHADOS: Array[String] = ["tabua", "vidro", "laje", "escada", "porta", "cerca"]
+const ICONES_DESENHADOS: Array[String] = [
+	"tabua", "vidro", "laje", "escada", "porta", "cerca", "semente"
+]
 
 
 func _init() -> void:
@@ -48,7 +50,6 @@ func _init() -> void:
 func _desenhar(item_id: String, atlas: Image) -> Image:
 	var def: ItemDef = ItemRegistry.get_item(item_id)
 	var img := Image.create(L, L, false, Image.FORMAT_RGBA8)
-	if def.bloco_id != 0 and item_id != "semente":  # semente tem desenho próprio
 	if def.bloco_id != 0 and not ICONES_DESENHADOS.has(item_id):
 		_copiar_tile(img, atlas, BlockRegistry.get_block(def.bloco_id).textura_lado)
 		return img

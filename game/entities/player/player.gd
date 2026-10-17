@@ -548,13 +548,6 @@ func _processar_mira_e_interacao(delta: float) -> void:
 		_avisou_tier = false
 
 	if Input.is_action_pressed("quebrar"):
-		var id_alvo := _chunk_manager.get_block(bloco_mirado)
-		var def := BlockRegistry.get_block(id_alvo)
-		if def != null:
-			_progresso_quebra += delta * _multiplicador_ferramenta_atual()
-			if _progresso_quebra >= def.dureza:
-				_quebrar_bloco(bloco_mirado)
-				_progresso_quebra = 0.0
 		_quebrar_bloco(bloco_mirado, delta)
 	else:
 		_progresso_quebra = 0.0
@@ -579,7 +572,7 @@ func _quebrar_bloco(bloco_mirado: Vector3i, delta: float) -> void:
 		return
 	_progresso_quebra += delta * _multiplicador_para(def)
 	if _progresso_quebra >= def.dureza:
-		_chunk_manager.set_block(bloco_mirado, BlockRegistry.AR_ID)
+		_remover_bloco(bloco_mirado)
 		_progresso_quebra = 0.0
 		_gastar_ferramenta()
 
@@ -621,8 +614,8 @@ func _alternar_porta(pos: Vector3i, id: int) -> void:
 		_chunk_manager.trocar_estado_do_bloco(base, BlockRegistry.PORTA_FECHADA_ID)
 
 
-func _quebrar_bloco(pos: Vector3i) -> void:
-	## Quebra o bloco; porta sai inteira (base e topo), dropando uma vez só.
+func _remover_bloco(pos: Vector3i) -> void:
+	## Remove o bloco; porta sai inteira (base e topo), dropando uma vez só.
 	var id := _chunk_manager.get_block(pos)
 	var def := BlockRegistry.get_block(id)
 	_chunk_manager.set_block(pos, BlockRegistry.AR_ID)
@@ -674,37 +667,37 @@ func _celula_invade_o_corpo(celula: Vector3i) -> bool:
 	)
 
 
-func _tentar_colocar_bloco(adjacente: Vector3i) -> void:
-	## Só ar e água aceitam bloco. A água é substituída (lago raso, mirando o
-	## fundo) e não entra no save, então Continuar fica consistente.
+func _destino_aceita_bloco(adjacente: Vector3i, def: ItemDef) -> bool:
+	## Só ar e água aceitam bloco (a água é substituída e não entra no save),
+	## nunca dentro do corpo do jogador (prendia num poço, replay do Ciclo 7),
+	## respeitando o chão exigido (semente) e o espaço da porta.
 	var id_destino := _chunk_manager.get_block(adjacente)
-	var destino_livre: bool = (
-		id_destino == BlockRegistry.AR_ID or id_destino == BlockRegistry.AGUA_ID
-	)
-	## Bloco dentro do corpo prendia o jogador (achado no replay do Ciclo 7).
-	if not destino_livre or _celula_invade_o_corpo(adjacente):
-		return
-	var item_id: String = GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
-	if item_id == "":
-		return
-	var def := ItemRegistry.get_item(item_id)
-	if def == null or def.bloco_id == BlockRegistry.AR_ID:
-		return
+	if id_destino != BlockRegistry.AR_ID and id_destino != BlockRegistry.AGUA_ID:
+		return false
+	if _celula_invade_o_corpo(adjacente):
+		return false
 	var def_bloco := BlockRegistry.get_block(def.bloco_id)
 	if def_bloco != null and not def_bloco.chao_exigido.is_empty():
 		var chao := _chunk_manager.get_block(adjacente + Vector3i.DOWN)
 		if not def_bloco.chao_exigido.has(chao):
 			EventBus.aviso.emit("Não dá pra plantar aqui")
-			return
-	var eh_porta: bool = def.bloco_id == BlockRegistry.PORTA_FECHADA_ID
-	if eh_porta and not _cabe_porta_em_cima(adjacente):
+			return false
+	return def.bloco_id != BlockRegistry.PORTA_FECHADA_ID or _cabe_porta_em_cima(adjacente)
+
+
+func _tentar_colocar_bloco(adjacente: Vector3i) -> void:
+	var item_id: String = GameState.inventario_hotbar.get_item_id(GameState.hotbar_selecionado)
+	var def := ItemRegistry.get_item(item_id) if item_id != "" else null
+	if def == null or def.bloco_id == BlockRegistry.AR_ID:
+		return
+	if not _destino_aceita_bloco(adjacente, def):
 		return
 	## Fora do mundo, acima do topo ou em chunk ainda não gerado o set_block
 	## não faz nada: confere antes de gastar o item.
 	_chunk_manager.set_block(adjacente, def.bloco_id)
 	if _chunk_manager.get_block(adjacente) != def.bloco_id:
 		return
-	if eh_porta and not _completar_porta(adjacente):
+	if def.bloco_id == BlockRegistry.PORTA_FECHADA_ID and not _completar_porta(adjacente):
 		return
 	GameState.inventario_hotbar.remover(item_id, 1)
 

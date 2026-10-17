@@ -17,7 +17,6 @@ extends Resource
 @export var textura_base: String = ""  ## vazio = mesma do topo
 @export var brilho: float = 0.0  ## luz própria na textura (0 = nenhuma)
 ## Ciclo 8 (frente 8A): blocos em cruz e plantas que crescem.
-@export var forma: String = "cubo"  ## "cubo" | "cruz" (dois planos cruzados, sem colisão)
 @export var oclui: bool = true  ## false: não esconde a face dos vizinhos
 @export var altura_cruz: float = 0.9  ## altura dos planos da forma "cruz"
 @export var cresce_para: int = 0  ## id do próximo estágio (0 = não cresce)
@@ -30,7 +29,8 @@ extends Resource
 @export var drop_extra_max: int = 1
 
 ## Frente 8C (Ciclo 8): blocos de construção.
-@export var forma: String = "cubo"  ## "cubo" | "vidro" | "laje" | "escada" | "porta" | "cerca"
+## "cubo" | "cruz" (planos cruzados, sem colisão) | "vidro" | "laje" | "escada" | "porta" | "cerca"
+@export var forma: String = "cubo"
 @export var transparente: bool = false  ## vidro: não oclui e a textura tem furos (discard)
 
 ## Ciclo 8 (8E): ferramenta que acelera a quebra e tier mínimo para quebrar.

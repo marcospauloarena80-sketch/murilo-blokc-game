@@ -70,10 +70,10 @@ func test_colocar_porta_sem_espaco_em_cima_nao_faz_nada() -> void:
 
 func test_quebrar_uma_metade_tira_a_porta_inteira() -> void:
 	_montar_porta()
-	_player._quebrar_bloco(TOPO)
+	_player._remover_bloco(TOPO)
 	assert_eq(_cm.get_block(TOPO), BlockRegistry.AR_ID)
 	assert_eq(_cm.get_block(BASE), BlockRegistry.AR_ID)
 	_montar_porta()
-	_player._quebrar_bloco(BASE)
+	_player._remover_bloco(BASE)
 	assert_eq(_cm.get_block(TOPO), BlockRegistry.AR_ID)
 	assert_eq(_cm.get_block(BASE), BlockRegistry.AR_ID)

@@ -71,12 +71,12 @@ func construir_malha(chunk: ChunkData, vizinho_solido: Callable) -> ArrayMesh:
 				i += 1
 				var id: int = dados[i]
 				if id != BlockRegistry.AR_ID:
-					grade[linha + x] = oclusao[id]
-					## Só cubo cheio oclui (1); vidro vale 3 (esconde só a face de outro
-					## vidro); laje, escada, porta e cerca não ocluem (8C).
+					## Só cubo cheio que oclui vale 1 (cruz, 8A, oclui=false); vidro vale 3
+					## (esconde só a face de outro vidro); laje, escada, porta e cerca não
+					## ocluem (8C): ficam 0.
 					var forma_id: int = formas[id]
 					if forma_id == BlockRegistry.FORMA_CUBO:
-						grade[linha + x] = solidos[id]
+						grade[linha + x] = oclusao[id]
 					elif forma_id == BlockRegistry.FORMA_VIDRO:
 						grade[linha + x] = _GRADE_VIDRO
 					y_max = y

@@ -131,16 +131,11 @@ static func tabela_cruz() -> PackedByteArray:
 	return _tabela_cruz
 
 
-static func e_oclusor(id: int) -> bool:
-	if id == AR_ID:
-		return false
-	var bloco := get_block(id)
-	return bloco != null and bloco.solido and bloco.oclui
-
-
 static func e_cruz(id: int) -> bool:
 	var bloco := get_block(id)
 	return bloco != null and bloco.forma == "cruz"
+
+
 static func tabela_formas() -> PackedByteArray:
 	## 256 entradas: código FORMA_* de cada id (8C). Só FORMA_CUBO oclui vizinhos;
 	## FORMA_VIDRO esconde a face entre vidros, o resto vira caixas no mesher.
@@ -154,7 +149,8 @@ static func tabela_formas() -> PackedByteArray:
 static func e_oclusor(id: int) -> bool:
 	## Esconde as faces dos vizinhos: sólido e cubo cheio (vidro, laje, escada,
 	## porta e cerca não ocluem).
-	return e_solido(id) and tabela_formas()[id] == FORMA_CUBO
+	var bloco := get_block(id)
+	return e_solido(id) and tabela_formas()[id] == FORMA_CUBO and bloco != null and bloco.oclui
 
 
 static func e_solido(id: int) -> bool:

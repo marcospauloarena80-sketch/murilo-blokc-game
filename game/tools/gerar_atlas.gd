@@ -508,6 +508,8 @@ func _terra_arada_topo(img: Image, rng: RandomNumberGenerator) -> void:
 			_ponto(img, x, y, Color.html("4a2c16"))
 			_ponto(img, x, y + 1, Color.html("5f3b22"))
 			_ponto(img, x, y - 1, Color.html("a3744d"))
+
+
 func _vidro(img: Image) -> void:
 	## Moldura opaca e brilhos; o miolo fica transparente (o shader do terreno
 	## descarta alpha < 0,5), então o vidro deixa ver o outro lado.
