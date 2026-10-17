@@ -56,6 +56,8 @@ func definir_nivel(novo_nivel: int) -> void:
 	var placa := get_node_or_null("Placa") as Label3D
 	if placa != null:
 		placa.text = "%s Nv.%d" % [especie.nome, novo_nivel]
+
+
 ## Liga o modo companheiro; chamar antes do add_child.
 func configurar_companheiro(cubelin: CreatureInstance) -> void:
 	companheiro = true
