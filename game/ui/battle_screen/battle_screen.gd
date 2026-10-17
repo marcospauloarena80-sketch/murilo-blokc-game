@@ -131,10 +131,7 @@ func _concluir_o_jogo() -> void:
 func _salvar_progresso() -> bool:
 	if salvador.is_valid():
 		return bool(salvador.call())
-	var cena: Node = get_tree().current_scene
-	if cena != null and cena.has_method("salvar_jogo"):
-		return bool(cena.call("salvar_jogo"))
-	return false
+	return SaveManager.salvar_pela_cena(get_tree().current_scene)
 
 
 func _enviar_pro_refugio() -> void:

@@ -34,6 +34,14 @@ func salvar(dados: Dictionary) -> bool:
 	return gravou
 
 
+## Pede à cena para salvar e devolve se gravou. Cena sem `salvar_jogo` (testes,
+## menu) conta como "não gravou". É a única lógica de "salvar pela cena" do jogo.
+func salvar_pela_cena(cena: Node) -> bool:
+	if cena == null or not cena.has_method("salvar_jogo"):
+		return false
+	return bool(cena.call("salvar_jogo"))
+
+
 func carregar() -> Dictionary:
 	var dados := _ler_arquivo(SAVE_PATH)
 	if dados.is_empty():
