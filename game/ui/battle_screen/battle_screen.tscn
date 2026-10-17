@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://ui/battle_screen/battle_screen.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/battle_screen/arena_3d.tscn" id="2"]
 
 [node name="BattleScreen" type="CanvasLayer"]
 script = ExtResource("1")
@@ -15,19 +16,35 @@ grow_vertical = 2
 mouse_filter = 1
 color = Color(0, 0, 0, 0.5)
 
+[node name="ArenaContainer" type="SubViewportContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+anchor_bottom = 0.34
+grow_horizontal = 2
+mouse_filter = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="Control/ArenaContainer"]
+handle_input_locally = false
+size = Vector2i(1152, 250)
+render_target_update_mode = 4
+
+[node name="Arena3D" parent="Control/ArenaContainer/SubViewport" instance=ExtResource("2")]
+
 [node name="Painel" type="PanelContainer" parent="Control"]
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = 7
 anchor_left = 0.5
-anchor_top = 0.5
+anchor_top = 1.0
 anchor_right = 0.5
-anchor_bottom = 0.5
+anchor_bottom = 1.0
 offset_left = -220.0
-offset_top = -220.0
+offset_top = -440.0
 offset_right = 220.0
-offset_bottom = 220.0
+offset_bottom = -8.0
 grow_horizontal = 2
-grow_vertical = 2
+grow_vertical = 0
 
 [node name="Margem" type="MarginContainer" parent="Control/Painel"]
 layout_mode = 2
@@ -44,9 +61,23 @@ theme_override_constants/separation = 8
 layout_mode = 2
 text = "Selvagem"
 
+[node name="BarraSelvagem" type="ProgressBar" parent="Control/Painel/Margem/VBox"]
+layout_mode = 2
+show_percentage = false
+
 [node name="LabelJogador" type="Label" parent="Control/Painel/Margem/VBox"]
 layout_mode = 2
 text = "Jogador"
+
+[node name="BarraJogador" type="ProgressBar" parent="Control/Painel/Margem/VBox"]
+layout_mode = 2
+show_percentage = false
+
+[node name="Log" type="RichTextLabel" parent="Control/Painel/Margem/VBox"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+bbcode_enabled = true
+scroll_active = false
 
 [node name="LabelStatus" type="Label" parent="Control/Painel/Margem/VBox"]
 layout_mode = 2

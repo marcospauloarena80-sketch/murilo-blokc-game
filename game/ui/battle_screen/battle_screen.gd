@@ -12,6 +12,7 @@ extends CanvasLayer
 const VARIACAO_MIN: float = 0.9
 const VARIACAO_MAX: float = 1.1
 const NIVEL_SELVAGEM_PADRAO: int = 5
+const LINHAS_LOG: int = 3
 
 var _batalha: BattleService
 var _criatura_mundo: Creature
@@ -19,9 +20,17 @@ var _guardiao: GuardianBattle
 var _arena: ArenaDef
 var _aberto: bool = false
 var _botoes_ataque: Array[Button] = []
+var _linhas_log: Array[String] = []
+var _inst_jogador_exibida: CreatureInstance
+var _especie_jogador_exibida: String = ""
+var _inst_selvagem_exibida: CreatureInstance
 
 @onready var _label_jogador: Label = $Control/Painel/Margem/VBox/LabelJogador
 @onready var _label_selvagem: Label = $Control/Painel/Margem/VBox/LabelSelvagem
+@onready var _barra_jogador: ProgressBar = $Control/Painel/Margem/VBox/BarraJogador
+@onready var _barra_selvagem: ProgressBar = $Control/Painel/Margem/VBox/BarraSelvagem
+@onready var _log: RichTextLabel = $Control/Painel/Margem/VBox/Log
+@onready var _arena_3d: Arena3D = $Control/ArenaContainer/SubViewport/Arena3D
 @onready var _label_status: Label = $Control/Painel/Margem/VBox/LabelStatus
 @onready var _grid_ataques: VBoxContainer = $Control/Painel/Margem/VBox/GridAtaques
 @onready var _botao_trocar: Button = $Control/Painel/Margem/VBox/Acoes/BotaoTrocar
@@ -56,6 +65,7 @@ func _abrir(criatura: Creature) -> void:
 	var nivel_selvagem: int = criatura.nivel if criatura.nivel > 0 else NIVEL_SELVAGEM_PADRAO
 	var selvagem := CreatureInstance.new(criatura.especie.especie_id, nivel_selvagem)
 	_batalha = BattleService.new(GameState.equipe_cubelins, selvagem)
+	_limpar_log()
 	_aberto = true
 	visible = true
 	GameState.abrir_tela("batalha")
@@ -67,6 +77,7 @@ func _abrir_arena(arena_id: String) -> void:
 	_arena = ArenaRegistry.get_arena(arena_id)
 	_guardiao = GuardianBattle.new(GameState.equipe_cubelins, _arena.construir_equipe())
 	_batalha = _guardiao.batalha_atual
+	_limpar_log()
 	_aberto = true
 	visible = true
 	GameState.abrir_tela("batalha")
@@ -84,6 +95,8 @@ func _fechar() -> void:
 		EventBus.game_completed.emit()
 	_aberto = false
 	visible = false
+	_inst_jogador_exibida = null
+	_inst_selvagem_exibida = null
 	_batalha = null
 	_criatura_mundo = null
 	_guardiao = null
@@ -135,13 +148,20 @@ func _avancar_guardiao_se_necessario() -> void:
 
 func _resolver_turno_com_ataque(ataque_id: String) -> void:
 	if _batalha.quem_age_primeiro() == "jogador":
-		_batalha.jogador_ataca(ataque_id, randf_range(VARIACAO_MIN, VARIACAO_MAX))
+		_jogador_ataca_com_efeitos(ataque_id)
 		if _batalha.resultado == BattleService.Resultado.EM_ANDAMENTO:
 			_ataque_selvagem_aleatorio()
 	else:
 		_ataque_selvagem_aleatorio()
 		if _batalha.resultado == BattleService.Resultado.EM_ANDAMENTO:
-			_batalha.jogador_ataca(ataque_id, randf_range(VARIACAO_MIN, VARIACAO_MAX))
+			_jogador_ataca_com_efeitos(ataque_id)
+
+
+func _jogador_ataca_com_efeitos(ataque_id: String) -> void:
+	var atacante := _batalha.jogador_ativo()
+	var alvo := _batalha.selvagem
+	var dano := _batalha.jogador_ataca(ataque_id, randf_range(VARIACAO_MIN, VARIACAO_MAX))
+	_registrar_ataque(atacante, alvo, ataque_id, dano, Arena3D.Lado.JOGADOR)
 
 
 func _ataque_selvagem_aleatorio() -> void:
@@ -149,7 +169,46 @@ func _ataque_selvagem_aleatorio() -> void:
 	if conhecidos.is_empty():
 		return
 	var ataque_id: String = conhecidos[randi() % conhecidos.size()]
-	_batalha.selvagem_ataca(ataque_id, randf_range(VARIACAO_MIN, VARIACAO_MAX))
+	var atacante := _batalha.selvagem
+	var alvo := _batalha.jogador_ativo()
+	var dano := _batalha.selvagem_ataca(ataque_id, randf_range(VARIACAO_MIN, VARIACAO_MAX))
+	_registrar_ataque(atacante, alvo, ataque_id, dano, Arena3D.Lado.OPONENTE)
+
+
+## Linhas do log e animações (investida do atacante, piscar do alvo).
+func _registrar_ataque(
+	atacante: CreatureInstance,
+	alvo: CreatureInstance,
+	ataque_id: String,
+	dano: int,
+	lado_atacante: int
+) -> void:
+	var ataque := AttackRegistry.get_ataque(ataque_id)
+	_adicionar_log("%s usou %s: %d de dano!" % [atacante.especie_def().nome, ataque.nome, dano])
+	var multiplicador := BattleService.multiplicador_elemental(
+		ataque.elemento, alvo.especie_def().elemento
+	)
+	if multiplicador > 1.0:
+		_adicionar_log("É super efetivo!")
+	elif multiplicador < 1.0:
+		_adicionar_log("Pouco efetivo...")
+	var lado_alvo: int = (
+		Arena3D.Lado.OPONENTE if lado_atacante == Arena3D.Lado.JOGADOR else Arena3D.Lado.JOGADOR
+	)
+	_arena_3d.investida(lado_atacante)
+	_arena_3d.piscar_dano(lado_alvo)
+
+
+func _limpar_log() -> void:
+	_linhas_log.clear()
+	_log.text = ""
+
+
+func _adicionar_log(linha: String) -> void:
+	_linhas_log.append(linha)
+	while _linhas_log.size() > LINHAS_LOG:
+		_linhas_log.remove_at(0)
+	_log.text = "\n".join(_linhas_log)
 
 
 func _proximo_indice_disponivel() -> int:
@@ -209,8 +268,12 @@ func _usar_cubo_com_sorteio(sorteio: float) -> void:
 		if not _consumir_item("cubo_captura"):
 			return
 	var sucesso := CaptureService.tentar_capturar(_batalha.selvagem, tier, sorteio)
+	_arena_3d.animar_captura(sucesso)
+	if not sucesso:
+		_adicionar_log("%s escapou do cubo!" % _batalha.selvagem.especie_def().nome)
 	if sucesso:
 		_batalha.capturar()
+		_adicionar_log("%s foi capturado!" % _batalha.selvagem.especie_def().nome)
 		GameState.adicionar_cubelin(_batalha.selvagem)
 		EventBus.creature_captured.emit(_batalha.selvagem.especie_id)
 		if _criatura_mundo != null:
@@ -256,6 +319,12 @@ func _atualizar() -> void:
 			]
 		)
 	var selvagem := _batalha.selvagem
+	_sincronizar_arena(jogador, selvagem)
+	_barra_selvagem.max_value = selvagem.vida_maxima_efetiva()
+	_barra_selvagem.value = selvagem.vida_atual
+	if jogador != null:
+		_barra_jogador.max_value = jogador.vida_maxima_efetiva()
+		_barra_jogador.value = jogador.vida_atual
 	if _guardiao != null:
 		_label_selvagem.text = (
 			"%s (%d/%d): %s — HP %d/%d"
@@ -304,6 +373,22 @@ func _atualizar() -> void:
 		if is_instance_valid(_criatura_mundo):
 			_criatura_mundo.queue_free()
 		_criatura_mundo = null
+
+
+func _sincronizar_arena(jogador: CreatureInstance, selvagem: CreatureInstance) -> void:
+	## Remonta as criaturas 3D só quando mudam (troca, próximo do Guardião);
+	## mesma instância com espécie nova é evolução e ganha o flash.
+	if jogador != null:
+		if jogador != _inst_jogador_exibida:
+			_arena_3d.trocar_corpo(Arena3D.Lado.JOGADOR, jogador.especie_def())
+		elif jogador.especie_id != _especie_jogador_exibida:
+			_arena_3d.evoluir_jogador(jogador.especie_def())
+			_adicionar_log("%s evoluiu!" % jogador.especie_def().nome)
+		_inst_jogador_exibida = jogador
+		_especie_jogador_exibida = jogador.especie_id
+	if selvagem != _inst_selvagem_exibida:
+		_arena_3d.trocar_corpo(Arena3D.Lado.OPONENTE, selvagem.especie_def())
+		_inst_selvagem_exibida = selvagem
 
 
 func _texto_resultado() -> String:
