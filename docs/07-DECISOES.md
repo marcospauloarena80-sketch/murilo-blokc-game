@@ -326,3 +326,16 @@ Nenhuma insígnia do Coração Dourado é concedida em nenhum caminho. Revanche 
 O save atual só é trocado depois de o novo já estar conferido, então uma falha no meio nunca o corrompe, e `carregar` continua caindo no backup se o principal estiver ilegível. `_conferir` exige texto idêntico e JSON de objeto válido (pega arquivo truncado ou vazio). Temporário esquecido por uma queda não atrapalha o carregamento nem a gravação seguinte.
 
 **Validação.** 11 testes novos com injeção de falha em pasta própria de `user://`: pasta impossível de criar, temporário que não abre, backup que não copia, arquivo truncado/vazio/diferente/ausente, principal corrompido ou ausente com recuperação pelo backup, temporário órfão. No navegador (build v43): dois saves reais, backup com o save anterior, nenhum `.tmp` sobrando, principal truncado no IndexedDB e Continuar carregando o estado do backup. **Não reproduzidos:** falha de `rename_absolute` e disco cheio de verdade (sem como provocar em ambiente seguro).
+
+## ADR-037: Um principal inválido nunca substitui um backup válido (17/out/2026)
+
+**Cenário apontado pela 2ª auditoria.** Principal corrompido e backup válido; `carregar()` recupera pelo backup mas não restaura o principal; o jogo salva de novo; `_gravar` (ADR-036) copiava o principal **corrompido** por cima do backup; se a troca do arquivo falhasse, as duas cópias ficavam inválidas e a última versão boa se perdia. Confirmado por teste: com a cópia incondicional, 4 dos 8 testes novos falham (o backup vira o lixo do principal).
+
+**Correção.**
+1. O principal só vai para o backup se for **válido** (`_e_valido`: arquivo legível, JSON de objeto não vazio, sem logar erro de parse). Principal inválido não toca no backup, que pode ser a última cópia boa.
+2. Com isso, se a troca (`rename_absolute`) falhar, sempre sobra uma cópia recuperável: principal válido e intacto, ou backup com a última versão boa. O temporário é removido e a gravação devolve `false`.
+3. `_ler_arquivo` usa `JSON.new().parse` (sem erro no log) e fecha o arquivo.
+
+**Ponto de injeção só para testes.** `SaveManager.renomear_para_teste` (um `Callable`, vazio por padrão) substitui `rename_absolute` quando válido. Em produção fica vazio e o comportamento é o mesmo; um teste garante que o padrão é vazio. Evita depender de falha real do sistema operacional.
+
+**Testes.** `test_save_manager_backup.gd` (8): principal corrompido com backup válido é recuperável; salvar depois de recuperar não sobrescreve o backup; falha na troca com principal corrompido preserva o backup byte a byte e os dados; falha destrutiva (principal apagado e erro) recupera pelo backup; salvamento posterior ok sem `.tmp` órfão; principal corrompido sem backup não cria backup do lixo; principal válido continua indo para o backup; injeção vazia por padrão. No navegador (build v44), partindo do cenário real (principal truncado, backup válido): Continuar carregou o backup, Salvar gravou um principal válido e o backup ficou **idêntico** (mesmo hash). **Não reproduzido de verdade:** falha do sistema operacional em `rename_absolute` (só por injeção).

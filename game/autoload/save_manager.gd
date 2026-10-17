@@ -8,6 +8,10 @@ const SCHEMA_VERSION: int = 1
 const SAVE_PATH: String = "user://saves/slot1.json"
 const BACKUP_PATH: String = "user://saves/slot1.bak.json"
 
+## Ponto de injeção de falha SÓ PARA TESTES: se válido, substitui `rename_absolute`
+## (recebe origem e destino, devolve um Error). Em produção fica vazio e nada muda.
+var renomear_para_teste: Callable = Callable()
+
 
 func existe_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
@@ -22,11 +26,13 @@ func salvar(dados: Dictionary) -> bool:
 
 ## Etapas, cada uma com falha explícita (devolve false e deixa o save anterior
 ## como estava): 1) pasta de saves existe ou é criada; 2) o JSON novo é escrito num
-## arquivo temporário, que é fechado e relido para conferir; 3) o save atual vai
-## pro backup (cópia conferida); 4) o temporário substitui o save atual; 5) o
-## resultado é relido. Como o save atual só é trocado depois de o novo já estar
-## conferido, uma falha no meio nunca corrompe o que já existia, e `carregar`
-## ainda cai no backup se o principal estiver ilegível.
+## arquivo temporário, que é fechado e relido para conferir; 3) se o save atual é
+## VÁLIDO, ele vai pro backup (cópia conferida); se estiver corrompido, o backup
+## existente NÃO é tocado, porque pode ser a última cópia boa; 4) o temporário
+## substitui o save atual; 5) o resultado é relido. O save atual só é trocado
+## depois de o novo já estar conferido; se a troca falhar, ou o save atual segue
+## intacto, ou o backup guarda a última versão válida: sempre sobra uma cópia
+## recuperável pelo `carregar`.
 func _gravar(dados: Dictionary, caminho: String, caminho_backup: String) -> bool:
 	dados["schema_version"] = SCHEMA_VERSION
 	var pasta := caminho.get_base_dir()
@@ -38,14 +44,35 @@ func _gravar(dados: Dictionary, caminho: String, caminho_backup: String) -> bool
 	if not _escrever_e_conferir(temporario, texto):
 		_remover(temporario)
 		return false
-	if FileAccess.file_exists(caminho):
+	if _e_valido(caminho):
 		if DirAccess.copy_absolute(caminho, caminho_backup) != OK:
 			_remover(temporario)
 			return false
-	if DirAccess.rename_absolute(temporario, caminho) != OK:
+	if _renomear(temporario, caminho) != OK:
 		_remover(temporario)
 		return false
 	return _conferir(caminho, texto)
+
+
+func _renomear(origem: String, destino: String) -> Error:
+	if renomear_para_teste.is_valid():
+		return renomear_para_teste.call(origem, destino)
+	return DirAccess.rename_absolute(origem, destino)
+
+
+## Arquivo existe, lê e é um objeto JSON não vazio (sem logar erro de parse).
+func _e_valido(caminho: String) -> bool:
+	if not FileAccess.file_exists(caminho):
+		return false
+	var arquivo := FileAccess.open(caminho, FileAccess.READ)
+	if arquivo == null:
+		return false
+	var texto := arquivo.get_as_text()
+	arquivo.close()
+	var json := JSON.new()
+	if json.parse(texto) != OK:
+		return false
+	return json.data is Dictionary and not (json.data as Dictionary).is_empty()
 
 
 func _escrever_e_conferir(caminho: String, texto: String) -> bool:
@@ -115,8 +142,11 @@ func _ler_arquivo(caminho: String) -> Dictionary:
 	if not FileAccess.file_exists(caminho):
 		return {}
 	var arquivo := FileAccess.open(caminho, FileAccess.READ)
-	var texto := arquivo.get_as_text()
-	var resultado: Variant = JSON.parse_string(texto)
-	if resultado == null or not (resultado is Dictionary):
+	if arquivo == null:
 		return {}
-	return resultado as Dictionary
+	var texto := arquivo.get_as_text()
+	arquivo.close()
+	var json := JSON.new()
+	if json.parse(texto) != OK or not (json.data is Dictionary):
+		return {}  ## ilegível ou não é um objeto: tratado como "sem save"
+	return json.data as Dictionary
