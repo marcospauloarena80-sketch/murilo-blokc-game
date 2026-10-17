@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="NpcDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/npcs/npc_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+npc_id = "treinador_tico"
+nome = "Tico"
+cor = Color(0.3, 0.7, 0.25, 1)
+papel = "treinador"
+cor_pele = Color(0.82, 0.6, 0.42, 1)
+cor_cabelo = Color(0.1, 0.1, 0.12, 1)
+cor_camisa = Color(0.35, 0.65, 0.3, 1)
+cor_calca = Color(0.45, 0.32, 0.2, 1)
+linhas_dialogo = PackedStringArray("Oi! Eu sou o Tico, treinador de Cubelins.", "Bora uma batalha? Meus Cubelins estão prontos!")
+oferece_quest_id = "quest_07_primeiro_treinador"
+abre_arena = "treinador_tico"

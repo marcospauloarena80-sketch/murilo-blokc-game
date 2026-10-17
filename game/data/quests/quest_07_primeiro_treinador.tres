@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuestDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/quests/quest_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+quest_id = "quest_07_primeiro_treinador"
+nome = "Primeiro Treinador"
+descricao = "Vença o treinador Tico em uma batalha."
+tipo = "vencer_treinador"
+alvo_id = "treinador_tico"
+quantidade_alvo = 1
+recompensa_itens = {
+"cubo_captura": 2
+}
+npc_id = "treinador_tico"
+requer_quest = "quest_r1_coleta_diaria"

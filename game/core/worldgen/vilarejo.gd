@@ -28,6 +28,12 @@ const POSICOES_NPCS: Dictionary = {
 	"guardiao_final": Vector2i(64, 80),
 }
 
+## Treinadores de mundo (Ciclo 9, 9E): só x,z; o main.gd aterra pelo chão da superfície.
+const POSICOES_TREINADORES: Dictionary = {
+	"treinador_tico": Vector2i(40, 64),
+	"treinador_bia": Vector2i(88, 64),
+}
+
 ## Centro da casa e direção da porta (sempre voltada ao centro do mundo).
 const CASAS: Dictionary = {
 	"lina": {"centro": Vector2i(64, 72), "porta": Vector2i(0, -1)},

@@ -87,9 +87,18 @@ func _ao_continuar() -> void:
 	GameState.insignias_conquistadas = _array_para_strings(dados.get("insignias_conquistadas", []))
 	GameState.especies_vistas = _array_para_strings(dados.get("especies_vistas", []))
 	GameState.especies_capturadas = _array_para_strings(dados.get("especies_capturadas", []))
+	GameState.treinadores_vencidos = _dicionario_de_dias(dados.get("treinadores_vencidos", {}))
 	GameState.veio_de_continuar = true
 
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
+
+
+static func _dicionario_de_dias(dados: Variant) -> Dictionary:
+	var resultado: Dictionary = {}
+	if dados is Dictionary:
+		for chave: Variant in dados:
+			resultado[String(chave)] = int(dados[chave])
+	return resultado
 
 
 static func _array_para_vector3(dados: Array) -> Vector3:

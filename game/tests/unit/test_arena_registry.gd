@@ -5,7 +5,7 @@ const ARENAS_REGULARES := ["pedra", "brasa", "gota", "faisca"]
 
 
 func test_4_arenas_regulares_mais_o_desafio_final_existem() -> void:
-	assert_eq(ArenaRegistry.todos_os_ids().size(), 5)
+	assert_eq(ArenaRegistry.todos_os_ids().size(), 7)
 	for id: String in ARENAS_REGULARES:
 		assert_not_null(ArenaRegistry.get_arena(id), "arena '%s' deveria existir" % id)
 	assert_not_null(ArenaRegistry.get_arena("coracao_dourado"))

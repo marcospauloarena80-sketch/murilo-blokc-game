@@ -14,6 +14,8 @@ static var _npcs: Dictionary = {
 	"guardiao_gota": preload("res://data/npcs/guardiao_gota.tres"),
 	"guardiao_faisca": preload("res://data/npcs/guardiao_faisca.tres"),
 	"guardiao_final": preload("res://data/npcs/guardiao_final.tres"),
+	"treinador_tico": preload("res://data/npcs/treinador_tico.tres"),
+	"treinador_bia": preload("res://data/npcs/treinador_bia.tres"),
 }
 
 

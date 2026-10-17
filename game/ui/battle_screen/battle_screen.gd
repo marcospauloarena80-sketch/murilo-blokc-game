@@ -142,8 +142,21 @@ func _avancar_guardiao_se_necessario() -> void:
 	if _guardiao.tem_proximo_adversario():
 		_guardiao.avancar_para_proximo()
 		_batalha = _guardiao.batalha_atual
+	elif not _arena.da_insignia:
+		_premiar_treinador()
 	elif not GameState.tem_insignia(_arena.arena_id):
 		GameState.conquistar_insignia(_arena.arena_id)
+
+
+func _premiar_treinador() -> void:
+	## Treinador de mundo (Ciclo 9, 9E): sem insígnia; recompensa uma vez por dia de jogo.
+	var liberada := Treinadores.revanche_liberada(_arena.arena_id)
+	Treinadores.registrar_vitoria(_arena.arena_id)
+	EventBus.treinador_vencido.emit(_arena.arena_id)
+	if not liberada:
+		return
+	for item_id: String in _arena.recompensa_itens:
+		GameState.adicionar_item(item_id, int(_arena.recompensa_itens[item_id]))
 
 
 func _resolver_turno_com_ataque(ataque_id: String) -> void:

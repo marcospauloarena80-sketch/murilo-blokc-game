@@ -6,7 +6,8 @@ extends Resource
 @export var quest_id: String = ""
 @export var nome: String = ""
 @export var descricao: String = ""
-@export var tipo: String = ""  ## "coletar" | "construir" | "derrotar" | "capturar"
+## "coletar" | "construir" | "derrotar" | "capturar" | "craftar" | "vencer_treinador"
+@export var tipo: String = ""
 @export var alvo_id: String = ""  ## item_id | block_id (String) | especie_id, conforme o tipo
 @export var quantidade_alvo: int = 1
 @export var recompensa_receita: String = ""  ## "" = nenhuma; senão id de uma RecipeDef
@@ -18,3 +19,5 @@ extends Resource
 @export var proxima_quest_id: String = ""  ## "" = fim da cadeia
 @export var repetivel: bool = false
 @export var npc_id: String = ""  ## quem dá essa missão
+## Só fica disponível depois de concluir esta outra missão ("" = sem pré-requisito).
+@export var requer_quest: String = ""

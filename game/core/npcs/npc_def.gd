@@ -7,7 +7,8 @@ extends Resource
 @export var npc_id: String = ""
 @export var nome: String = ""
 @export var cor: Color = Color.WHITE  ## cor de destaque (era o cubo da F9)
-@export var papel: String = ""  ## professora | refugio | comerciante | construtor | guardiao
+## professora | refugio | comerciante | construtor | guardiao | treinador
+@export var papel: String = ""
 @export var cor_pele: Color = Color(0.945, 0.761, 0.49)
 @export var cor_cabelo: Color = Color(0.353, 0.22, 0.145)
 @export var cor_camisa: Color = Color(0.204, 0.596, 0.859)

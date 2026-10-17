@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="NpcDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/npcs/npc_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+npc_id = "treinador_bia"
+nome = "Bia"
+cor = Color(0.3, 0.55, 0.85, 1)
+papel = "treinador"
+cor_pele = Color(0.55, 0.38, 0.27, 1)
+cor_cabelo = Color(0.45, 0.15, 0.55, 1)
+cor_camisa = Color(0.85, 0.75, 0.2, 1)
+cor_calca = Color(0.2, 0.25, 0.5, 1)
+linhas_dialogo = PackedStringArray("Eu sou a Bia! Treino Cubelins por todo o mundo.", "Quer ver se você aguenta o meu time?")
+abre_arena = "treinador_bia"

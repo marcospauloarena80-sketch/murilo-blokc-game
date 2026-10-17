@@ -58,6 +58,10 @@ func _posicionar_npcs_no_chunk(coord: Vector2i) -> void:
 				base = Vilarejo.centro_da_casa(npc_id)
 			x = base.x
 			z = base.y
+		elif Vilarejo.POSICOES_TREINADORES.has(npc_id):
+			var ponto: Vector2i = Vilarejo.POSICOES_TREINADORES[npc_id]
+			x = ponto.x
+			z = ponto.y
 		var coord_npc := Vector2i(
 			floori(x / float(ChunkData.SIZE_H)), floori(z / float(ChunkData.SIZE_H))
 		)
@@ -259,6 +263,7 @@ func salvar_jogo() -> void:
 		"insignias_conquistadas": GameState.insignias_conquistadas,
 		"especies_vistas": GameState.especies_vistas,
 		"especies_capturadas": GameState.especies_capturadas,
+		"treinadores_vencidos": GameState.treinadores_vencidos,
 	}
 	SaveManager.salvar(dados)
 	EventBus.game_saved.emit()

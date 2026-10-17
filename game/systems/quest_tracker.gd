@@ -16,6 +16,7 @@ func _ready() -> void:
 	EventBus.creature_defeated.connect(_ao_derrotar_criatura)
 	EventBus.block_placed.connect(_ao_colocar_bloco)
 	EventBus.recipe_crafted.connect(_ao_craftar_receita)
+	EventBus.treinador_vencido.connect(_ao_vencer_treinador)
 
 
 func _ao_coletar_item(item_id: String, quantidade: int) -> void:
@@ -28,6 +29,10 @@ func _ao_capturar_criatura(especie_id: String) -> void:
 
 func _ao_derrotar_criatura(especie_id: String) -> void:
 	_avancar("derrotar", especie_id, 1)
+
+
+func _ao_vencer_treinador(arena_id: String) -> void:
+	_avancar("vencer_treinador", arena_id, 1)
 
 
 func _ao_colocar_bloco(_pos: Vector3i, block_id: int) -> void:

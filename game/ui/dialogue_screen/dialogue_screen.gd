@@ -63,7 +63,7 @@ func _oferece_quest_pendente() -> bool:
 		return false
 	if GameState.quest_atual_id == _npc_def.oferece_quest_id:
 		return false
-	return true
+	return QuestRegistry.liberada(_npc_def.oferece_quest_id)
 
 
 func _ao_aceitar_quest() -> void:
@@ -90,7 +90,9 @@ func _arena_disponivel() -> bool:
 		return false
 	var arena := ArenaRegistry.get_arena(_npc_def.abre_arena)
 	if arena.requer_todas_insignias:
-		return GameState.insignias_conquistadas.size() >= ArenaRegistry.todos_os_ids().size() - 1
+		return GameState.insignias_conquistadas.size() >= ArenaRegistry.ids_com_insignia().size()
+	if not arena.da_insignia:
+		return Treinadores.revanche_liberada(arena.arena_id)
 	return true
 
 
@@ -170,7 +172,11 @@ func _atualizar() -> void:
 			]
 		)
 	elif mostra_bloqueado:
-		_label_texto.text = "Volte quando tiver conquistado todas as insígnias."
+		var treinador := ArenaRegistry.get_arena(_npc_def.abre_arena)
+		if treinador != null and not treinador.da_insignia:
+			_label_texto.text = "Volte amanhã."
+		else:
+			_label_texto.text = "Volte quando tiver conquistado todas as insígnias."
 	else:
 		_label_texto.text = ""
 

@@ -11,6 +11,10 @@ extends Resource
 ## acontece via GameState.tem_insignia() checado em RecipeDef.requer_insignia — este campo aqui
 ## só documenta/valida o par arena↔receita (ver test_arena_registry.gd)
 @export var requer_todas_insignias: bool = false  ## só o desafio final (Coração Dourado)
+## Treinadores pelo mundo (Ciclo 9, 9E): false = não dá insígnia; a vitória entrega
+## recompensa_itens uma vez por dia de jogo (GameState.treinadores_vencidos).
+@export var da_insignia: bool = true
+@export var recompensa_itens: Dictionary = {}  ## item_id -> quantidade
 
 
 func construir_equipe() -> Array[CreatureInstance]:

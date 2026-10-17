@@ -31,6 +31,8 @@ signal team_changed
 signal creature_captured(species_id: String)
 signal creature_defeated(species_id: String)
 signal quest_completed(quest_id: String)
+## Treinador de mundo (Ciclo 9, 9E) vencido; arena_id é o da ArenaDef sem insígnia.
+signal treinador_vencido(arena_id: String)
 signal dialogue_started(npc: Npc)
 signal laboratorio_requested
 signal caderno_requested

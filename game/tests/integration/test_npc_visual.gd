@@ -120,7 +120,7 @@ func test_npc_comum_nao_tem_faixa() -> void:
 
 func test_todos_os_npcs_tem_papel_definido() -> void:
 	var papeis_validos: Array[String] = [
-		"professora", "refugio", "comerciante", "construtor", "guardiao"
+		"professora", "refugio", "comerciante", "construtor", "guardiao", "treinador"
 	]
 	for npc_id: String in NpcRegistry.todos_os_ids():
 		var def := NpcRegistry.get_npc(npc_id)

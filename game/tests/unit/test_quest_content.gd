@@ -1,11 +1,13 @@
 extends GutTest
 ## Ver docs/01-GDD.md §12 (cadeia principal + repetíveis) e docs/07-DECISOES.md ADR-022.
 
-const TIPOS_VALIDOS := ["coletar", "construir", "derrotar", "capturar", "craftar"]
+const TIPOS_VALIDOS := [
+	"coletar", "construir", "derrotar", "capturar", "craftar", "vencer_treinador"
+]
 
 
-func test_existem_12_missoes_no_total() -> void:
-	assert_eq(QuestRegistry.todos_os_ids().size(), 12)
+func test_existem_13_missoes_no_total() -> void:
+	assert_eq(QuestRegistry.todos_os_ids().size(), 13)
 
 
 func test_todas_as_missoes_tem_tipo_valido() -> void:

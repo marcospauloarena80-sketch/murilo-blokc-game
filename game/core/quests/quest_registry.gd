@@ -14,6 +14,7 @@ static var _quests: Dictionary = {
 	"quest_07_abrigo": preload("res://data/quests/quest_07_abrigo.tres"),
 	"quest_08_ferramentas_de_pedra":
 	preload("res://data/quests/quest_08_ferramentas_de_pedra.tres"),
+	"quest_07_primeiro_treinador": preload("res://data/quests/quest_07_primeiro_treinador.tres"),
 	"quest_r1_coleta_diaria": preload("res://data/quests/quest_r1_coleta_diaria.tres"),
 	"quest_r2_pedreiro": preload("res://data/quests/quest_r2_pedreiro.tres"),
 	"quest_r3_cacador": preload("res://data/quests/quest_r3_cacador.tres"),
@@ -23,6 +24,14 @@ static var _quests: Dictionary = {
 
 static func get_quest(quest_id: String) -> QuestDef:
 	return _quests.get(quest_id, null)
+
+
+static func liberada(quest_id: String) -> bool:
+	## Missão com pré-requisito (requer_quest) só aparece depois de concluí-lo.
+	var quest: QuestDef = get_quest(quest_id)
+	if quest == null or quest.requer_quest == "":
+		return true
+	return GameState.quests_concluidas.has(quest.requer_quest)
 
 
 static func todos_os_ids() -> Array:

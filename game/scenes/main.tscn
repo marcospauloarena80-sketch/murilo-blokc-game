@@ -167,3 +167,11 @@ npc_id_inicial = "guardiao_faisca"
 [node name="NpcGuardiaoFinal" parent="." instance=ExtResource("16")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 45, 80)
 npc_id_inicial = "guardiao_final"
+
+[node name="NpcTreinadorTico" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 45, 64)
+npc_id_inicial = "treinador_tico"
+
+[node name="NpcTreinadorBia" parent="." instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 88, 45, 64)
+npc_id_inicial = "treinador_bia"

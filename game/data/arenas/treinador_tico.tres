@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ArenaDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/arenas/arena_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+arena_id = "treinador_tico"
+elemento = "mato"
+guardiao_nome = "Tico"
+equipe = [{
+"especie_id": "brotinho",
+"nivel": 6
+}, {
+"especie_id": "ventim",
+"nivel": 7
+}]
+da_insignia = false
+recompensa_itens = {
+"pocao_cura": 2
+}

@@ -103,6 +103,7 @@ func _atualizar_marcador() -> void:
 		def.oferece_quest_id != ""
 		and GameState.quest_atual_id != def.oferece_quest_id
 		and not GameState.quests_concluidas.has(def.oferece_quest_id)
+		and QuestRegistry.liberada(def.oferece_quest_id)
 	)
 
 

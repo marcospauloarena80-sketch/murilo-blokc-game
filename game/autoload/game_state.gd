@@ -34,6 +34,8 @@ var insignias_conquistadas: Array[String] = []  ## ids das Arenas vencidas (F10)
 ## Caderno de Cubelins (Ciclo 9, 9D): espécies já vistas em batalha / capturadas.
 var especies_vistas: Array[String] = []
 var especies_capturadas: Array[String] = []
+## Treinadores de mundo (Ciclo 9, 9E): arena_id -> dia de jogo da última vitória.
+var treinadores_vencidos: Dictionary = {}
 
 ## Preenchidos pelo menu antes de trocar pra scenes/main.tscn (F5).
 var veio_de_continuar: bool = false
@@ -93,6 +95,7 @@ func reiniciar_para_novo_jogo() -> void:
 	insignias_conquistadas = []
 	especies_vistas = []
 	especies_capturadas = []
+	treinadores_vencidos = {}
 	veio_de_continuar = false
 	delta_blocos_carregado = {}
 
