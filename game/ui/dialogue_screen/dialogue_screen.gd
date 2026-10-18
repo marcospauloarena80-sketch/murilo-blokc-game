@@ -7,6 +7,8 @@ extends CanvasLayer
 var _npc_def: NpcDef
 var _indice_linha: int = 0
 var _aberto: bool = false
+## Aceitar a missão nova descartaria progresso da atual: pede o segundo toque.
+var _confirmando_substituicao: bool = false
 
 @onready var _label_nome: Label = $Control/Painel/Margem/VBox/LabelNome
 @onready var _label_texto: Label = $Control/Painel/Margem/VBox/LabelTexto
@@ -36,6 +38,7 @@ func _ready() -> void:
 func _abrir(npc: Npc) -> void:
 	_npc_def = npc.def
 	_indice_linha = 0
+	_confirmando_substituicao = false
 	_aberto = true
 	visible = true
 	GameState.abrir_tela("dialogo")
@@ -46,6 +49,7 @@ func _abrir(npc: Npc) -> void:
 
 func _fechar() -> void:
 	_aberto = false
+	_confirmando_substituicao = false
 	visible = false
 	_npc_def = null
 	GameState.fechar_tela("dialogo")
@@ -67,11 +71,24 @@ func _oferece_quest_pendente() -> bool:
 
 
 func _ao_aceitar_quest() -> void:
+	if (
+		not _confirmando_substituicao
+		and SubstituicaoQuest.exige_confirmacao(
+			GameState.quest_atual(), GameState.progresso_quest_atual
+		)
+	):
+		_confirmando_substituicao = true  ## 1º toque: só pergunta, nada muda
+		_atualizar()
+		return
 	GameState.iniciar_quest(_npc_def.oferece_quest_id)
 	_fechar()
 
 
 func _ao_recusar_quest() -> void:
+	if _confirmando_substituicao:
+		_confirmando_substituicao = false  ## cancelar: a missão atual segue intacta
+		_atualizar()
+		return
 	_fechar()
 
 
@@ -88,12 +105,25 @@ func _ao_abrir_caderno() -> void:
 func _arena_disponivel() -> bool:
 	if _npc_def == null or _npc_def.abre_arena == "":
 		return false
+	if not GameState.tem_cubelin_disponivel():
+		return false  ## E0-4: ninguém em condições de lutar
 	var arena := ArenaRegistry.get_arena(_npc_def.abre_arena)
 	if arena.requer_todas_insignias:
 		return GameState.insignias_conquistadas.size() >= ArenaRegistry.ids_com_insignia().size()
 	if not arena.da_insignia:
 		return Treinadores.revanche_liberada(arena.arena_id)
 	return true
+
+
+func _texto_bloqueio() -> String:
+	if not GameState.tem_cubelin_disponivel():
+		return "Seus Cubelins precisam descansar antes de um desafio."
+	var arena := ArenaRegistry.get_arena(_npc_def.abre_arena)
+	if arena != null and arena.requer_todas_insignias:
+		return "Volte quando tiver conquistado todas as insígnias."
+	if arena != null and not arena.da_insignia:
+		return "Volte amanhã."
+	return "Volte quando tiver conquistado todas as insígnias."
 
 
 func _ao_desafiar() -> void:
@@ -143,8 +173,10 @@ func _atualizar() -> void:
 	var mostra_laboratorio := fim_das_linhas and not mostra_oferta and _npc_def.abre_laboratorio
 	var mostra_troca := fim_das_linhas and not mostra_oferta and _npc_def.troca_pede_item != ""
 	var eh_guardiao := _npc_def.abre_arena != ""
+	## A oferta de missão é opcional: não esconde o Desafiar (aceitar, recusar ou
+	## ignorar a missão não muda se o jogador pode lutar).
 	var mostra_desafio := (
-		fim_das_linhas and not mostra_oferta and eh_guardiao and _arena_disponivel()
+		fim_das_linhas and eh_guardiao and _arena_disponivel() and not _confirmando_substituicao
 	)
 	var mostra_bloqueado := (
 		fim_das_linhas and not mostra_oferta and eh_guardiao and not _arena_disponivel()
@@ -161,6 +193,12 @@ func _atualizar() -> void:
 			if oferta != null
 			else "Aceita esta missão?"
 		)
+		if _confirmando_substituicao:
+			_label_texto.text = SubstituicaoQuest.texto_confirmacao(
+				GameState.quest_atual(), GameState.progresso_quest_atual, oferta
+			)
+		elif eh_guardiao and not _arena_disponivel():
+			_label_texto.text += "\n(" + _texto_bloqueio() + ")"
 	elif mostra_troca:
 		_label_texto.text = (
 			"Troco %d %s por %d %s."
@@ -172,17 +210,15 @@ func _atualizar() -> void:
 			]
 		)
 	elif mostra_bloqueado:
-		var treinador := ArenaRegistry.get_arena(_npc_def.abre_arena)
-		if treinador != null and not treinador.da_insignia:
-			_label_texto.text = "Volte amanhã."
-		else:
-			_label_texto.text = "Volte quando tiver conquistado todas as insígnias."
+		_label_texto.text = _texto_bloqueio()
 	else:
 		_label_texto.text = ""
 
 	_botao_avancar.visible = not fim_das_linhas
 	_botao_aceitar.visible = mostra_oferta
+	_botao_aceitar.text = "Substituir" if _confirmando_substituicao else "Aceitar"
 	_botao_recusar.visible = mostra_oferta
+	_botao_recusar.text = "Cancelar" if _confirmando_substituicao else "Recusar"
 	_botao_laboratorio.visible = mostra_laboratorio
 	_botao_caderno.visible = mostra_laboratorio
 	_botao_trocar.visible = mostra_troca

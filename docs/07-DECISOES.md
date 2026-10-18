@@ -263,3 +263,105 @@ Formato curto: contexto → decisão → consequências. Toda decisão nova entr
 **Validado:** suíte local verde, build de depuração no navegador com ambiente tocando (2 players) e sem música. **Não validado:** toque em aparelho real, sensação de voo e turbo, aparência da barra no celular.
 
 **Item "sumido":** no navegador, a carne do Lanugo chegou à mochila (2 unidades, com ícone), não à hotbar. A coleta vai para a mochila por desenho. O ponto fraco é de percepção: a mochila só abre com I ou o botão Bolsa e o slot não mostra o nome. Pendência: aviso de coleta mais visível.
+
+## ADR-032: E0 (correções de combate nas arenas) e E1 preparatória (17/out/2026)
+
+**Contexto:** planejamento dos ginásios, líderes e modos aprovado como base (`~/.claude/plans/murilo-blocks-game-golden-valley.md`). O dono autorizou só a E0 e a preparação da E1, em branch `ginasios/e0-e1`, sem merge em `main` e sem publicação (o `deploy-pages` do CI só roda em `main`).
+
+**E0, decisões:**
+1. `GuardianBattle.avancar_para_proximo` preserva o Cubelin ativo escolhido pelo jogador; só volta ao primeiro capaz se ele desmaiou.
+2. `BattleService.jogador_ataca` não age com o ativo desmaiado; a tela também pula o ataque. Antes, o desmaiado atacava, levava o XP e revivia com a cura do level-up.
+3. O Coração Dourado deixa de ser insígnia (`da_insignia = false`, as 4 insígnias seguem iguais) e os créditos (`game_completed`) saem só na primeira vitória da partida, usando o registro já salvo em `treinadores_vencidos`.
+4. Desafiar fica escondido sem Cubelin em condições, com o aviso "Seus Cubelins precisam descansar antes de um desafio.".
+5. Abrir uma batalha de arena marca a equipe adversária como vista no Caderno.
+
+**E1 preparatória:** `core/progressao/progressao.gd` (classe pura, estática, recebe o estado por parâmetro) e três campos genéricos em `ArenaDef` (`ordem = 0`, `requer_insignias = []`, `requer_quest = ""`). Nenhum `.tres` mudou de valor; `Progressao` não está ligada a nenhuma tela. A ordem real dos ginásios, nomes, elementos e equipes continuam pendentes do dono.
+
+**Validação:** 830/830 testes (16 novos). Build Web de depuração local: desafio ao Renato com dois Cubelins, troca para a Brisura, vitória sobre o Pedrolim e a Brisura continua em campo contra o Rochedo; vitória; Caderno com Pedrolim e Rochedo vistos. **Não validado jogando:** desmaiado não atacar (item 2), créditos únicos (item 3) e o aviso de descanso (item 4), cobertos só por testes automatizados.
+
+## ADR-033: Créditos únicos, oferta de missão opcional e cobertura do Cubelin desmaiado (17/out/2026)
+
+**Contexto:** a validação manual da E0 (ADR-032) mostrou que os créditos do Coração Dourado reabriam depois de voltar ao menu e continuar, porque o registro de "já venceu" vivia só na memória, e que a oferta de missão do guardião escondia o botão Desafiar.
+
+**Decisões:**
+1. **Créditos só depois de gravar.** `SaveManager.salvar` e `Main.salvar_jogo` passam a devolver `bool`. Na primeira vitória sobre o Coração Dourado, `BattleScreen._fechar` grava o jogo antes de emitir `game_completed`. Se a gravação falhar, os créditos não abrem, o registro em memória é desfeito, o jogador recebe um aviso e a vitória vale de novo numa revanche. O ponto escolhido foi o fechamento da batalha porque o estado da luta já está consistente e porque os créditos não deixam salvar depois (a tela prende o jogo em pausa e o botão só volta ao menu). O Coração Dourado continua sem insígnia.
+2. **Oferta de missão opcional.** `DialogueScreen` deixa de esconder Desafiar quando há oferta pendente. Aceitar, recusar ou ignorar a missão não muda o acesso; só os requisitos reais da batalha (Cubelin em condições, insígnias, revanche diária). A mensagem de bloqueio passa a aparecer junto da oferta. Corrigido de passagem: o desafio final sem as 4 insígnias dizia "Volte amanhã" depois da E0 (efeito colateral do `da_insignia = false`).
+3. **Missão ativa substituída em silêncio: NÃO corrigido, aguarda decisão do dono.** O único ponto é `DialogueScreen._ao_aceitar_quest` chamando `GameState.iniciar_quest`. Bloquear a troca sempre travaria a progressão: a cadeia principal termina em `quest_r1_coleta_diaria`, que é repetível e continua como missão atual depois de concluída, então toda missão lateral (Construtor, Tico, guardiões) só é aceita hoje substituindo-a. O diálogo não tem mecanismo de confirmação.
+4. **Cobertura do desmaiado, sem hook de depuração:** testes determinísticos novos para ataque com 0 de vida, XP a um ponto do próximo nível sem level-up nem revive, gasto de energia, troca para um Cubelin vivo e o cenário da tela com oponente mais rápido.
+
+**Limites:** a falha de gravação foi validada só por teste automatizado (injeção do `salvador`); não é reproduzível pela interface. O botão "Salvar" da pausa continua mostrando "Jogo salvo!" sem conferir o retorno (fora do escopo desta correção).
+
+## ADR-034: Confirmação ao substituir missão, aviso de salvamento honesto e retry dos créditos (17/out/2026)
+
+**1. Substituição de missão.** `DialogueScreen._ao_aceitar_quest` pede um segundo toque só quando aceitar descartaria progresso, decidido por `SubstituicaoQuest.exige_confirmacao` com dados da `QuestDef` atual: não repetível e com progresso maior que zero. Sem missão ativa, com missão repetível ou sem progresso, aceita direto como antes (a cadeia principal termina numa repetível, então bloquear tudo travaria a progressão). A confirmação reaproveita os dois botões da oferta: viram Substituir/Cancelar e o texto informa a missão atual e o progresso perdido. Cancelar volta à oferta sem mudar nada; o estado de confirmação zera ao abrir ou fechar o diálogo. Sem fila de missões e sem mudança nas regras de repetição.
+
+**2. Aviso de salvamento.** O único ponto que anunciava "Jogo salvo!" era o botão Salvar da pausa, que não conferia o retorno. Agora `PauseScreen` usa o `bool` de `Main.salvar_jogo`: sucesso mostra "Jogo salvo!"/"Salvo!" em verde; falha mostra "Não foi possível salvar o jogo!"/"Falhou!" em vermelho. "Sair pro Menu" não sai mais se a gravação falhar (fica na pausa com o erro), em vez de perder o progresso em silêncio. A lógica de "pedir à cena para salvar" ficou num só lugar, `SaveManager.salvar_pela_cena`, usado pela pausa e pela tela de batalha.
+
+**3. Nova tentativa após falha antes dos créditos: NÃO implementada.** Hoje a falha avisa e exige uma nova vitória. A solução mais barata, manter a batalha aberta e usar o botão Fechar como nova tentativa, deixaria o jogador preso se a gravação falhar sempre (armazenamento cheio ou bloqueado), porque a tela da batalha não tem outra saída. Seria preciso um segundo botão ("Sair sem créditos") na tela de resultado, só depois de uma falha: uma mudança de interface com testes próprios, fora do escopo autorizado.
+
+**Validação.** Automatizada: 870 testes. Manual no navegador: confirmação, cancelamento e substituição com a missão "Um Teto Sobre a Cabeça" a 3 de 10 contra a oferta do Renato; "Jogo salvo!" da pausa. Não reproduzível pela interface: falha de gravação (testada só por injeção). A missão com progresso foi preparada editando o save local do navegador de teste.
+
+## ADR-035: Falha ao salvar antes dos créditos tem duas saídas (17/out/2026)
+
+Substitui o tratamento da falha descrito no ADR-033 (aviso e nova vitória) e fecha o item 3 do ADR-034.
+
+**Fluxo.** Na primeira vitória sobre o Coração Dourado, `BattleScreen._fechar` tenta gravar o jogo antes dos créditos. Se gravar, abre os créditos uma vez e fecha a batalha. Se falhar, a batalha **continua aberta**, o resultado fica como está e a tela mostra uma mensagem clara com duas saídas no lugar do botão Fechar:
+- **Tentar salvar novamente:** repete só a gravação. Não repete a batalha, não registra outra vitória nem premia de novo (o registro da vitória foi feito uma vez, no fim da luta, e continua em memória justamente para a nova tentativa gravá-lo). Se gravar, abre os créditos e fecha; se falhar de novo, continua pendente.
+- **Sair sem créditos:** fecha a batalha sem créditos, desfaz o registro da conclusão em memória (para um "Salvar" qualquer da pausa não gravar a conclusão sem ninguém ver os créditos), avisa "Conclusão não salva" e deixa uma vitória futura valer como a primeira.
+
+Nenhuma insígnia do Coração Dourado é concedida em nenhum caminho. Revanche depois de uma conclusão gravada não reabre os créditos (o registro vem do save). Não há recuperação automática: se o jogador sair sem créditos, a conclusão não é dada como salva.
+
+**Limites.** Os dois botões são criados em código; nenhuma cena foi alterada. O autosave continua sem aviso de falha (fora do escopo). A falha de gravação não é reproduzível pela interface do navegador: só tem teste automatizado, com o salvamento simulado.
+
+## ADR-036: Gravação do save com cada falha tratada e conferida por releitura (17/out/2026)
+
+**Origem.** A auditoria independente apontou `save_manager.gd`: o código guardava o retorno de `FileAccess.store_string()` num `bool`, e a auditoria entendia que a API devolve `void`. **No Godot 4.7.1 (o da projeto) ela devolve `bool`**: medido rodando `godot --headless --script` (retorno `true`, tipo bool), e o código compilava e passava na suíte (GDScript tipado, avisos como erro, recusaria atribuir um `void`). O ponto da auditoria vale, porém, para o que o código **não** verificava: pasta de saves, cópia do backup, fechamento e releitura.
+
+**Decisão.** `SaveManager.salvar` passa a delegar a `_gravar`, com cada etapa devolvendo `false` explícito e preservando o save anterior:
+1. a pasta de saves existe ou é criada (`make_dir_recursive_absolute`);
+2. o JSON é escrito num arquivo temporário (`.tmp`), com `store_string`, `get_error`, `flush` e `close` conferidos e releitura idêntica;
+3. o save atual é copiado para o backup (retorno de `copy_absolute` conferido);
+4. o temporário substitui o save atual (`rename_absolute`, que sobrescreve o destino);
+5. o resultado é relido e conferido.
+O save atual só é trocado depois de o novo já estar conferido, então uma falha no meio nunca o corrompe, e `carregar` continua caindo no backup se o principal estiver ilegível. `_conferir` exige texto idêntico e JSON de objeto válido (pega arquivo truncado ou vazio). Temporário esquecido por uma queda não atrapalha o carregamento nem a gravação seguinte.
+
+**Validação.** 11 testes novos com injeção de falha em pasta própria de `user://`: pasta impossível de criar, temporário que não abre, backup que não copia, arquivo truncado/vazio/diferente/ausente, principal corrompido ou ausente com recuperação pelo backup, temporário órfão. No navegador (build v43): dois saves reais, backup com o save anterior, nenhum `.tmp` sobrando, principal truncado no IndexedDB e Continuar carregando o estado do backup. **Não reproduzidos:** falha de `rename_absolute` e disco cheio de verdade (sem como provocar em ambiente seguro).
+
+## ADR-037: Um principal inválido nunca substitui um backup válido (17/out/2026)
+
+**Cenário apontado pela 2ª auditoria.** Principal corrompido e backup válido; `carregar()` recupera pelo backup mas não restaura o principal; o jogo salva de novo; `_gravar` (ADR-036) copiava o principal **corrompido** por cima do backup; se a troca do arquivo falhasse, as duas cópias ficavam inválidas e a última versão boa se perdia. Confirmado por teste: com a cópia incondicional, 4 dos 8 testes novos falham (o backup vira o lixo do principal).
+
+**Correção.**
+1. O principal só vai para o backup se for **válido** (`_e_valido`: arquivo legível, JSON de objeto não vazio, sem logar erro de parse). Principal inválido não toca no backup, que pode ser a última cópia boa.
+2. Com isso, se a troca (`rename_absolute`) falhar, sempre sobra uma cópia recuperável: principal válido e intacto, ou backup com a última versão boa. O temporário é removido e a gravação devolve `false`.
+3. `_ler_arquivo` usa `JSON.new().parse` (sem erro no log) e fecha o arquivo.
+
+**Ponto de injeção só para testes.** `SaveManager.renomear_para_teste` (um `Callable`, vazio por padrão) substitui `rename_absolute` quando válido. Em produção fica vazio e o comportamento é o mesmo; um teste garante que o padrão é vazio. Evita depender de falha real do sistema operacional.
+
+**Testes.** `test_save_manager_backup.gd` (8): principal corrompido com backup válido é recuperável; salvar depois de recuperar não sobrescreve o backup; falha na troca com principal corrompido preserva o backup byte a byte e os dados; falha destrutiva (principal apagado e erro) recupera pelo backup; salvamento posterior ok sem `.tmp` órfão; principal corrompido sem backup não cria backup do lixo; principal válido continua indo para o backup; injeção vazia por padrão. No navegador (build v44), partindo do cenário real (principal truncado, backup válido): Continuar carregou o backup, Salvar gravou um principal válido e o backup ficou **idêntico** (mesmo hash). **Não reproduzido de verdade:** falha do sistema operacional em `rename_absolute` (só por injeção).
+
+## ADR-038: Validação semântica do save e proteção do backup (17/out/2026)
+
+**Origem.** Auditoria independente da rev3: o validador `_e_valido` aceitava qualquer objeto JSON não vazio, então um principal "válido" mas sem sentido (ex.: sem `seed`) ainda era copiado para o backup, e a cópia não era conferida.
+
+**Formato real.** Lido de `scenes/main.gd::salvar_jogo` (escrita) e `scenes/menu.gd::_ao_continuar` (leitura). O menu usa valor padrão para toda chave ausente e tem parâmetros tipados (`Array`, `Dictionary`, `String`) que travariam com o tipo errado. Por isso: **só `seed` é obrigatório** (presente em todo save desde a F5; sem ela não há mundo); as demais chaves podem faltar (saves antigos não tinham todas, como `treinadores_vencidos` do Ciclo 9), mas, **se presentes, têm de ter o tipo que o carregamento espera**: números, `quest_atual_id` texto, `aparencia`/`delta_blocos`/`baus`/`treinadores_vencidos` objeto, `hotbar`/`mochila`/`equipe_cubelins`/`deposito_cubelins` lista de objetos, as quatro listas de ids lista de textos, as posições lista de números, cada baú uma lista de slots-objeto. Nada é corrigido nem preenchido por padrão. `schema_version` ausente conta como v1; `>1` é "versão futura".
+
+**Estados.** `ValidadorSave` (puro, `core/save/validador_save.gd`) devolve VALIDO, VAZIO, ESTRUTURA_INVALIDA ou VERSAO_FUTURA. `SaveManager._avaliar_arquivo` acrescenta INEXISTENTE, ERRO_DE_LEITURA (existe mas não abre) e MALFORMADO (não é JSON). Carregamento, backup, conferência e recuperação usam essa mesma classificação.
+
+**Regras de gravação (`_gravar`).** (0) dados novos precisam passar na validação; (1) pasta criada ou erro; (2) JSON novo escrito em temporário e relido; (3) principal VERSAO_FUTURA ou ERRO_DE_LEITURA, ou backup VERSAO_FUTURA, **recusam a gravação** (não se sobrescreve o que não se entende nem se consegue ler); principal VALIDO é copiado para o backup e a cópia é **conferida** (existe, passa na validação e tem o mesmo texto); qualquer outro principal inválido **não toca no backup**; (4) o temporário substitui o principal; (5) releitura final. Carregar usa o principal se VALIDO (ou VERSAO_FUTURA, política já existente de "avisar e tentar"), senão o backup.
+
+**Garantias e limites.** Se a cópia, a troca ou a conferência falharem, sobra sempre uma cópia válida recuperável (o principal intacto ou o backup). Não há promessa de atomicidade absoluta: sem `rename` atômico garantido em todo sistema de arquivos, uma queda exatamente no instante da troca pode deixar o principal ausente ou inválido; o backup válido preservado antes dela é a rede de segurança. ERRO_DE_LEITURA só foi testado na decisão (`_pode_gravar_sobre`), não com um arquivo ilegível de verdade (depende de permissões do sistema e quebraria em CI com root). Versão futura é lida sem validar a estrutura dela.
+
+**Testes.** 34 novos: `test_validador_save` (14), `test_save_manager_integridade` (+`_falhas`) (20) com pasta própria em `user://` e pontos de injeção `renomear_para_teste` e `copiar_para_teste` (vazios em produção, com teste para isso). "Reabrir o jogo" = nova instância de `SaveManager`. Três mutações no código de produção (copiar sem conferir, permitir sobrescrever versão futura, copiar principal inválido) fazem testes falharem.
+
+## ADR-039: `seed` e demais campos `int` exigem valor inteiro (17/out/2026)
+
+**Origem.** Auditoria da rev4: `_e_numero` aceitava int e float, então `"seed": 123.45` passava como válido.
+
+**Contrato real (inspecionado).** `GameState.seed_atual: int`; `WorldGenerator._init(mundo_seed: int)` (usa `_seed + constantes`, `_hash01(seed: int, ...)` e `FastNoiseLite.seed`); `menu.gd` lê com `int(dados.get("seed", 0))`; novo jogo usa `randi()` (0 a 4294967295), gravado como número. Logo a semente é inteira. Atenção: o JSON do Godot devolve **todo** número como float (a seed real 3356247210 volta como 3356247210.0), então "inteiro" não pode ser o tipo do Variant: é **valor inteiro, finito e dentro do int64** (`1.0` vale, `1.5` não; booleano, texto, null, lista, objeto, infinito, NaN e 1e300 não).
+
+**Campos com a mesma exigência** (declarados `int` no `GameState` e lidos com `int(...)` no menu): `seed`, `hotbar_selecionado`, `vida_atual`, `fome_atual`, `energia_atual`, `progresso_quest_atual`; também `schema_version`. **Seguem aceitando fração** `tempo_de_jogo_seg` e `ciclo_dia_noite_seg` (`float` no `GameState`).
+
+**Compatibilidade.** Saves reais gravados pelo jogo têm esses campos inteiros (confirmado no navegador: save com seed 3356247210 continuou carregando). `treinadores_vencidos` não foi endurecido (o menu converte cada valor com `int()` e tolera o resto). Nenhum campo novo é obrigatório.
+
+**Testes.** 14 novos em `test_validador_save_inteiros.gd`: seed válida (inclusive 4294967295 e a que volta como float do JSON), decimal, texto, booleano, null, lista, objeto, ausente, infinita e fora do int64; demais campos `int`; tempos com fração; `schema_version`; arquivo com seed decimal classificado como estrutura inválida; `_gravar` recusa seed decimal/texto/booleano sem tocar em nada; principal com seed decimal recupera pelo backup, salvar depois preserva o backup byte a byte, e falha na troca (injetada) preserva backup e principal. Mutação (aceitar qualquer número como inteiro): 9 dos 14 testes novos falham.

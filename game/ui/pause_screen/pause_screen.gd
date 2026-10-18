@@ -6,6 +6,11 @@ extends CanvasLayer
 
 const DURACAO_CONFIRMACAO_SEG: float = 1.5
 const COR_SALVO: Color = Color(0.6, 1.0, 0.6)
+const COR_ERRO: Color = Color(1.0, 0.45, 0.45)
+
+## Persiste o jogo (devolve true se gravou). Vazio = `salvar_jogo` da cena atual;
+## os testes injetam o próprio.
+var salvador: Callable = Callable()
 
 var _aberto: bool = false
 
@@ -47,12 +52,26 @@ func _fechar() -> void:
 
 
 func _ao_salvar() -> void:
-	get_tree().current_scene.call("salvar_jogo")
-	_rotulo_status.text = "Jogo salvo!"
-	_rotulo_status.add_theme_color_override("font_color", COR_SALVO)
-	_botao_salvar.text = "Salvo!"
+	if _salvar():
+		_rotulo_status.text = "Jogo salvo!"
+		_rotulo_status.add_theme_color_override("font_color", COR_SALVO)
+		_botao_salvar.text = "Salvo!"
+	else:
+		_mostrar_falha("Não foi possível salvar o jogo!")
+		_botao_salvar.text = "Falhou!"
 	## Callable ligado a este nó: se a tela for liberada antes, a conexão cai junto.
 	get_tree().create_timer(DURACAO_CONFIRMACAO_SEG).timeout.connect(_restaurar_botao_salvar)
+
+
+func _salvar() -> bool:
+	if salvador.is_valid():
+		return bool(salvador.call())
+	return SaveManager.salvar_pela_cena(get_tree().current_scene)
+
+
+func _mostrar_falha(texto: String) -> void:
+	_rotulo_status.text = texto
+	_rotulo_status.add_theme_color_override("font_color", COR_ERRO)
 
 
 func _restaurar_botao_salvar() -> void:
@@ -60,9 +79,14 @@ func _restaurar_botao_salvar() -> void:
 
 
 func _ao_sair() -> void:
-	## Salva antes de voltar pro menu (mesma rotina do botão Salvar); nos testes
-	## a cena atual pode não ter salvar_jogo — aí só troca de cena.
+	## Salva antes de voltar pro menu (mesma rotina do botão Salvar). Se a gravação
+	## falhar, fica na pausa com o erro à vista em vez de perder o progresso em
+	## silêncio. Nos testes a cena atual pode não ter salvar_jogo: aí só troca de cena.
 	var cena_atual: Node = get_tree().current_scene
-	if cena_atual != null and cena_atual.has_method("salvar_jogo"):
-		cena_atual.call("salvar_jogo")
+	var pode_salvar: bool = (
+		salvador.is_valid() or (cena_atual != null and cena_atual.has_method("salvar_jogo"))
+	)
+	if pode_salvar and not _salvar():
+		_mostrar_falha("Não foi possível salvar. Você continua no jogo.")
+		return
 	get_tree().change_scene_to_file("res://scenes/menu.tscn")

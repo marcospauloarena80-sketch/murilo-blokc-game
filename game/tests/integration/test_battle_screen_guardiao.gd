@@ -97,6 +97,7 @@ func test_vencer_o_coracao_dourado_emite_game_completed_ao_fechar() -> void:
 	GameState.equipe_cubelins = [CreatureInstance.new("pedrargo", 30)]
 	var tela := BattleScreenScene.instantiate() as BattleScreen
 	add_child_autofree(tela)
+	tela.salvador = func() -> bool: return true
 	tela._abrir_arena("coracao_dourado")
 
 	# Um golpe sempre causa >=1 de dano (BattleService.calcular_dano) — deixar
@@ -106,7 +107,10 @@ func test_vencer_o_coracao_dourado_emite_game_completed_ao_fechar() -> void:
 		tela._batalha.selvagem.vida_atual = 1
 		tela._ao_atacar(0)
 
-	assert_true(GameState.tem_insignia("coracao_dourado"), "deveria ter vencido o desafio final")
+	assert_eq(tela._batalha.resultado, BattleService.Resultado.VITORIA)
+	assert_false(
+		GameState.tem_insignia("coracao_dourado"), "o desafio final não é uma insígnia (E0-3)"
+	)
 
 	var recebido: Array = [false]
 	var callback := func() -> void: recebido[0] = true
@@ -133,3 +137,45 @@ func test_derrota_contra_guardiao_manda_pro_refugio_como_selvagem() -> void:
 
 	assert_eq(GameState.vida_atual, GameState.vida_maxima)
 	assert_false(equipe.esta_desmaiado())
+
+
+func _vencer_o_final(tela: BattleScreen) -> void:
+	tela._abrir_arena("coracao_dourado")
+	for i in range(3):
+		tela._batalha.selvagem.vida_atual = 1
+		tela._ao_atacar(0)
+	assert_eq(tela._batalha.resultado, BattleService.Resultado.VITORIA)
+
+
+func test_revanche_no_coracao_dourado_nao_repete_game_completed() -> void:
+	## Defeito E0-3: cada nova vitória reabria os créditos.
+	GameState.equipe_cubelins = [CreatureInstance.new("pedrargo", 30)]
+	GameState.treinadores_vencidos = {}
+	var tela := BattleScreenScene.instantiate() as BattleScreen
+	add_child_autofree(tela)
+	tela.salvador = func() -> bool: return true
+	var vezes: Array = [0]
+	var callback := func() -> void: vezes[0] += 1
+	EventBus.game_completed.connect(callback)
+
+	_vencer_o_final(tela)
+	tela._fechar()
+	_vencer_o_final(tela)
+	tela._fechar()
+
+	EventBus.game_completed.disconnect(callback)
+	GameState.treinadores_vencidos = {}
+	assert_eq(vezes[0], 1)
+
+
+func test_abrir_arena_marca_a_equipe_do_guardiao_como_vista_no_caderno() -> void:
+	## Defeito E0-5: batalhas de arena não passavam por battle_started.
+	GameState.especies_vistas = []
+	var tela := BattleScreenScene.instantiate() as BattleScreen
+	add_child_autofree(tela)
+
+	tela._abrir_arena("pedra")
+
+	assert_true(GameState.especies_vistas.has("pedrolim"))
+	assert_true(GameState.especies_vistas.has("rochedo"))
+	GameState.especies_vistas = []

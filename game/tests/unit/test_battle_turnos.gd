@@ -180,3 +180,25 @@ func test_acao_nao_faz_nada_apos_batalha_resolvida() -> void:
 	assert_eq(
 		equipe[0].vida_atual, vida_antes, "batalha já resolvida não deveria processar mais ações"
 	)
+
+
+func test_cubelin_desmaiado_nao_ataca_nem_ganha_xp() -> void:
+	## Defeito E0-2: o oponente mais rápido derrubava o ativo, que ainda
+	## atacava, levava o XP e revivia com a cura do level-up.
+	var equipe: Array[CreatureInstance] = [
+		CreatureInstance.new("brotinho", 1), CreatureInstance.new("ventim", 1)
+	]
+	var oponente := CreatureInstance.new("pedrolim", 1)
+	oponente.vida_atual = 1
+	var batalha := BattleService.new(equipe, oponente)
+	equipe[0].vida_atual = 0
+	equipe[0].xp = 0
+	batalha.indice_ativo = 0  ## como fica logo após o golpe do oponente
+
+	var dano := batalha.jogador_ataca(equipe[0].ataques_conhecidos[0], 1.0)
+
+	assert_eq(dano, 0)
+	assert_eq(oponente.vida_atual, 1, "desmaiado não causa dano")
+	assert_eq(equipe[0].xp, 0, "desmaiado não ganha XP")
+	assert_true(equipe[0].esta_desmaiado(), "não revive")
+	assert_eq(batalha.resultado, BattleService.Resultado.EM_ANDAMENTO)

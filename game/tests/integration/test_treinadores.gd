@@ -71,8 +71,9 @@ func test_equipes_e_recompensas_do_plano() -> void:
 
 
 func test_arenas_antigas_continuam_dando_insignia() -> void:
-	for id: String in ["pedra", "brasa", "gota", "faisca", "coracao_dourado"]:
+	for id: String in ["pedra", "brasa", "gota", "faisca"]:
 		assert_true(ArenaRegistry.get_arena(id).da_insignia, id)
+	assert_false(ArenaRegistry.get_arena("coracao_dourado").da_insignia, "desafio final (E0-3)")
 	assert_eq(ArenaRegistry.ids_com_insignia().size(), 4)
 
 

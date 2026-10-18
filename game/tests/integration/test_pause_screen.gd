@@ -21,8 +21,9 @@ class CenaDuble:
 	extends Node
 	var chamadas_salvar: int = 0
 
-	func salvar_jogo() -> void:
+	func salvar_jogo() -> bool:
 		chamadas_salvar += 1
+		return true
 
 
 func _instalar_cena_duble() -> CenaDuble:

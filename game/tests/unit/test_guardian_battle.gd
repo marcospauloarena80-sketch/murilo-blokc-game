@@ -87,3 +87,32 @@ func test_guardiao_totalmente_derrotado_quando_ultimo_membro_cai() -> void:
 
 	assert_eq(batalha.batalha_atual.resultado, BattleService.Resultado.VITORIA)
 	assert_true(batalha.guardiao_totalmente_derrotado())
+
+
+func test_avancar_preserva_o_cubelin_ativo_escolhido_pelo_jogador() -> void:
+	## Defeito E0-1 (ADR-027, pendência): ao trocar de membro do Guardião o ativo
+	## voltava ao primeiro da equipe.
+	var jogador := _equipe_forte(20, 2)
+	var guardiao: Array[CreatureInstance] = [
+		CreatureInstance.new("brotinho", 1), CreatureInstance.new("ventim", 1)
+	]
+	var batalha := GuardianBattle.new(jogador, guardiao)
+	assert_true(batalha.batalha_atual.trocar_ativo(1))
+
+	batalha.avancar_para_proximo()
+
+	assert_eq(batalha.batalha_atual.indice_ativo, 1, "o segundo continua em campo")
+
+
+func test_avancar_volta_ao_primeiro_capaz_se_o_ativo_desmaiou() -> void:
+	var jogador := _equipe_forte(20, 2)
+	var guardiao: Array[CreatureInstance] = [
+		CreatureInstance.new("brotinho", 1), CreatureInstance.new("ventim", 1)
+	]
+	var batalha := GuardianBattle.new(jogador, guardiao)
+	assert_true(batalha.batalha_atual.trocar_ativo(1))
+	jogador[1].vida_atual = 0
+
+	batalha.avancar_para_proximo()
+
+	assert_eq(batalha.batalha_atual.indice_ativo, 0)

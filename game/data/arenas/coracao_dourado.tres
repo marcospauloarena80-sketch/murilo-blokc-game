@@ -18,3 +18,4 @@ equipe = [{
 "nivel": 20
 }]
 requer_todas_insignias = true
+da_insignia = false
