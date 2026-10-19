@@ -38,11 +38,14 @@ func _rodar(quadros: int, companheiro: Companheiro) -> void:
 		await wait_physics_frames(1)
 
 
-## Faixa plana de pedra e ar em -Z do jogador (nos eixos X ficam NPCs do Vilarejo),
-## pra o teste não depender do relevo.
+## Faixa plana de pedra e ar em -Z do jogador, sem NPCs do Vilarejo, pra o teste
+## não depender do relevo nem de obstáculos. O Construtor fica a ~7,5 blocos em -Z,
+## no meio da faixa: o companheiro anda em linha reta (sem desvio, ADR-020) e,
+## conforme a folga lateral, encosta nele e fica parado.
 func _aplanar_corredor() -> void:
 	var cm: ChunkManager = _main.get_node("ChunkManager")
 	var base := Vector3i(_jogador.global_position.floor())
+	_remover_npcs_do_corredor()
 	for dx in range(-2, 3):
 		for dz in range(-14, 3):
 			cm.set_block(base + Vector3i(dx, -1, dz), 3)
@@ -50,6 +53,15 @@ func _aplanar_corredor() -> void:
 				cm.set_block(base + Vector3i(dx, dy, dz), BlockRegistry.AR_ID)
 	while cm.tem_chunks_pendentes():
 		cm._process(0.0)
+
+
+func _remover_npcs_do_corredor() -> void:
+	var origem: Vector3 = _jogador.global_position
+	for no: Node in get_tree().get_nodes_in_group("npc"):
+		var npc := no as Node3D
+		var d: Vector3 = npc.global_position - origem
+		if absf(d.x) <= 3.0 and d.z >= -15.0 and d.z <= 3.0:
+			npc.queue_free()
 
 
 func test_equipe_vazia_nao_tem_companheiro() -> void:
@@ -118,6 +130,7 @@ func test_segue_o_jogador_de_longe_ate_a_faixa() -> void:
 	assert_true(_jogador.is_on_floor(), "jogador deveria ter pousado")
 	var amigo: Creature = companheiro.criatura
 	_aplanar_corredor()
+	await wait_physics_frames(1)  ## o queue_free dos NPCs vale no fim do quadro
 	amigo.global_position = _jogador.global_position + Vector3(0, 0.5, -10)
 	var antes: float = amigo.global_position.distance_to(_jogador.global_position)
 	await _rodar(240, companheiro)
